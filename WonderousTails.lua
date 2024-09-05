@@ -210,29 +210,29 @@ for i = 0, 12 do
             else
                 yield("/autoduty cfg Unsync true")
             end
-        end
 
-        if duty.dutyId ~= nil then
-            yield("/echo Queuing duty TerritoryId#"..duty.dutyId.." for Wonderous Tails #"..i)
-            yield("/autoduty run "..duty.dutyId.." 1 true")
-            yield("/bmrai on")
-            yield("/rotation auto")
-            yield("/wait 10")
-            while GetCharacterCondition(34) do -- wait for duty to be finished
-                if GetCharacterCondition(2) then -- dead
-                    yield("/echo Died to "..duty.dutyName..". Skipping.")
-                    LeaveDuty()
-                    break
+            if duty.dutyId ~= nil then
+                yield("/echo Queuing duty TerritoryId#"..duty.dutyId.." for Wonderous Tails #"..i)
+                yield("/autoduty run "..duty.dutyId.." 1 true")
+                yield("/bmrai on")
+                yield("/rotation auto")
+                yield("/wait 10")
+                while GetCharacterCondition(34) do -- wait for duty to be finished
+                    if GetCharacterCondition(2) then -- dead
+                        yield("/echo Died to "..duty.dutyName..". Skipping.")
+                        LeaveDuty()
+                        break
+                    end
+                    yield("/wait 1")
                 end
-                yield("/wait 1")
-            end
-        else
-            if duty.dutyName ~= nil then
-                yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
-                LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
             else
-                yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
-                LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
+                if duty.dutyName ~= nil then
+                    yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
+                    LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
+                else
+                    yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
+                    LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
+                end
             end
         end
     end
