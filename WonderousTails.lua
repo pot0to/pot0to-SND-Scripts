@@ -115,10 +115,17 @@ function SearchWonderousTailsTable(type, data, text)
                 return duty
             end
         end
-    elseif type == 1 or type == 2 then
+    elseif type == 1 then
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.dutyName == text then
                 duty.minLevel = data
+                return duty
+            end
+        end
+    elseif type == 2 then
+        for _, duty in ipairs(WonderousTailsDuties[type+1]) do
+            if duty.dutyName == text then
+                duty.minLevel = data - 9
                 return duty
             end
         end
@@ -196,6 +203,7 @@ for i = 0, 12 do
         if duty ~= nil then
             if CurrentLevel < duty.minLevel then
                 yield("/echo [WonderousTails] Cannot queue for "..duty.dutyName.." as level is too low.")
+                duty.dutyId = nil
             elseif CurrentLevel - duty.minLevel <= 20 then
                 duty.dutyId = nil
                 yield("/autoduty cfg Support true") -- TODO: test this when it gets released
@@ -219,8 +227,13 @@ for i = 0, 12 do
                 yield("/wait 1")
             end
         else
-            yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
-            LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
+            if duty.dutyName ~= nil then
+                yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
+                LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
+            else
+                yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
+                LogInfo("[WonderousTails] Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1))
+            end
         end
     end
 
