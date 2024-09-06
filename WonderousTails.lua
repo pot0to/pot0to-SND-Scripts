@@ -19,7 +19,6 @@ WonderousTailsDuties = {
         { instanceId=20040, dutyId=566, dutyName="The Minstrel's Ballad: Nidhogg's Rage", minLevel=60 },
         { instanceId=20042, dutyId=577, dutyName="Containment Bay P1T6 (Extreme)", minLevel=60 },
         { instanceId=20044, dutyId=638, dutyName="Containment Bay Z1T9 (Extreme)", minLevel=60 },
-        { instanceId=20047, dutyId=677, dutyName="The Pool of Tribute (Extreme)", minLevel=70 },
         { instanceId=20049, dutyId=720, dutyName="Emanation (Extreme)", minLevel=70 },
         { instanceId=20056, dutyId=779, dutyName="The Minstrel's Ballad: Tsukuyomi's Pain", minLevel=70 },
         { instanceId=20058, dutyId=811, dutyName="Hells' Kier (Extreme)", minLevel=70 },
@@ -76,7 +75,8 @@ WonderousTailsDuties = {
     },
     Blacklisted= {
         {
-            { instanceId=20052, dutyId=758, dutyName="The Jade Stoa (Extreme)", minLevel=70 }
+            { instanceId=20052, dutyId=758, dutyName="The Jade Stoa (Extreme)", minLevel=70 }, -- cannot solo double tankbuster vuln
+            { instanceId=20047, dutyId=677, dutyName="The Pool of Tribute (Extreme)", minLevel=70 } -- cannot solo active time maneuver
         },
         {},
         {},
@@ -217,7 +217,7 @@ for i = 0, 12 do
                 yield("/bmrai on")
                 yield("/rotation auto")
                 yield("/wait 10")
-                while GetCharacterCondition(34) do -- wait for duty to be finished
+                while GetCharacterCondition(34) or GetCharacterCondition(51) or GetCharacterCondition(56) do -- wait for duty to be finished
                     if GetCharacterCondition(2) then -- dead
                         yield("/echo Died to "..duty.dutyName..". Skipping.")
                         LeaveDuty()
@@ -238,7 +238,7 @@ for i = 0, 12 do
     end
 
     if GetWeeklyBingoTaskStatus(i) == 1
-       -- and (not StopPlacingStickersAt7 or WeeklyBingoNumPlacedStickers() < 7)
+       and (not StopPlacingStickersAt7 or WeeklyBingoNumPlacedStickers() < 7)
     then
         if not IsAddonVisible("WeeklyBingo") then
             yield("/pcall WeeklyBingo true 2 "..i)
@@ -246,3 +246,5 @@ for i = 0, 12 do
         end
     end
 end
+
+yield("/echo Completed all Wonderous Tails entries it is capable of.<se.3>")
