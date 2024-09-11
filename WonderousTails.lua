@@ -206,7 +206,6 @@ for i = 0, 12 do
                 yield("/echo [WonderousTails] Cannot queue for "..duty.dutyName.." as level is too low.")
                 duty.dutyId = nil
             elseif CurrentLevel - duty.minLevel <= 20 then
-                duty.dutyId = nil
                 -- yield("/autoduty cfg dutyModeEnum 1") -- TODO: test this when it gets released
                 -- yield("/autoduty cfg Unsynced false")
                 dutyMode = "Support"
