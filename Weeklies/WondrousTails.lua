@@ -142,14 +142,6 @@ end
 
 CurrentLevel = GetLevel()
 
--- Read duty data from json
-local json = require("json")
-open = io.open
-local wtDutiesFile = open(os.getenv("appdata") .. "\\XIVLauncher\\pluginConfigs\\SomethingNeedDoing\\wonderousTailsSupportedDuties.json")
-local stringWtDuties = wtDutiesFile:read "*a"
-wtDutiesFile:close()
-local wtDuties = json.decode(stringWtDuties)
-
 -- Pick up a journal if you need one
 if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() then
     if not IsInZone(478) then
