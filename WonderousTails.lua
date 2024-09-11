@@ -205,6 +205,10 @@ for i = 0, 12 do
             if CurrentLevel < duty.minLevel then
                 yield("/echo [WonderousTails] Cannot queue for "..duty.dutyName.." as level is too low.")
                 duty.dutyId = nil
+            elseif type == 0 then -- trials
+                dutyMode = "Trial"
+            elseif type == 4 then -- raids
+                dutyMode = "Raid"
             elseif CurrentLevel - duty.minLevel <= 20 then
                 -- yield("/autoduty cfg dutyModeEnum 1") -- TODO: test this when it gets released
                 -- yield("/autoduty cfg Unsynced false")
@@ -229,6 +233,7 @@ for i = 0, 12 do
                     end
                     yield("/wait 1")
                 end
+                yield("/wait 10")
             else
                 if duty.dutyName ~= nil then
                     yield("/echo Wonderous Tails Script does not support Wonderous Tails entry #"..(i+1).." "..duty.dutyName)
