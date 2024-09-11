@@ -200,20 +200,25 @@ for i = 0, 12 do
         LogInfo("[WonderousTails] Wonderous Tails #"..(i+1).." Text: "..text)
 
         local duty = SearchWonderousTailsTable(type, data, text)
+        local dutyMode = "Support"
         if duty ~= nil then
             if CurrentLevel < duty.minLevel then
                 yield("/echo [WonderousTails] Cannot queue for "..duty.dutyName.." as level is too low.")
                 duty.dutyId = nil
             elseif CurrentLevel - duty.minLevel <= 20 then
                 duty.dutyId = nil
-                yield("/autoduty cfg Support true") -- TODO: test this when it gets released
+                -- yield("/autoduty cfg dutyModeEnum 1") -- TODO: test this when it gets released
+                -- yield("/autoduty cfg Unsynced false")
+                dutyMode = "Support"
             else
-                yield("/autoduty cfg Unsync true")
+                -- yield("/autoduty cfg dutyModeEnum 8")
+                yield("/autoduty cfg Unsynced true")
+                dutyMode = "Regular"
             end
 
             if duty.dutyId ~= nil then
                 yield("/echo Queuing duty TerritoryId#"..duty.dutyId.." for Wonderous Tails #"..i)
-                yield("/autoduty run "..duty.dutyId.." 1 true")
+                yield("/autoduty run "..dutyMode.." "..duty.dutyId.." 1 true")
                 yield("/bmrai on")
                 yield("/rotation auto")
                 yield("/wait 10")
