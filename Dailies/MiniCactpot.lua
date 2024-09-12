@@ -1,9 +1,15 @@
-if not IsInZone(144) then
-    yield("/tp Gold Saucer")
-    yield("/wait 3")
+function Teleport(aetheryteName)
+    yield("/tp "..aetheryteName)
+    while not GetCharacterCondition(45) do
+        yield("/wait 0.1")
+    end
+    while GetCharacterCondition(45) do
+        yield("/wait 0.1")
+    end
 end
-while not IsInZone(144) do
-    yield("/wait 1")
+
+if not IsInZone(144) then
+    Teleport("Gold Saucer")
 end
 PathfindAndMoveTo(-46.09, 1.60, 20.81)
 while PathIsRunning() or PathfindInProgress() do
@@ -17,7 +23,8 @@ repeat
 until HasTarget() and GetTargetName() == "Mini Cactpot Broker"
 repeat
     yield("/interact")
-until GetCharacterCondition(32)
+    yield("/wait 0.2")
+until IsAddonVisible("SelectIconString")
 
 -- yes play mini cactpot
 repeat
