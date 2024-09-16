@@ -6,10 +6,9 @@ function Start()
 
     yield("/target Aetheryte")
 
-    if not HasTarget() or GetTargetName() ~= "aetheryte" then
-        yield("/echo "..GetTargetName())
+    if not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 7 then
         PathfindAndMoveTo(-4.82, 1.04, 2.21)
-    elseif GetDistanceToTarget() < 7 then
+    elseif GetDistanceToTarget() <= 7 then
         yield("/vnav stop")
         yield("/li Cactpot Board")
         State = CharacterStates.claimPrize
@@ -26,9 +25,9 @@ function ClaimPrize()
         yield("/callback SelectYesno true 0")
     elseif RewardClaimed and not GetCharacterCondition(32) then
         State = CharacterStates.purchaseNewTickets
-    elseif not HasTarget() or GetTargetName() ~= "Cactpot Cashier" then
+    elseif not HasTarget() or GetTargetName() ~= "Cactpot Cashier" or GetDistanceToTarget() > 7 then
         PathfindAndMoveTo(123.25, 13.00, -19.35)
-    elseif GetDistanceToTarget() < 7 then
+    elseif GetDistanceToTarget() <= 7 then
         yield("/vnav stop")
         yield("/interact")
         RewardClaimed = true
@@ -39,16 +38,18 @@ TicketsPurchased = false
 function PurchaseNewTickets()
     yield("/target Jumbo Cactpot Broker")
 
-    if IsAddonVisible("LotteryWeeklyInput") then
-        yield("/wait 1")
-        yield("/callback LotteryWeeklyInput true "..math.random(9999))
+    if IsAddonVisible("SelectString") then
+        yield("/callback SelectString true 0")
     elseif IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
+    elseif IsAddonVisible("LotteryWeeklyInput") then
+        yield("/wait 1")
+        yield("/callback LotteryWeeklyInput true "..math.random(9999))
     elseif TicketsPurchased and not GetCharacterCondition(32) then
         State = CharacterStates.endState
-    elseif not HasTarget() or GetTargetName() ~= "Jumbo Cactpot Broker" then
+    elseif not HasTarget() or GetTargetName() ~= "Jumbo Cactpot Broker" or GetDistanceToTarget() > 7 then
         PathfindAndMoveTo(120.26, 13.00, -10.9)
-    elseif GetDistanceToTarget() < 7 then
+    elseif GetDistanceToTarget() <= 7 then
         yield("/vnav stop")
         yield("/interact")
         TicketsPurchased = true
