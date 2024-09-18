@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.1  *
+*  2.2.2  *
 ***********
-    -> 2.2.1    Clear target after collections fate turnin and better pathfinding to npc
+    -> 2.2.2    Adjusted navmesh stop conditions for collections fate turn in
+                Clear target after collections fate turnin and better pathfinding to npc
                 Added collections fates
                 Fixed fate syncing in Mare Lamentorum
                 Fixed NPC stutter step, clear npc target once in combat. Changed TelepotTown close logic
@@ -82,7 +83,7 @@ RangedDist = 20                 --distance for BMRAI ranged
 --Utilities
 RepairAmount = 20          --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repaier. onky supports self repair)
 ExtractMateria = true      --should it Extract Materia
-Food = "Boiled Egg"                  --Leave "" Blank if you don't want to use any food
+Food = ""                  --Leave "" Blank if you don't want to use any food
                            --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
 
 --Retainer
@@ -1288,13 +1289,10 @@ function CollectionsFateTurnIn()
         return
     end
 
-    if PathfindInProgress() or PathIsRunning() then
-        return
-    end
-
     if GetDistanceToPoint(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()) > 5 then
-        MoveToNPC()
-        return
+        if not (PathfindInProgress() or PathIsRunning()) then
+            MoveToNPC()
+        end
     else
         yield("/vnav stop")
         yield("/interact")
