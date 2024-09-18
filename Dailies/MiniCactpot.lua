@@ -34,27 +34,23 @@ yield("/wait 0.1")
 yield("/callback SelectIconString true 0")
 
 -- fast forward through dialog
-repeat
-    yield("/wait 0.1")
-until IsAddonVisible("Talk")
-yield("/wait 0.1")
-repeat
-    yield("/click Talk Click")
-    yield("/wait 0.1")
-until not IsAddonVisible("Talk")
-
--- for each cactpot ticket
-while GetCharacterCondition(32) do
-    repeat
-        yield("/wait 0.1")
-    until IsAddonVisible("SelectYesno")
-    yield("/wait 0.1")
-    yield("/callback SelectYesno true 0")
+if not HasPlugin("TextAdvance") then
     repeat
         yield("/wait 0.1")
     until IsAddonVisible("Talk")
+    yield("/wait 0.1")
     repeat
         yield("/click Talk Click")
         yield("/wait 0.1")
     until not IsAddonVisible("Talk")
+end
+
+-- for each cactpot ticket
+while GetCharacterCondition(32) do
+    if IsAddonVisible("SelectYesno") then
+        yield("/callback SelectYesno true 0")
+    elseif not HasPlugin("TextAdvance") and IsAddonVisible("Talk") then
+        yield("/click Talk Click")
+    end
+    yield("/wait 0.1")
 end
