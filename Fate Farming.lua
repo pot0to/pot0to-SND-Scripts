@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.5  *
+*  2.2.6  *
 ***********
-    -> 2.2.5    Manually vnav stop and clear targets after fate
+    -> 2.2.6    Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
+                Manually vnav stop and clear targets after fate
                 Added check for IsFateActive in collections turn in, Added target enemy
                 Adjusted navmesh stop conditions for collections fate turn in
                 Clear target after collections fate turnin and better pathfinding to npc
@@ -526,9 +527,11 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                "Parts Unknown",
+                { fateName="Parts Unknown", npcName="???" }
             },
-            otherNpcFates= {},
+            otherNpcFates= {
+                { fateName="Artificial Malevolence: 15 Minutes to Comply", npcName="Keltlona" }
+            },
             bossFates= {
                 "Artificial Malevolence: 15 Minutes to Comply",
                 "Roses Are Red, Violence is Due",
@@ -838,6 +841,19 @@ function IsFateActive(fateId)
     return false
 end
 
+function GetCurrentFateId()
+    local activeFates = GetActiveFates()
+    for i = 0, activeFates.Count-1 do
+        local x = GetFateLocationX(activeFates[i])
+        local y = GetFateLocationY(activeFates[i])
+        local z = GetFateLocationZ(activeFates[i])
+        if GetDistanceToPoint(x, y, z) < 40 then
+            return activeFates[i]
+        end
+    end
+    return nil
+end
+
 function EorzeaTimeToUnixTime(eorzeaTime)
     return eorzeaTime/(144/7) -- 24h Eorzea Time equals 70min IRL
 end
@@ -1090,7 +1106,7 @@ end
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.movingToFate
-        LogInfo("State Change: MovingToFate "..CurrentFate.fateName)
+        LogInfo("State Change: MovingToFate "..NextFate.fateName)
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
@@ -1146,11 +1162,11 @@ end
 --Paths to the Fate NPC Starter
 function MoveToNPC()
     LogInfo("MoveToNPC function")
-    yield("/target "..CurrentFate.npcName)
-    if HasTarget() and GetTargetName()==CurrentFate.npcName then
+    yield("/target "..NextFate.npcName)
+    if HasTarget() and GetTargetName()==NextFate.npcName then
         if GetDistanceToTarget() > 5 then
-            if CurrentFate.npcX ~= nil then
-                PathfindAndMoveTo(CurrentFate.npcX, CurrentFate.npcY, CurrentFate.npcZ, GetCharacterCondition(CharacterCondition.flying))
+            if NextFate.npcX ~= nil then
+                PathfindAndMoveTo(NextFate.npcX, NextFate.npcY, NextFate.npcZ, GetCharacterCondition(CharacterCondition.flying))
             else
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
             end
@@ -1169,7 +1185,7 @@ function MoveToFate()
         return
     end
 
-    if CurrentFate == nil then
+    if NextFate == nil then
         yield("/vnav stop")
         State = CharacterState.ready
         LogInfo("State Change: Ready")
@@ -1196,14 +1212,14 @@ function MoveToFate()
         return
     end
 
-    if GetDistanceToPoint(CurrentFate.x, GetPlayerRawYPos(), CurrentFate.z) < 30 then
+    if GetDistanceToPoint(NextFate.x, GetPlayerRawYPos(), NextFate.z) < 30 then
         if GetCharacterCondition(CharacterCondition.mounted) then
             State = CharacterState.dismounting
             LogInfo("State Change: Dismounting")
             return
         end
         
-        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
+        if (IsOtherNpcFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) and NextFate.startTime == 0 then
             State = CharacterState.interactWithNpc
             LogInfo("State Change: InteractWithFateNpc")
             return
@@ -1217,18 +1233,18 @@ function MoveToFate()
         return
     end
 
-    LogInfo("[FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+    LogInfo("[FATE] Moving to fate #"..NextFate.fateId.." "..NextFate.fateName)
     if Echo == 2 then
-        yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+        yield("/echo [FATE] Moving to fate #"..NextFate.fateId.." "..NextFate.fateName)
     end
 
-    local nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 29)
+    local nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(NextFate.x, NextFate.y, NextFate.z, 29)
 
     if HasPlugin("ChatCoordinates") then
         SetMapFlag(SelectedZone.zoneId, nearestLandX, nearestLandY, nearestLandZ)
     end
 
-    TeleportToClosestAetheryteToFate(playerPosition, CurrentFate)
+    TeleportToClosestAetheryteToFate(playerPosition, NextFate)
     LogInfo("[FATE] Moving to "..nearestLandX..", "..nearestLandY..", "..nearestLandZ)
     yield("/vnavmesh stop")
     yield("/wait 1")
@@ -1239,34 +1255,34 @@ function InteractWithFateNpc()
     PandoraSetFeatureState("Auto-Sync FATEs", false)
     LogInfo("Disabling Pandora Auto-Sync FATEs")
 
-    if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) and CurrentFate.npcX ~= nil then
+    if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) and NextFate.npcX ~= nil then
         yield("/wait 1")
         yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
         yield("/wait 1")
         PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.inCombat
         LogInfo("State Change: InCombat")
-    elseif CurrentFate == nil or not IsFateActive(CurrentFate.fateId) then
+    elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
         PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.ready
         LogInfo("State Change: Ready")
     elseif PathfindInProgress() or PathIsRunning() then
-        if HasTarget() and GetTargetName() == CurrentFate.npcName and GetDistanceToTarget() < 5 then
+        if HasTarget() and GetTargetName() == NextFate.npcName and GetDistanceToTarget() < 5 then
             yield("/vnav stop")
         end
         return
     else
         -- if target is already selected earlier during pathing, avoids having to target and move again
-        if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
-            yield("/target "..CurrentFate.npcName)
+        if (not HasTarget() or GetTargetName()~=NextFate.npcName) then
+            yield("/target "..NextFate.npcName)
             return
         end
 
-        CurrentFate.npcX = GetTargetRawXPos()
-        CurrentFate.npcY = GetTargetRawYPos()
-        CurrentFate.npcZ = GetTargetRawZPos()
+        NextFate.npcX = GetTargetRawXPos()
+        NextFate.npcY = GetTargetRawYPos()
+        NextFate.npcZ = GetTargetRawZPos()
 
-        if GetDistanceToPoint(CurrentFate.npcX, CurrentFate.npcY, CurrentFate.npcZ) > 5 then
+        if GetDistanceToPoint(NextFate.npcX, NextFate.npcY, NextFate.npcZ) > 5 then
             MoveToNPC()
             return
         end
@@ -1280,13 +1296,13 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    if CurrentFate == nil or not IsFateActive(CurrentFate.fateId) then
+    if NextFate == nil or not IsFateActive(NextFate.fateId) then
         State = CharacterState.ready
         LogInfo("State Change: Ready")
     end
 
-    if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
-        yield("/target "..CurrentFate.npcName)
+    if (not HasTarget() or GetTargetName()~=NextFate.npcName) then
+        yield("/target "..NextFate.npcName)
         return
     end
 
@@ -1299,7 +1315,7 @@ function CollectionsFateTurnIn()
         yield("/interact")
         yield("/wait 3")
 
-        if GetFateProgress(CurrentFate.fateId) < 100 then
+        if GetFateProgress(NextFate.fateId) < 100 then
             State = CharacterState.inCombat
             LogInfo("State Change: InCombat")
         else
@@ -1307,7 +1323,7 @@ function CollectionsFateTurnIn()
             LogInfo("State Change: Ready")
         end
 
-        if CurrentFate ~=nil and CurrentFate.npcName ~=nil and GetTargetName() == CurrentFate.npcName then
+        if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
             LogInfo("Attempting to clear target.")
             ClearTarget()
             yield("/wait 1")
@@ -1432,7 +1448,9 @@ function HandleCombat()
         State = CharacterState.dead
         LogInfo("State Change: Dead")
         return
-    elseif not IsInFate() and not GetCharacterCondition(CharacterCondition.inCombat) then
+    elseif GetCharacterCondition(CharacterCondition.inCombat) and
+        (not IsInFate() or GetFateProgress(GetCurrentFateId()) == 100)
+    then
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
@@ -1443,17 +1461,18 @@ function HandleCombat()
         State = CharacterState.dismounting
         LogInfo("State Change: Dismounting")
         return
-    elseif CurrentFate ~= nil and IsCollectionsFate(CurrentFate.fateName) then
+    elseif NextFate ~= nil and IsCollectionsFate(NextFate.fateName) then
         -- random turn in 10% of the time
         local r = math.random()
         LogInfo("Random turn in number: "..r)
-        if r < 0.05 or GetFateProgress(CurrentFate.fateId) == 100 then
+        if r < 0.05 or GetFateProgress(NextFate.fateId) == 100 then
             State = CharacterState.collectionsFateTurnIn
             LogInfo("State Change: CollectionsFatesTurnIn")
         end
     end
 
-    if CurrentFate ~=nil and CurrentFate.npcName ~=nil and GetTargetName() == CurrentFate.npcName then
+    -- do not target fate npc during combat
+    if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
         LogInfo("Attempting to clear target.")
         ClearTarget()
         yield("/wait 1")
@@ -1516,10 +1535,7 @@ end
 function Ready()
     FoodCheck()
 
-    if GetCharacterCondition(CharacterCondition.inCombat) or
-        (not PathIsRunning() and IsInFate() and
-         not (IsCollectionsFate(CurrentFate.fateName) and GetFateProgress(CurrentFate.fateId) == 100))
-    then
+    if GetCharacterCondition(CharacterCondition.inCombat) then
         State = CharacterState.inCombat
         LogInfo("State Change: InCombat")
     elseif GetCharacterCondition(CharacterCondition.dead) then
@@ -1531,7 +1547,7 @@ function Ready()
     elseif ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("State Change: ExtractMateria")
-    elseif CurrentFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
+    elseif NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
         yield("/wait 10")
     elseif ShouldExchange and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
@@ -1539,14 +1555,14 @@ function Ready()
     elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.processRetainers
         LogInfo("State Change: ProcessingRetainers")
-    elseif CurrentFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
+    elseif NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
         State = CharacterState.changingInstances
         LogInfo("State Change: ChangingInstances")
-    elseif CurrentFate == nil then
+    elseif NextFate == nil then
         yield("/wait 10")
     else
         State = CharacterState.movingToFate
-        LogInfo("State Change: MovingtoFate "..CurrentFate.fateName)
+        LogInfo("State Change: MovingtoFate "..NextFate.fateName)
     end
 
     if not GemAnnouncementLock and Echo >= 1 then
@@ -1860,7 +1876,7 @@ LastTeleportTimeStamp = 0
 State = CharacterState.ready
 
 LogInfo("[FATE] Starting fate farming script.")
-CurrentFate = nil
+NextFate = nil
 while true do
     if NavIsReady() then
         if GetCharacterCondition(CharacterCondition.dead) then
@@ -1873,9 +1889,8 @@ while true do
             LogInfo("State Change: InCombat")
         end
 
-        if State == CharacterState.ready or State == CharacterState.changingInstances or State == CharacterState.movingToFate
-        then
-            CurrentFate = SelectNextFate()
+        if  State == CharacterState.ready or State == CharacterState.movingToFate then
+            NextFate = SelectNextFate()
         end
         
         BicolorGemCount = GetItemCount(26807)
