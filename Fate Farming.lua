@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.3  *
+*  2.2.4  *
 ***********
-    -> 2.2.3    Added target enemy
+    -> 2.2.4    Added check for IsFateActive in collections turn in
+                Added target enemy
                 Adjusted navmesh stop conditions for collections fate turn in
                 Clear target after collections fate turnin and better pathfinding to npc
                 Added collections fates
@@ -1280,7 +1281,7 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    if CurrentFate == nil then
+    if CurrentFate == nil or not IsFateActive(CurrentFate.fateId) then
         State = CharacterState.ready
         LogInfo("State Change: Ready")
     end
