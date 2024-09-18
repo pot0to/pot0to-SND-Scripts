@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.6  *
+*  2.2.7  *
 ***********
-    -> 2.2.6    Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
+    -> 2.2.7    Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
+                Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
                 Manually vnav stop and clear targets after fate
                 Added check for IsFateActive in collections turn in, Added target enemy
                 Adjusted navmesh stop conditions for collections fate turn in
@@ -508,7 +509,7 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                "Full Petal ALchemist: Perilous Pickings",
+                { fateName="Full Petal ALchemist: Perilous Pickings", npcName="???" }
             },
             otherNpcFates= {},
             bossFates= {
@@ -947,7 +948,13 @@ function SelectNextFate()
         
         if not (tempFate.x == 0 and tempFate.z == 0) then -- sometimes game doesn't send the correct coords
             if not IsBlacklistedFate(tempFate.fateName) then -- check fate is not blacklisted for any reason
-                if IsOtherNpcFate(tempFate.fateName) or IsCollectionsFate(tempFate.fateName) then
+                if IsBossFate(tempFate.fateName) then
+                    if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
+                        nextFate = SelectNextFateHelper(tempFate, nextFate)
+                    else
+                        LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
+                    end
+                elseif IsOtherNpcFate(tempFate.fateName) or IsCollectionsFate(tempFate.fateName) then
                     if tempFate.startTime > 0 then -- if someone already opened this fate, then treat is as all the other fates
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else -- no one has opened this fate yet
@@ -958,12 +965,6 @@ function SelectNextFate()
                         elseif nextFate.startTime == 0 then -- both fates are unopened npc fates
                             nextFate = SelectNextFateHelper(tempFate, nextFate)
                         end
-                    end
-                elseif IsBossFate(tempFate.fateName) then
-                    if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
-                        nextFate = SelectNextFateHelper(tempFate, nextFate)
-                    else
-                        LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
                     end
                 elseif tempFate.duration ~= 0 then -- else is normal fate. avoid unlisted talk to npc fates
                     nextFate = SelectNextFateHelper(tempFate, nextFate)
