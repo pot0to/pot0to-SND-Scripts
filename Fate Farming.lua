@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.7  *
+*  2.2.8  *
 ***********
-    -> 2.2.7    Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
+    -> 2.2.8    Changed targting system to use Pandora FATE Targeting mode again
+                Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
                 Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
                 Manually vnav stop and clear targets after fate
                 Added check for IsFateActive in collections turn in, Added target enemy
@@ -171,7 +172,7 @@ end
 
 --Fate settings
 PandoraSetFeatureState("Auto-Sync FATEs", true)
-PandoraSetFeatureState("FATE Targeting Mode", false)
+PandoraSetFeatureState("FATE Targeting Mode", true)
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/at y")
 
@@ -1297,9 +1298,12 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    if NextFate == nil or not IsFateActive(NextFate.fateId) then
+    PandoraSetFeatureState("FATE Targeting Mode", false)
+
+    if not IsInFate() then
         State = CharacterState.ready
         LogInfo("State Change: Ready")
+        PandoraSetFeatureState("FATE Targeting Mode", true)
     end
 
     if (not HasTarget() or GetTargetName()~=NextFate.npcName) then
@@ -1445,12 +1449,11 @@ end
 
 function HandleCombat()
     if GetCharacterCondition(CharacterCondition.dead) then
-        TurnOffCombatMods()
         State = CharacterState.dead
         LogInfo("State Change: Dead")
         return
-    elseif GetCharacterCondition(CharacterCondition.inCombat) and
-        (not IsInFate() or GetFateProgress(GetCurrentFateId()) == 100)
+    elseif not GetCharacterCondition(CharacterCondition.inCombat) or
+        (IsInFate() and GetFateProgress(GetCurrentFateId()) == 100) -- leave turn in fates after they reach 100
     then
         yield("/vnav stop")
         ClearTarget()
@@ -1497,10 +1500,6 @@ function HandleCombat()
     -- targets whatever is trying to kill you
     if not HasTarget() then
         yield("/battletarget")
-    end
-
-    if not HasTarget() then
-        yield("/targetenemy")
     end
 
     -- pathfind closer if enemies are too far
@@ -1576,9 +1575,15 @@ function Ready()
     end
 end
 
+DeathAnnouncementLock = false
 function HandleDeath()
+    if CombatModsOn then
+        TurnOffCombatMods()
+    end
+
     if GetCharacterCondition(CharacterCondition.dead) then --Condition Dead
-        if Echo then
+        if Echo and not DeathAnnouncementLock then
+            DeathAnnouncementLock = true
             yield("/echo [FATE] You have died. Returning to home aetheryte.")
         end
 
@@ -1592,6 +1597,7 @@ function HandleDeath()
         if IsInZone(SelectedZone.zoneId) then
             State = CharacterState.ready
             LogInfo("State Change: Ready")
+            DeathAnnouncementLock = false
         else
             TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         end
