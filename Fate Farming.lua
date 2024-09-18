@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.9  *
+*  2.3.0  *
 ***********
-    -> 2.2.9    Fixed state transition out of combat for collections fates
+    -> 2.3.0    Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
+                Fixed state transition out of combat for collections fates
                 Changed targting system to use Pandora FATE Targeting mode again
                 Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
                 Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
@@ -20,12 +21,6 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
                 Clear target after collections fate turnin and better pathfinding to npc
                 Added collections fates, Fixed fate syncing in Mare Lamentorum
                 Fixed NPC stutter step, clear npc target once in combat. Changed TelepotTown close logic
-                Updated MoveToFate to require character be in flying state
-                Added mounted check for MoveToFate unstuck
-                Removed CurrentFate fate update while interacting with fate npc
-                Add back manual /lsync for npc fates, Add check for if Retainers is false
-                Closes mini aetheryte window after moving to Nexus Exchange
-                Added check for zones with only one instance, rearranged order of bicolor exchange -> retainers
     -> 2.0.0    State system
 
 *********************
@@ -1182,9 +1177,9 @@ end
 
 --Paths to the Fate
 function MoveToFate()
-    if GetCharacterCondition(CharacterCondition.inCombat) or (IsInFate() and not PathIsRunning()) then
-        State = CharacterState.inCombat
-        LogInfo("State Change: InCombat")
+    if not PathIsRunning() and IsInFate() and GetFateProgress(NextFate.fateId) < 100 then
+        State = CharacterState.doFate
+        LogInfo("State Change: DoFate")
         return
     end
 
@@ -1263,8 +1258,8 @@ function InteractWithFateNpc()
         yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
         yield("/wait 1")
         PandoraSetFeatureState("Auto-Sync FATEs", true)
-        State = CharacterState.inCombat
-        LogInfo("State Change: InCombat")
+        State = CharacterState.doFate
+        LogInfo("State Change: DoFate")
     elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
         PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.ready
@@ -1322,8 +1317,8 @@ function CollectionsFateTurnIn()
         yield("/wait 3")
 
         if GetFateProgress(NextFate.fateId) < 100 then
-            State = CharacterState.inCombat
-            LogInfo("State Change: InCombat")
+            State = CharacterState.doFate
+            LogInfo("State Change: DoFate")
         else
             State = CharacterState.ready
             LogInfo("State Change: Ready")
@@ -1448,14 +1443,59 @@ function TurnOffCombatMods()
     end
 end
 
-function HandleCombat()
+function HandleUnexpectedCombat()
     if GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
         LogInfo("State Change: Dead")
         return
-    elseif (not IsInFate and GetCharacterCondition(CharacterCondition.inCombat)) or
-        (IsInFate() and GetFateProgress(GetCurrentFateId()) == 100) -- leave turn in fates after they reach 100
-    then
+    elseif not GetCharacterCondition(CharacterCondition.inCombat) then
+        yield("/vnav stop")
+        ClearTarget()
+        TurnOffCombatMods()
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
+        return
+    end
+
+    if not CombatModsOn then
+        TurnOnCombatMods()
+    end
+
+    -- targets whatever is trying to kill you
+    if not HasTarget() then
+        yield("/battletarget")
+    end
+
+    --Paths to enemys when Bossmod is disabled
+    if not useBM then
+        EnemyPathing()
+    end
+
+    -- pathfind closer if enemies are too far
+    if HasTarget() then
+        if GetDistanceToTarget() > MaxDistance then
+            if not (PathfindInProgress() or PathIsRunning()) then
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+            end
+        else
+            if PathfindInProgress() or PathIsRunning() then
+                yield("/vnav stop")
+            else
+                --inch closer 3 seconds
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                yield("/wait 3")
+            end
+        end
+    end
+    yield("/wait 1")
+end
+
+function DoFate()
+    if GetCharacterCondition(CharacterCondition.dead) then
+        State = CharacterState.dead
+        LogInfo("State Change: Dead")
+        return
+    elseif not IsInFate() or GetFateProgress(GetCurrentFateId()) == 100 then -- leave turn in fates after they reach 100
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
@@ -1466,7 +1506,7 @@ function HandleCombat()
         State = CharacterState.dismounting
         LogInfo("State Change: Dismounting")
         return
-    elseif NextFate ~= nil and IsCollectionsFate(NextFate.fateName) then
+    elseif IsCollectionsFate(NextFate.fateName) then
         -- random turn in 10% of the time
         local r = math.random()
         LogInfo("Random turn in number: "..r)
@@ -1489,11 +1529,6 @@ function HandleCombat()
 
     GemAnnouncementLock = false
 
-    --Paths to enemys when Bossmod is disabled
-    if not useBM then
-        EnemyPathing()
-    end
-
     -- switches to targeting forlorns for bonus (if present)
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
@@ -1503,24 +1538,108 @@ function HandleCombat()
         yield("/battletarget")
     end
 
+    --Paths to enemys when Bossmod is disabled
+    if not useBM then
+        EnemyPathing()
+    end
+
     -- pathfind closer if enemies are too far
-    if IsInFate() and not GetCharacterCondition(CharacterCondition.inCombat) and HasTarget() then
-        if GetDistanceToTarget() > MaxDistance then
-            if not (PathfindInProgress() or PathIsRunning()) then
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+    if not GetCharacterCondition(CharacterCondition.inCombat) then
+        yield("/wait 1") -- give pandora a chance to find the enemy
+        if HasTarget() then
+            if GetDistanceToTarget() > MaxDistance then
+                if not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                end
+            else
+                if PathfindInProgress() or PathIsRunning() then
+                    yield("/vnav stop")
+                else
+                    --inch closer 3 seconds
+                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                    yield("/wait 3")
+                end
             end
         else
-            if PathfindInProgress() or PathIsRunning() then
-                yield("/vnav stop")
-            else
-                --inch closer 3 seconds
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-                yield("/wait 3")
-            end
+            yield("/targetenemy")
         end
     end
     yield("/wait 1")
 end
+
+-- function HandleCombat()
+--     if GetCharacterCondition(CharacterCondition.dead) then
+--         State = CharacterState.dead
+--         LogInfo("State Change: Dead")
+--         return
+--     elseif (not IsInFate and GetCharacterCondition(CharacterCondition.inCombat)) or
+--         (IsInFate() and GetFateProgress(GetCurrentFateId()) == 100) -- leave turn in fates after they reach 100
+--     then
+--         yield("/vnav stop")
+--         ClearTarget()
+--         TurnOffCombatMods()
+--         State = CharacterState.ready
+--         LogInfo("State Change: Ready")
+--         return
+--     elseif GetCharacterCondition(CharacterCondition.mounted) then
+--         State = CharacterState.dismounting
+--         LogInfo("State Change: Dismounting")
+--         return
+--     elseif NextFate ~= nil and IsCollectionsFate(NextFate.fateName) then
+--         -- random turn in 10% of the time
+--         local r = math.random()
+--         LogInfo("Random turn in number: "..r)
+--         if r < 0.05 or GetFateProgress(NextFate.fateId) == 100 then
+--             State = CharacterState.collectionsFateTurnIn
+--             LogInfo("State Change: CollectionsFatesTurnIn")
+--         end
+--     end
+
+--     -- do not target fate npc during combat
+--     if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
+--         LogInfo("Attempting to clear target.")
+--         ClearTarget()
+--         yield("/wait 1")
+--     end
+
+--     if not CombatModsOn then
+--         TurnOnCombatMods()
+--     end
+
+--     GemAnnouncementLock = false
+
+--     --Paths to enemys when Bossmod is disabled
+--     if not useBM then
+--         EnemyPathing()
+--     end
+
+--     -- switches to targeting forlorns for bonus (if present)
+--     yield("/target Forlorn Maiden")
+--     yield("/target The Forlorn")
+
+--     -- targets whatever is trying to kill you
+--     if not HasTarget() then
+--         yield("/battletarget")
+--     end
+
+--     -- pathfind closer if enemies are too far
+--     if IsInFate() and not GetCharacterCondition(CharacterCondition.inCombat) and HasTarget() then
+--         if GetDistanceToTarget() > MaxDistance then
+--             if not (PathfindInProgress() or PathIsRunning()) then
+--                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+--             end
+--         else
+--             if PathfindInProgress() or PathIsRunning() then
+--                 yield("/vnav stop")
+--             else
+--                 --inch closer 3 seconds
+--                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+--                 yield("/wait 3")
+--             end
+--         end
+--     end
+--     yield("/wait 1")
+-- end
 
 --#endregion
 
@@ -1536,13 +1655,13 @@ end
 function Ready()
     FoodCheck()
 
-    if GetCharacterCondition(CharacterCondition.inCombat) then
-        State = CharacterState.inCombat
-        LogInfo("State Change: InCombat")
+    if not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) then
+        State = CharacterState.unexpectedCombat
+        LogInfo("State Change: UnexpectedCombat")
     elseif GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
         LogInfo("State Change: Dead")
-    elseif NeedsRepair(RepairAmount) then
+    elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("State Change: Repair")
     elseif ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
@@ -1844,7 +1963,9 @@ CharacterState = {
     mounting = Mount,
     dismounting = Dismount,
     changingInstances = ChangeInstance,
-    inCombat = HandleCombat,
+    -- inCombat = HandleCombat,
+    unexpectedCombat = HandleUnexpectedCombat,
+    doFate = DoFate,
     extractMateria = ExtractMateria,
     repair = Repair
 }
@@ -1890,11 +2011,11 @@ while true do
         if GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("State Change: Dead")
-        elseif (State ~= CharacterState.inCombat and State ~= CharacterState.collectionsFateTurnIn) and
+        elseif not IsInFate() and
             GetCharacterCondition(CharacterCondition.inCombat) and not GetCharacterCondition(CharacterCondition.mounted)
         then
-            State = CharacterState.inCombat
-            LogInfo("State Change: InCombat")
+            State = CharacterState.unexpectedCombat
+            LogInfo("State Change: UnexpectedCombat")
         end
 
         if  State == CharacterState.ready or State == CharacterState.movingToFate then
