@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.2  *
+*  2.2.3  *
 ***********
-    -> 2.2.2    Adjusted navmesh stop conditions for collections fate turn in
+    -> 2.2.3    Added target enemy
+                Adjusted navmesh stop conditions for collections fate turn in
                 Clear target after collections fate turnin and better pathfinding to npc
                 Added collections fates
                 Fixed fate syncing in Mare Lamentorum
@@ -1297,7 +1298,6 @@ function CollectionsFateTurnIn()
         yield("/vnav stop")
         yield("/interact")
         yield("/wait 3")
-        EstimatedKills = 0
 
         if GetFateProgress(CurrentFate.fateId) < 100 then
             State = CharacterState.inCombat
@@ -1426,7 +1426,6 @@ function TurnOffCombatMods()
     end
 end
 
-EstimatedKills = 0
 function HandleCombat()
     if GetCharacterCondition(CharacterCondition.dead) then
         TurnOffCombatMods()
@@ -1478,8 +1477,8 @@ function HandleCombat()
         yield("/battletarget")
     end
 
-    if GetTargetHP() < 1 then
-        EstimatedKills = EstimatedKills + 1
+    if not HasTarget() then
+        yield("/targetenemy")
     end
 
     -- pathfind closer if enemies are too far
@@ -1513,8 +1512,6 @@ function FoodCheck()
 end
 
 function Ready()
-    EstimatedKills = 0
-
     FoodCheck()
 
     if GetCharacterCondition(CharacterCondition.inCombat) or
