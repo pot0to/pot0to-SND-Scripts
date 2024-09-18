@@ -8,14 +8,13 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.4  *
+*  2.2.5  *
 ***********
-    -> 2.2.4    Added check for IsFateActive in collections turn in
-                Added target enemy
+    -> 2.2.5    Manually vnav stop and clear targets after fate
+                Added check for IsFateActive in collections turn in, Added target enemy
                 Adjusted navmesh stop conditions for collections fate turn in
                 Clear target after collections fate turnin and better pathfinding to npc
-                Added collections fates
-                Fixed fate syncing in Mare Lamentorum
+                Added collections fates, Fixed fate syncing in Mare Lamentorum
                 Fixed NPC stutter step, clear npc target once in combat. Changed TelepotTown close logic
                 Updated MoveToFate to require character be in flying state
                 Added mounted check for MoveToFate unstuck
@@ -458,7 +457,7 @@ FatesData = {
         fatesList= {
             collectionsFates= {
                 { fateName="Low Coral Fiber", npcName="Teushs Ooan" },
-                { fateName="Pearls Apart", npcName="Ondo Peddler" }
+                { fateName="Pearls Apart", npcName="Ondo Spearfisher" }
             },
             otherNpcFates= {
                 { fateName="Where has the Dagon", npcName="Teushs Ooan" },
@@ -486,8 +485,8 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                "Sheaves on the Wind",
-                "Moisture Farming",
+                { fateName="Sheaves on the Wind", npcName="Vexed Researcher" },
+                { fateName="Moisture Farming", npcName="Well-moisturized Researcher" }
             },
             otherNpcFates= {},
             bossFates= {
@@ -1434,6 +1433,8 @@ function HandleCombat()
         LogInfo("State Change: Dead")
         return
     elseif not IsInFate() and not GetCharacterCondition(CharacterCondition.inCombat) then
+        yield("/vnav stop")
+        ClearTarget()
         TurnOffCombatMods()
         State = CharacterState.ready
         LogInfo("State Change: Ready")
