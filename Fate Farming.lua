@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.2.8  *
+*  2.2.9  *
 ***********
-    -> 2.2.8    Changed targting system to use Pandora FATE Targeting mode again
+    -> 2.2.9    Fixed state transition out of combat for collections fates
+                Changed targting system to use Pandora FATE Targeting mode again
                 Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
                 Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
                 Manually vnav stop and clear targets after fate
@@ -1452,7 +1453,7 @@ function HandleCombat()
         State = CharacterState.dead
         LogInfo("State Change: Dead")
         return
-    elseif not GetCharacterCondition(CharacterCondition.inCombat) or
+    elseif (not IsInFate and GetCharacterCondition(CharacterCondition.inCombat)) or
         (IsInFate() and GetFateProgress(GetCurrentFateId()) == 100) -- leave turn in fates after they reach 100
     then
         yield("/vnav stop")
