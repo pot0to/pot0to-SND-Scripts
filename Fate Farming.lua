@@ -8,9 +8,9 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.1  *
+*  2.5.2  *
 ***********
-    -> 2.5.1    Fixed limsa mender telepot  town
+    -> 2.5.2    Fixed limsa mender telepot town, removed debug echoes
                 Reworked change instance spaghetti, Added limsa mender
                 Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
                 Fixed state transition out of combat for collections fates
@@ -205,7 +205,7 @@ if NavIsReady() then
 end
 
 --#endregion Plugin Checks and Setting Init
-  
+
 --#region Data
 
 CharacterCondition = {
@@ -1562,7 +1562,7 @@ end
 
 --#endregion
 
---#region Other State Functions
+--#region State Transition Functions
 
 function FoodCheck()
     --food usage
@@ -1691,8 +1691,6 @@ function ExchangeNewVouchers()
     end
 end
 
-
-
 function ExchangeVouchers()
     if BicolorGemCount >= 1400 then
         if IsAddonVisible("SelectYesno") then
@@ -1775,7 +1773,6 @@ function ProcessRetainers()
     end
 end
 
-
 function TurnIn()
     yield("/autoduty turnin")
     yield("/wait 1")
@@ -1845,8 +1842,6 @@ function Repair()
             local mender = { npcName="Alistair", x=-246.87, y=16.19, z=49.83 }
             local aethernetshard = { x=-213.95, y=15.99, z=49.35 }
             if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(aethernetshard.x, aethernetshard.y, aethernetshard.z, mender.x, mender.y, mender.z) + 10) then
-                yield("/echo "..GetDistanceToPoint(mender.x, mender.y, mender.z))
-                yield("/echo "..DistanceBetween(aethernetshard.x, aethernetshard.y, aethernetshard.z, mender.x, mender.y, mender.z))
                 yield("/li Hawkers' Alley")
             elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then
                 if IsAddonVisible("TelepotTown") then
@@ -1926,7 +1921,7 @@ CharacterState = {
     repair = Repair
 }
 
---#endregion Other State Functions
+--#endregion State Transition Functions
 
 --#region Main
 
