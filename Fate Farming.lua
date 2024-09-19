@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.4.0  *
+*  2.5.0  *
 ***********
-    -> 2.4.0    Added limsa mender
+    -> 2.5.0    Reworked change instance spaghetti
+                Added limsa mender
                 Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
                 Fixed state transition out of combat for collections fates
                 Changed targting system to use Pandora FATE Targeting mode again
@@ -36,6 +37,7 @@ Plugins that are needed for it to work:
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
         -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
+    -> TextAdvance: (for interacting with Fate NPCs)
 
 *********************
 *  Optional Plugins *
@@ -732,7 +734,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {
                 { fateName="License to Dill", npcName="Tonawawtan Provider" },
-                { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
             otherNpcFates= {
                 { fateName="It's Super Defective", npcName="Novice Hunter" },
@@ -747,6 +748,7 @@ FatesData = {
                 "(Got My Eye) Set on You"
             },
             blacklistedFates= {
+                "When It's So Salvage" -- { fateName="When It's So Salvage", npcName="Refined Reforger" }
             }
         }
     },
@@ -839,19 +841,6 @@ function IsFateActive(fateId)
         end
     end
     return false
-end
-
-function GetCurrentFateId()
-    local activeFates = GetActiveFates()
-    for i = 0, activeFates.Count-1 do
-        local x = GetFateLocationX(activeFates[i])
-        local y = GetFateLocationY(activeFates[i])
-        local z = GetFateLocationZ(activeFates[i])
-        if GetDistanceToPoint(x, y, z) < 40 then
-            return activeFates[i]
-        end
-    end
-    return nil
 end
 
 function EorzeaTimeToUnixTime(eorzeaTime)
@@ -1050,57 +1039,50 @@ end
 
 function ChangeInstance()
     --Change Instance
-    
-    if EnableChangeInstance then
-        yield("/wait 1")
 
-        yield("/target aetheryte")
-        yield("/wait 1")
-
-        while not HasTarget() or GetTargetName() ~= "aetheryte" do
-            LogInfo("[FATE] Attempting to target aetheryte.")
-            local closestAetheryte = nil
-            local closestAetheryteDistance = math.maxinteger
-            for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
-                -- GetDistanceToPoint is implemented with raw distance instead of distance squared
-                local distanceToAetheryte = GetDistanceToPoint(aetheryte.x, aetheryte.y, aetheryte.z)
-                if distanceToAetheryte < closestAetheryteDistance then
-                    closestAetheryte = aetheryte
-                    closestAetheryteDistance = distanceToAetheryte
-                end
-            end
-            TeleportTo(closestAetheryte.aetheryteName)
-
-            yield("/target Aetheryte")
-            yield("/wait 1")
-        end
-
-        if GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.dismounting
-            LogInfo("State Change: Dismounting")
-        end
-
-        yield("/lockon")
-        yield("/automove")
-        while GetDistanceToTarget() > 10 do
-            LogInfo("[FATE] Approaching aetheryte...")
-            yield("/wait 0.5")
-        end
-        yield("/automove off")
-
-        local nextInstance = (GetZoneInstance() % 3) + 1
-
-        yield("/li "..nextInstance) -- start instance transfer
-        yield("/wait 1") -- wait for instance transfer to register
-        while GetCharacterCondition(CharacterCondition.transition) do -- wait for instance transfer to complete
-            LogInfo("[FATE] Waiting for instance transfer to complete...")
-            yield("/wait 1")
-        end
-        yield("/lockon off")
-        State = CharacterState.ready
-        LogInfo("State Change: Ready")
+    if LifestreamIsBusy() or GetCharacterCondition(CharacterCondition.transition) or SuccessiveInstanceChanges >= 3 then
+        yield("/wait 10")
+        SuccessiveInstanceChanges = 0
+        return
     end
-    yield("/wait 3")
+
+    yield("/target aetheryte") -- search for nearby aetheryte
+    if not HasTarget() or GetTargetName() ~= "aetheryte" then -- if no aetheryte within targeting range, teleport to it
+        local closestAetheryte = nil
+        local closestAetheryteDistance = math.maxinteger
+        for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
+            -- GetDistanceToPoint is implemented with raw distance instead of distance squared
+            local distanceToAetheryte = GetDistanceToPoint(aetheryte.x, aetheryte.y, aetheryte.z)
+            if distanceToAetheryte < closestAetheryteDistance then
+                closestAetheryte = aetheryte
+                closestAetheryteDistance = distanceToAetheryte
+            end
+        end
+        TeleportTo(closestAetheryte.aetheryteName)
+        return
+    end
+
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        State = CharacterState.dismounting
+        LogInfo("State Change: Dismounting")
+        return
+    end
+
+    if GetDistanceToTarget() > 10 then
+        PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+        return
+    else
+        if PathfindInProgress() or PathIsRunning() then
+            yield("/vnav stop")
+            return
+        end
+    end
+
+    local nextInstance = (GetZoneInstance() % 3) + 1
+    yield("/li "..nextInstance) -- start instance transfer
+    yield("/wait 1") -- wait for instance transfer to register
+    State = CharacterState.ready
+    LogInfo("State Change: Ready")
 end
 
 function Mount()
@@ -1179,7 +1161,9 @@ end
 
 --Paths to the Fate
 function MoveToFate()
-    if not PathIsRunning() and IsInFate() and GetFateProgress(NextFate.fateId) < 100 then
+    SuccessiveInstanceChanges = 0
+
+    if not PathIsRunning() and IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
         State = CharacterState.doFate
         LogInfo("State Change: DoFate")
         return
@@ -1321,9 +1305,11 @@ function CollectionsFateTurnIn()
         if GetFateProgress(NextFate.fateId) < 100 then
             State = CharacterState.doFate
             LogInfo("State Change: DoFate")
+            PandoraSetFeatureState("FATE Targeting Mode", true)
         else
             State = CharacterState.ready
             LogInfo("State Change: Ready")
+            PandoraSetFeatureState("FATE Targeting Mode", true)
         end
 
         if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
@@ -1497,7 +1483,7 @@ function DoFate()
         State = CharacterState.dead
         LogInfo("State Change: Dead")
         return
-    elseif not IsInFate() or GetFateProgress(GetCurrentFateId()) == 100 then -- leave turn in fates after they reach 100
+    elseif not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100) then -- leave turn in fates after they reach 100
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
@@ -1513,6 +1499,7 @@ function DoFate()
         local r = math.random()
         LogInfo("Random turn in number: "..r)
         if r < 0.05 or GetFateProgress(NextFate.fateId) == 100 then
+            yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("State Change: CollectionsFatesTurnIn")
         end
@@ -1565,83 +1552,13 @@ function DoFate()
         else
             yield("/targetenemy")
         end
+    else
+        if GetDistanceToTarget() <= MaxDistance and PathfindInProgress() or PathIsRunning() then
+            yield("/vnav stop")
+        end
     end
     yield("/wait 1")
 end
-
--- function HandleCombat()
---     if GetCharacterCondition(CharacterCondition.dead) then
---         State = CharacterState.dead
---         LogInfo("State Change: Dead")
---         return
---     elseif (not IsInFate and GetCharacterCondition(CharacterCondition.inCombat)) or
---         (IsInFate() and GetFateProgress(GetCurrentFateId()) == 100) -- leave turn in fates after they reach 100
---     then
---         yield("/vnav stop")
---         ClearTarget()
---         TurnOffCombatMods()
---         State = CharacterState.ready
---         LogInfo("State Change: Ready")
---         return
---     elseif GetCharacterCondition(CharacterCondition.mounted) then
---         State = CharacterState.dismounting
---         LogInfo("State Change: Dismounting")
---         return
---     elseif NextFate ~= nil and IsCollectionsFate(NextFate.fateName) then
---         -- random turn in 10% of the time
---         local r = math.random()
---         LogInfo("Random turn in number: "..r)
---         if r < 0.05 or GetFateProgress(NextFate.fateId) == 100 then
---             State = CharacterState.collectionsFateTurnIn
---             LogInfo("State Change: CollectionsFatesTurnIn")
---         end
---     end
-
---     -- do not target fate npc during combat
---     if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
---         LogInfo("Attempting to clear target.")
---         ClearTarget()
---         yield("/wait 1")
---     end
-
---     if not CombatModsOn then
---         TurnOnCombatMods()
---     end
-
---     GemAnnouncementLock = false
-
---     --Paths to enemys when Bossmod is disabled
---     if not useBM then
---         EnemyPathing()
---     end
-
---     -- switches to targeting forlorns for bonus (if present)
---     yield("/target Forlorn Maiden")
---     yield("/target The Forlorn")
-
---     -- targets whatever is trying to kill you
---     if not HasTarget() then
---         yield("/battletarget")
---     end
-
---     -- pathfind closer if enemies are too far
---     if IsInFate() and not GetCharacterCondition(CharacterCondition.inCombat) and HasTarget() then
---         if GetDistanceToTarget() > MaxDistance then
---             if not (PathfindInProgress() or PathIsRunning()) then
---                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
---             end
---         else
---             if PathfindInProgress() or PathIsRunning() then
---                 yield("/vnav stop")
---             else
---                 --inch closer 3 seconds
---                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
---                 yield("/wait 3")
---             end
---         end
---     end
---     yield("/wait 1")
--- end
 
 --#endregion
 
@@ -1657,7 +1574,7 @@ end
 function Ready()
     FoodCheck()
 
-    if not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) then
+    if not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat then
         State = CharacterState.unexpectedCombat
         LogInfo("State Change: UnexpectedCombat")
     elseif GetCharacterCondition(CharacterCondition.dead) then
@@ -2017,6 +1934,8 @@ CharacterState = {
 
 GemAnnouncementLock = false
 AvailableFateCount = 0
+SuccessiveInstanceChanges = 0
+LastInstanceChangeTimestamp = 0
 SetMaxDistance()
 
 local selectedZoneId = GetZoneID()
@@ -2065,7 +1984,13 @@ while true do
         
         BicolorGemCount = GetItemCount(26807)
 
-        State()
+        if not (GetCharacterCondition(CharacterCondition.transition) or
+            GetCharacterCondition(CharacterCondition.jumping) or
+            GetCharacterCondition(CharacterCondition.mounting))
+        then
+            State()
+        end
+        
     end
     yield("/wait 0.1")
 end
