@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.2  *
+*  2.5.3  *
 ***********
-    -> 2.5.2    Fixed limsa mender telepot town, removed debug echoes
+    -> 2.5.3    Updated Garlemald and Raktikka fates, credit: Giggles
+                Fixed limsa mender telepot town, removed debug echoes
                 Reworked change instance spaghetti, Added limsa mender
                 Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
                 Fixed state transition out of combat for collections fates
@@ -430,12 +431,13 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                { fateName="Picking up the Pieces", npcName="Night's Blessed" },
+                { fateName="Picking up the Pieces", npcName="Night's Blessed Missionary" },
                 { fateName="Pluck of the Draw", npcName="Myalna Bowsing" },
                 { fateName="Monkeying Around", npcName="Fanow Warder" }
             },
             otherNpcFates= {
                 { fateName="Queen of the Harpies", npcName="Fanow Huntress" },
+                { fateName="Shot Through the Hart", npcName="Qilmet Redspear" },
             },
             bossFates= {
                 "Attack of the Killer Tomatl",
@@ -529,10 +531,13 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                { fateName="Parts Unknown", npcName="???" }
+                { fateName="Parts Unknown", npcName="Displaced Engineer" },
+                { fateName="Amazing Crates", npcName="Hardy Refugee" },
             },
             otherNpcFates= {
-                { fateName="Artificial Malevolence: 15 Minutes to Comply", npcName="Keltlona" }
+                { fateName="Artificial Malevolence: 15 Minutes to Comply", npcName="Keltlona" },
+                { fateName="Artificial Malevolence: The Drone Army", npcName="Ebrelnaux" },
+                { fateName="Artificial Malevolence: Unmanned Aerial Villains", npcName="Keltlona" },
             },
             bossFates= {
                 "Artificial Malevolence: 15 Minutes to Comply",
@@ -1069,8 +1074,10 @@ function ChangeInstance()
     end
 
     if GetDistanceToTarget() > 10 then
-        PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-        return
+        if not (PathfindInProgress() or PathIsRunning()) then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+            return
+        end
     else
         if PathfindInProgress() or PathIsRunning() then
             yield("/vnav stop")
