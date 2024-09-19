@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.4  *
+*  2.5.5  *
 ***********
-    -> 2.5.4    Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
+    -> 2.5.5    Check IsPlayerAvailable
+                Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
                 Updated Garlemald and Raktikka fates, credit: Gigglels
                 Fixed limsa mender telepot town, removed debug echoes
                 Reworked change instance spaghetti, Added limsa mender
@@ -1968,7 +1969,7 @@ State = CharacterState.ready
 LogInfo("[FATE] Starting fate farming script.")
 NextFate = nil
 while true do
-    if NavIsReady() then
+    if NavIsReady() and IsPlayerAvailable() then
         if GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
