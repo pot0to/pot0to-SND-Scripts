@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.3  *
+*  2.5.4  *
 ***********
-    -> 2.5.3    Updated Garlemald and Raktikka fates, credit: Giggles
+    -> 2.5.4    Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
+                Updated Garlemald and Raktikka fates, credit: Gigglels
                 Fixed limsa mender telepot town, removed debug echoes
                 Reworked change instance spaghetti, Added limsa mender
                 Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
@@ -1069,7 +1070,7 @@ function ChangeInstance()
 
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
-        LogInfo("State Change: Dismounting")
+        LogInfo("[FATE] State Change: Dismounting")
         return
     end
 
@@ -1089,13 +1090,13 @@ function ChangeInstance()
     yield("/li "..nextInstance) -- start instance transfer
     yield("/wait 1") -- wait for instance transfer to register
     State = CharacterState.ready
-    LogInfo("State Change: Ready")
+    LogInfo("[FATE] State Change: Ready")
 end
 
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.movingToFate
-        LogInfo("State Change: MovingToFate "..NextFate.fateName)
+        LogInfo("[FATE] State Change: MovingToFate "..NextFate.fateName)
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
@@ -1111,7 +1112,6 @@ function Mount()
 end
 
 function Dismount()
-    LogInfo("dismount entered")
     if PathIsRunning() or PathfindInProgress() then
         yield("/vnav stop")
         return
@@ -1130,7 +1130,7 @@ function Dismount()
         local z2 = GetPlayerRawZPos()
 
         if GetCharacterCondition(CharacterCondition.flying) and DistanceBetween(x1, y1, z1, x2, y2, z2) < 2 then
-            LogInfo("Unable to dismount here. Moving to another spot.")
+            LogInfo("[FATE] Unable to dismount here. Moving to another spot.")
             local random_x, random_y, random_z = RandomAdjustCoordinates(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 10)
             local nearestPointX = QueryMeshNearestPointX(random_x, random_y, random_z, 100, 100)
             local nearestPointY = QueryMeshNearestPointY(random_x, random_y, random_z, 100, 100)
@@ -1144,13 +1144,12 @@ function Dismount()
         yield('/ac dismount')
     else
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[FATE] State Change: Ready")
     end
 end
 
 --Paths to the Fate NPC Starter
 function MoveToNPC()
-    LogInfo("MoveToNPC function")
     yield("/target "..NextFate.npcName)
     if HasTarget() and GetTargetName()==NextFate.npcName then
         if GetDistanceToTarget() > 5 then
@@ -1172,14 +1171,14 @@ function MoveToFate()
 
     if not PathIsRunning() and IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
         State = CharacterState.doFate
-        LogInfo("State Change: DoFate")
+        LogInfo("[FATE] State Change: DoFate")
         return
     end
 
     if NextFate == nil then
         yield("/vnav stop")
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[FATE] State Change: Ready")
         return
     end
 
@@ -1188,9 +1187,7 @@ function MoveToFate()
         local y1 = GetPlayerRawYPos()
         local z1 = GetPlayerRawZPos()
 
-        LogInfo("before wait")
         yield("/wait 5")
-        LogInfo("after wait")
 
         local x2 = GetPlayerRawXPos()
         local y2 = GetPlayerRawYPos()
@@ -1206,13 +1203,13 @@ function MoveToFate()
     if GetDistanceToPoint(NextFate.x, GetPlayerRawYPos(), NextFate.z) < 30 then
         if GetCharacterCondition(CharacterCondition.mounted) then
             State = CharacterState.dismounting
-            LogInfo("State Change: Dismounting")
+            LogInfo("[FATE] State Change: Dismounting")
             return
         end
         
         if (IsOtherNpcFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) and NextFate.startTime == 0 then
             State = CharacterState.interactWithNpc
-            LogInfo("State Change: InteractWithFateNpc")
+            LogInfo("[FATE] State Change: InteractWithFateNpc")
             return
         end
         return
@@ -1220,7 +1217,7 @@ function MoveToFate()
 
     if not GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.mounting
-        LogInfo("State Change: Mounting")
+        LogInfo("[FATE] State Change: Mounting")
         return
     end
 
@@ -1252,11 +1249,11 @@ function InteractWithFateNpc()
         yield("/wait 1")
         PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.doFate
-        LogInfo("State Change: DoFate")
+        LogInfo("[FATE] State Change: DoFate")
     elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
         PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[FATE] State Change: Ready")
     elseif PathfindInProgress() or PathIsRunning() then
         if HasTarget() and GetTargetName() == NextFate.npcName and GetDistanceToTarget() < 5 then
             yield("/vnav stop")
@@ -1291,8 +1288,7 @@ function CollectionsFateTurnIn()
 
     if not IsInFate() then
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
-        PandoraSetFeatureState("FATE Targeting Mode", true)
+        LogInfo("[FATE] State Change: Ready")
     end
 
     if (not HasTarget() or GetTargetName()~=NextFate.npcName) then
@@ -1311,16 +1307,14 @@ function CollectionsFateTurnIn()
 
         if GetFateProgress(NextFate.fateId) < 100 then
             State = CharacterState.doFate
-            LogInfo("State Change: DoFate")
-            PandoraSetFeatureState("FATE Targeting Mode", true)
+            LogInfo("[FATE] State Change: DoFate")
         else
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
-            PandoraSetFeatureState("FATE Targeting Mode", true)
+            LogInfo("[FATE] State Change: Ready")
         end
 
         if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
-            LogInfo("Attempting to clear target.")
+            LogInfo("[FATE] Attempting to clear target.")
             ClearTarget()
             yield("/wait 1")
         end
@@ -1417,7 +1411,7 @@ function TurnOnCombatMods()
 end
 
 function TurnOffCombatMods()
-    LogInfo("Turning off combat mods")
+    LogInfo("[FATE] Turning off combat mods")
     CombatModsOn = false
     -- no need to turn RSR off
 
@@ -1441,14 +1435,14 @@ end
 function HandleUnexpectedCombat()
     if GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
-        LogInfo("State Change: Dead")
+        LogInfo("[FATE] State Change: Dead")
         return
     elseif not GetCharacterCondition(CharacterCondition.inCombat) then
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[FATE] State Change: Ready")
         return
     end
 
@@ -1486,35 +1480,42 @@ function HandleUnexpectedCombat()
 end
 
 function DoFate()
+    PandoraSetFeatureState("FATE Targeting Mode", true)
+
     if GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
-        LogInfo("State Change: Dead")
+        LogInfo("[FATE] State Change: Dead")
         return
     elseif not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100) then -- leave turn in fates after they reach 100
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[FATE] State Change: Ready")
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
-        LogInfo("State Change: Dismounting")
+        LogInfo("[FATE] State Change: Dismounting")
+        return
+    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and not GetCharacterCondition(CharacterCondition.mounted) then -- got pushed out of fate. go back
+        yield("/vnav stop")
+        yield("/wait 1")
+        PathfindAndMoveTo(NextFate.x, NextFate.y, NextFate.z)
         return
     elseif IsCollectionsFate(NextFate.fateName) then
         -- random turn in 10% of the time
         local r = math.random()
-        LogInfo("Random turn in number: "..r)
+        LogInfo("[FATE] Random turn in number: "..r)
         if r < 0.05 or GetFateProgress(NextFate.fateId) == 100 then
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
-            LogInfo("State Change: CollectionsFatesTurnIn")
+            LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
         end
     end
 
     -- do not target fate npc during combat
     if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
-        LogInfo("Attempting to clear target.")
+        LogInfo("[FATE] Attempting to clear target.")
         ClearTarget()
         yield("/wait 1")
     end
@@ -1583,32 +1584,32 @@ function Ready()
 
     if not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat then
         State = CharacterState.unexpectedCombat
-        LogInfo("State Change: UnexpectedCombat")
+        LogInfo("[FATE] State Change: UnexpectedCombat")
     elseif GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
-        LogInfo("State Change: Dead")
+        LogInfo("[FATE] State Change: Dead")
     elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
-        LogInfo("State Change: Repair")
+        LogInfo("[FATE] State Change: Repair")
     elseif ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
-        LogInfo("State Change: ExtractMateria")
+        LogInfo("[FATE] State Change: ExtractMateria")
     elseif NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
         yield("/wait 10")
     elseif ShouldExchange and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
-        LogInfo("State Change: ExchangingVouchers")
+        LogInfo("[FATE] State Change: ExchangingVouchers")
     elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.processRetainers
-        LogInfo("State Change: ProcessingRetainers")
+        LogInfo("[FATE] State Change: ProcessingRetainers")
     elseif NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
         State = CharacterState.changingInstances
-        LogInfo("State Change: ChangingInstances")
+        LogInfo("[FATE] State Change: ChangingInstances")
     elseif NextFate == nil then
         yield("/wait 10")
     else
         State = CharacterState.movingToFate
-        LogInfo("State Change: MovingtoFate "..NextFate.fateName)
+        LogInfo("[FATE] State Change: MovingtoFate "..NextFate.fateName)
     end
 
     if not GemAnnouncementLock and Echo >= 1 then
@@ -1642,7 +1643,7 @@ function HandleDeath()
     else
         if IsInZone(SelectedZone.zoneId) then
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[FATE] State Change: Ready")
             DeathAnnouncementLock = false
         else
             TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
@@ -1726,7 +1727,7 @@ function ExchangeVouchers()
             return
         else
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[FATE] State Change: Ready")
             return
         end
     end
@@ -1773,7 +1774,7 @@ function ProcessRetainers()
             yield("/callback RetainerList true -1")
         elseif IsInZone(SelectedZone.zoneId) then
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[FATE] State Change: Ready")
         elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
             TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         end
@@ -1826,7 +1827,7 @@ function Repair()
     if SelfRepair then
         if GetCharacterCondition(CharacterCondition.mounted) then
             State = CharacterState.dismounting
-            LogInfo("State Change: Dismounting")
+            LogInfo("[FATE] State Change: Dismounting")
             return
         end
 
@@ -1837,7 +1838,7 @@ function Repair()
             end
         else
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[FATE] State Change: Ready")
         end
     else
         if NeedsRepair(RepairAmount) then
@@ -1869,7 +1870,7 @@ function Repair()
                 return
             else
                 State = CharacterState.ready
-                LogInfo("State Change: Ready")
+                LogInfo("[FATE] State Change: Ready")
             end
         end
     end
@@ -1878,7 +1879,7 @@ end
 function ExtractMateria()
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
-        LogInfo("State Change: Dismounting")
+        LogInfo("[FATE] State Change: Dismounting")
         return
     end
 
@@ -1904,7 +1905,7 @@ function ExtractMateria()
             yield("/pcall Materialize true -1")
         else
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[FATE] State Change: Ready")
         end
     end
 end
@@ -1970,12 +1971,12 @@ while true do
     if NavIsReady() then
         if GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
-            LogInfo("State Change: Dead")
+            LogInfo("[FATE] State Change: Dead")
         elseif not IsInFate() and
             GetCharacterCondition(CharacterCondition.inCombat) and not GetCharacterCondition(CharacterCondition.mounted)
         then
             State = CharacterState.unexpectedCombat
-            LogInfo("State Change: UnexpectedCombat")
+            LogInfo("[FATE] State Change: UnexpectedCombat")
         end
 
         if  State == CharacterState.ready or State == CharacterState.movingToFate then
