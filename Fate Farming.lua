@@ -8,10 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.0  *
+*  2.5.1  *
 ***********
-    -> 2.5.0    Reworked change instance spaghetti
-                Added limsa mender
+    -> 2.5.1    Fixed limsa mender telepot  town
+                Reworked change instance spaghetti, Added limsa mender
                 Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
                 Fixed state transition out of combat for collections fates
                 Changed targting system to use Pandora FATE Targeting mode again
@@ -1679,9 +1679,7 @@ function ExchangeNewVouchers()
     elseif GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > 5 then
         if IsAddonVisible("TelepotTown") then
             yield("/callback TelepotTown false -1")
-        elseif PathfindInProgress() or PathIsRunning() then
-            return
-        else
+        elseif not (PathfindInProgress() or PathIsRunning()) then
             PathfindAndMoveTo(beryl.x, beryl.y, beryl.z)
         end
     else
@@ -1800,10 +1798,6 @@ function TurnIn()
 end
 
 function Repair()
-    if PathfindInProgress() or PathIsRunning() or GetCharacterCondition(CharacterCondition.transition) or LifestreamIsBusy() then
-        return
-    end
-
     if IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
         return
@@ -1854,14 +1848,18 @@ function Repair()
                 yield("/echo "..GetDistanceToPoint(mender.x, mender.y, mender.z))
                 yield("/echo "..DistanceBetween(aethernetshard.x, aethernetshard.y, aethernetshard.z, mender.x, mender.y, mender.z))
                 yield("/li Hawkers' Alley")
-            elseif IsAddonVisible("TelepotTown") then
-                yield("/callback TelepotTown false -1")
             elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then
-                PathfindAndMoveTo(mender.x, mender.y, mender.z)
-            elseif not HasTarget() or GetTargetName() ~= mender.npcName then
-                yield("/target "..mender.npcName)
+                if IsAddonVisible("TelepotTown") then
+                    yield("/callback TelepotTown false -1")
+                elseif not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(mender.x, mender.y, mender.z)
+                end
             else
-                yield("/interact")
+                if not HasTarget() or GetTargetName() ~= mender.npcName then
+                    yield("/target "..mender.npcName)
+                elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
+                    yield("/interact")
+                end
             end
         else
             if not IsInZone(SelectedZone.zoneId) then
