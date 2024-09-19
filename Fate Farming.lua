@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.3.0  *
+*  2.4.0  *
 ***********
-    -> 2.3.0    Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
+    -> 2.4.0    Added limsa mender
+                Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
                 Fixed state transition out of combat for collections fates
                 Changed targting system to use Pandora FATE Targeting mode again
                 Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
@@ -60,8 +61,19 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --Teleport and Voucher
 EnableChangeInstance = true --should it Change Instance when there is no Fate (only works on DT fates)
-ShouldExchange = true             --should it Exchange Vouchers
-OldV = true                 --should it Exchange Old Vouchers
+ShouldExchange = true       --should it Exchange Vouchers
+    OldV = true             --should it Exchange Old Vouchers (set to false if you want the new Turali ones)
+
+--Utilities
+SelfRepair = false          --if false,  will go to Limsa mender
+    RepairAmount = 20       --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+ExtractMateria = true       --should it Extract Materia
+Food = ""                   --Leave "" Blank if you don't want to use any food
+                            --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
+--Retainer
+Retainers = true            --should it do Retainers
+    TurnIn = false              --should it to Turn ins at the GC (requires Deliveroo)
+    slots = 5                   --how much inventory space before turning in
 
 --Fate settings
 WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
@@ -70,8 +82,8 @@ MinTimeLeftToIgnoreFate = 3*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
 CompletionToJoinBossFate = 20   --Percent above which to join boss fate
 fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
-useBM = true                   --if you want to use the BossMod dodge/follow mode
-BMorBMR = "BMR"
+useBM = true                    --if you want to use the BossMod dodge/follow mode
+    BMorBMR = "BMR"
 
 --Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"
 --Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
@@ -80,27 +92,17 @@ BMorBMR = "BMR"
 MeleeDist = 2.5                 --distance for BMRAI melee
 RangedDist = 20                 --distance for BMRAI ranged
 
---Utilities
-RepairAmount = 20          --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repaier. onky supports self repair)
-ExtractMateria = true      --should it Extract Materia
-Food = ""                  --Leave "" Blank if you don't want to use any food
-                           --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
-
---Retainer
-Retainers = true           --should it do Retainers
-TurnIn = false             --should it to Turn ins at the GC (requires Deliveroo)
-slots = 5                  --how much inventory space before turning in
 
 --Other stuff
 ChocoboS = true                 --should it Activate the Chocobo settings in Pandora (to summon it)
 MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates, leave empty for mount roulette 
 
-Echo = 2
 --Change this value for how much echos u want in chat 
 --0 no echos
 --1 echo how many bicolor gems you have after every fate
 --2 echo how many bicolor gems you have after every fate and the next fate you're moving to
-  
+Echo = 2
+
 --#endregion Settings
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1881,25 +1883,7 @@ function TurnIn()
 end
 
 function Repair()
-    if GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.dismounting
-        LogInfo("State Change: Dismounting")
-        return
-    end
-
-    if not NeedsRepair(RepairAmount) then
-        if IsAddonVisible("Repair") then
-            yield("/callback Repair true -1")
-        else
-            State = CharacterState.ready
-            LogInfo("State Change: Ready")
-        end
-        return
-    end
-
-    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtraction) then
-        LogInfo("[FATE] Repairing...")
-        yield("/wait 1") 
+    if PathfindInProgress() or PathIsRunning() or GetCharacterCondition(CharacterCondition.transition) or LifestreamIsBusy() then
         return
     end
 
@@ -1908,13 +1892,70 @@ function Repair()
         return
     end
 
-    if not IsAddonVisible("Repair") then
-        LogInfo("[FATE] Opening repair menu...")
-        yield("/generalaction repair")
+    if IsAddonVisible("Repair") then
+        if not NeedsRepair(RepairAmount) then
+            yield("/callback Repair true -1") -- if you don't need repair anymore, close the menu
+        else
+            yield("/callback Repair true 0") -- select repair
+        end
         return
     end
 
-    yield("/callback Repair true 0")
+    -- if occupied by repair, then just wait
+    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtraction) then
+        LogInfo("[FATE] Repairing...")
+        yield("/wait 1")
+        return
+    end
+
+    if SelfRepair then
+        if GetCharacterCondition(CharacterCondition.mounted) then
+            State = CharacterState.dismounting
+            LogInfo("State Change: Dismounting")
+            return
+        end
+
+        if NeedsRepair(RepairAmount) then
+            if not IsAddonVisible("Repair") then
+                LogInfo("[FATE] Opening repair menu...")
+                yield("/generalaction repair")
+            end
+        else
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
+        end
+    else
+        if NeedsRepair(RepairAmount) then
+            if not IsInZone(129) then
+                TeleportTo("Limsa Lominsa Lower Decks")
+                return
+            end
+
+            local mender = { npcName="Alistair", x=-246.87, y=16.19, z=49.83 }
+            local aethernetshard = { x=-213.95, y=15.99, z=49.35 }
+            if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(aethernetshard.x, aethernetshard.y, aethernetshard.z, mender.x, mender.y, mender.z) + 10) then
+                yield("/echo "..GetDistanceToPoint(mender.x, mender.y, mender.z))
+                yield("/echo "..DistanceBetween(aethernetshard.x, aethernetshard.y, aethernetshard.z, mender.x, mender.y, mender.z))
+                yield("/li Hawkers' Alley")
+            elseif IsAddonVisible("TelepotTown") then
+                yield("/callback TelepotTown false -1")
+            elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then
+                PathfindAndMoveTo(mender.x, mender.y, mender.z)
+            elseif not HasTarget() or GetTargetName() ~= mender.npcName then
+                yield("/target "..mender.npcName)
+            else
+                yield("/interact")
+            end
+        else
+            if not IsInZone(SelectedZone.zoneId) then
+                TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+                return
+            else
+                State = CharacterState.ready
+                LogInfo("State Change: Ready")
+            end
+        end
+    end
 end
 
 function ExtractMateria()
