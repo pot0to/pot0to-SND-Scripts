@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.7  *
+*  2.5.8  *
 ***********
-    -> 2.5.7    Fixed collections fates table for Living Memory
+    -> 2.5.8    Fixing mount and leave after collections fate
+                Fixed collections fates table for Living Memory
                 Added checks for IsPlayerAvailable to ready and change instance
                 Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
                 Updated Garlemald and Raktikka fates, credit: Gigglels
@@ -22,11 +23,6 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
                 Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
                 Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
                 Manually vnav stop and clear targets after fate
-                Added check for IsFateActive in collections turn in, Added target enemy
-                Adjusted navmesh stop conditions for collections fate turn in
-                Clear target after collections fate turnin and better pathfinding to npc
-                Added collections fates, Fixed fate syncing in Mare Lamentorum
-                Fixed NPC stutter step, clear npc target once in combat. Changed TelepotTown close logic
     -> 2.0.0    State system
 
 *********************
@@ -177,6 +173,7 @@ end
 --Fate settings
 PandoraSetFeatureState("Auto-Sync FATEs", true)
 PandoraSetFeatureState("FATE Targeting Mode", true)
+PandoraFateTargeting = true
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/at y")
 
@@ -534,13 +531,13 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                { fateName="Parts Unknown", npcName="Displaced Engineer" },
-                { fateName="Amazing Crates", npcName="Hardy Refugee" },
+                { fateName="Parts Unknown", npcName="Displaced Engineer" }
             },
             otherNpcFates= {
                 { fateName="Artificial Malevolence: 15 Minutes to Comply", npcName="Keltlona" },
                 { fateName="Artificial Malevolence: The Drone Army", npcName="Ebrelnaux" },
                 { fateName="Artificial Malevolence: Unmanned Aerial Villains", npcName="Keltlona" },
+                { fateName="Amazing Crates", npcName="Hardy Refugee" }
             },
             bossFates= {
                 "Artificial Malevolence: 15 Minutes to Comply",
@@ -1247,17 +1244,15 @@ end
 
 function InteractWithFateNpc()
     PandoraSetFeatureState("Auto-Sync FATEs", false)
-    LogInfo("Disabling Pandora Auto-Sync FATEs")
+    LogInfo("[FATE] Disabling Pandora Auto-Sync FATEs")
 
     if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) and NextFate.npcX ~= nil then
         yield("/wait 1")
         yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
         yield("/wait 1")
-        PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
     elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
-        PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
     elseif PathfindInProgress() or PathIsRunning() then
@@ -1290,7 +1285,11 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    PandoraSetFeatureState("FATE Targeting Mode", false)
+    if PandoraFateTargeting then
+        PandoraSetFeatureState("FATE Targeting Mode", false)
+        LogInfo("[FATE] Turning of Pandora FATE Targeting Mode")
+        PandoraFateTargeting = false
+    end
 
     if not IsInFate() then
         State = CharacterState.ready
@@ -1486,11 +1485,20 @@ function HandleUnexpectedCombat()
 end
 
 function DoFate()
-    PandoraSetFeatureState("FATE Targeting Mode", true)
+    if not PandoraFateTargeting then
+        PandoraSetFeatureState("FATE Targeting Mode", true)
+        LogInfo("Turning on Pandora FATE Targeting Mode")
+        PandoraFateTargeting = true
+    end
 
     if GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
         LogInfo("[FATE] State Change: Dead")
+        return
+    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and not GetCharacterCondition(CharacterCondition.mounted) then -- got pushed out of fate. go back
+        yield("/vnav stop")
+        yield("/wait 1")
+        PathfindAndMoveTo(NextFate.x, NextFate.y, NextFate.z)
         return
     elseif not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100) then -- leave turn in fates after they reach 100
         yield("/vnav stop")
@@ -1503,16 +1511,11 @@ function DoFate()
         State = CharacterState.dismounting
         LogInfo("[FATE] State Change: Dismounting")
         return
-    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and not GetCharacterCondition(CharacterCondition.mounted) then -- got pushed out of fate. go back
-        yield("/vnav stop")
-        yield("/wait 1")
-        PathfindAndMoveTo(NextFate.x, NextFate.y, NextFate.z)
-        return
     elseif IsCollectionsFate(NextFate.fateName) then
         -- random turn in 10% of the time
         local r = math.random()
         LogInfo("[FATE] Random turn in number: "..r)
-        if r < 0.05 or GetFateProgress(NextFate.fateId) == 100 then
+        if r < 0.03 or GetFateProgress(NextFate.fateId) == 100 then
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
@@ -1588,7 +1591,9 @@ end
 function Ready()
     FoodCheck()
 
-    if not IsInFate() and GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat then
+    if (not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100)) and
+        GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat
+    then
         State = CharacterState.unexpectedCombat
         LogInfo("[FATE] State Change: UnexpectedCombat")
     elseif GetCharacterCondition(CharacterCondition.dead) then
