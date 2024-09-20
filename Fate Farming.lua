@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.10  *
+*  2.5.11  *
 ***********
-    -> 2.5.10   Cleaned up pandora checks
+    -> 2.5.11   Fixed RSR spam when BM/R is turned off
+                Cleaned up pandora checks
                 Added check for do fates getting pushed out of bounds
                 Fixing mount and leave after collections fate
                 Fixed collections fates table for Living Memory
@@ -148,7 +149,7 @@ if ExtractMateria == true then
         yield("/echo [FATE] Please Install YesAlready")
     end 
 end   
-if useBM == true then
+if useBM then
     if HasPlugin("BossModReborn") == false and HasPlugin("BossMod") == false then
         yield("/echo [FATE] Please Install BossMod")
     else
@@ -1380,46 +1381,54 @@ function SetMaxDistance()
 end
 
 function TurnOnCombatMods()
-    CombatModsOn = true
-    -- turn on RSR in case you have the RSR 30 second out of combat timer set
-    yield("/rotation manual")
-    Class = GetClassJobId()
-    
-    if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
-        yield("/rotation settings aoetype 2") -- aoe
-    else
-        yield("/rotation settings aoetype 1") -- cleave
-    end
-    yield("/wait 1")
-
-    if not bossModAIActive and useBM then
-        SetMaxDistance()
+    if not CombatModsOn then
+        CombatModsOn = true
+        -- turn on RSR in case you have the RSR 30 second out of combat timer set
+        yield("/rotation manual")
+        Class = GetClassJobId()
         
-        if BMorBMR == "BMR" then
-            yield("/bmrai on")
-            yield("/bmrai followtarget on")
-            yield("/bmrai followcombat on")
-            yield("/bmrai followoutofcombat on")
-            yield("/bmrai maxdistancetarget " .. MaxDistance)
+        if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
+            yield("/rotation settings aoetype 2") -- aoe
         else
-            yield("/vbmai on")
-            --yield("/vbmai followtarget on")
-            --yield("/vbmai followcombat on")
-            --yield("/vbmai followoutofcombat on")
+            yield("/rotation settings aoetype 1") -- cleave
         end
-        bossModAIActive = true
-    elseif not useBM then
-        TurnOffCombatMods()
-    end
+        yield("/wait 1")
 
-    yield("/wait 1")
+        if not bossModAIActive and useBM then
+            SetMaxDistance()
+            
+            if BMorBMR == "BMR" then
+                yield("/bmrai on")
+                yield("/bmrai followtarget on")
+                yield("/bmrai followcombat on")
+                yield("/bmrai followoutofcombat on")
+                yield("/bmrai maxdistancetarget " .. MaxDistance)
+            else
+                yield("/vbmai on")
+                --yield("/vbmai followtarget on")
+                --yield("/vbmai followcombat on")
+                --yield("/vbmai followoutofcombat on")
+            end
+            bossModAIActive = true
+        elseif not useBM then
+            TurnOffBM()
+        end
+
+        yield("/wait 1")
+    end
 end
 
 function TurnOffCombatMods()
-    LogInfo("[FATE] Turning off combat mods")
-    CombatModsOn = false
-    -- no need to turn RSR off
+    if CombatModsOn then
+        LogInfo("[FATE] Turning off combat mods")
+        CombatModsOn = false
+        -- no need to turn RSR off
 
+        TurnOffBM()
+    end
+end
+
+function TurnOffBM()
     -- turn of BMR so you don't start engaging other mobs
     if useBM and bossModAIActive then
         if BMorBMR == "BMR" then
@@ -1451,9 +1460,7 @@ function HandleUnexpectedCombat()
         return
     end
 
-    if not CombatModsOn then
-        TurnOnCombatMods()
-    end
+    TurnOnCombatMods()
 
     -- targets whatever is trying to kill you
     if not HasTarget() then
@@ -1530,9 +1537,7 @@ function DoFate()
         yield("/wait 1")
     end
 
-    if not CombatModsOn then
-        TurnOnCombatMods()
-    end
+    TurnOnCombatMods()
 
     GemAnnouncementLock = false
 
