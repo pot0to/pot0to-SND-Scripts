@@ -8,9 +8,9 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.13  *
+*  2.6.0  *
 ***********
-    -> 2.5.13   Added Pandora autosync back
+    -> 2.6.0    Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
                 Fixed RSR spam when BM/R is turned off
                 Cleaned up pandora checks
                 Added check for do fates getting pushed out of bounds
@@ -167,16 +167,16 @@ end
 
 --Chocobo settings
 if ChocoboS == true then
-    PandoraSetFeatureState("Auto-Summon Chocobo", true) 
-    PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", true)
+    PandoraSetFeatureState("Auto-Summon Chocobo", true)
+    PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
 elseif ChocoboS == false then
     PandoraSetFeatureState("Auto-Summon Chocobo", false) 
-    PandoraSetFeatureConfigState("Auto-Summon Chocobo", "Use whilst in combat", false)
+    PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
 end
 
 --Fate settings
 PandoraSetFeatureState("Auto-Sync FATEs", true)
-PandoraSetFeatureState("FATE Targeting Mode", true)
+PandoraSetFeatureState("FATE Targeting Mode", false)
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/at y")
 
@@ -1402,9 +1402,9 @@ function TurnOnCombatMods()
             
             if BMorBMR == "BMR" then
                 yield("/bmrai on")
-                yield("/bmrai followtarget on")
-                yield("/bmrai followcombat on")
-                yield("/bmrai followoutofcombat on")
+                -- yield("/bmrai followtarget on") overrisdes navmesh path and runs into walls
+                -- yield("/bmrai followcombat on")
+                -- yield("/bmrai followoutofcombat on")
                 yield("/bmrai maxdistancetarget " .. MaxDistance)
             else
                 yield("/vbmai on")
@@ -1413,11 +1413,7 @@ function TurnOnCombatMods()
                 --yield("/vbmai followoutofcombat on")
             end
             bossModAIActive = true
-        elseif not useBM then
-            TurnOffBM()
         end
-
-        yield("/wait 1")
     end
 end
 
@@ -1427,25 +1423,21 @@ function TurnOffCombatMods()
         CombatModsOn = false
         -- no need to turn RSR off
 
-        TurnOffBM()
-    end
-end
-
-function TurnOffBM()
-    -- turn of BMR so you don't start engaging other mobs
-    if useBM and bossModAIActive then
-        if BMorBMR == "BMR" then
-            yield("/bmrai off")
-            yield("/bmrai followtarget off")
-            yield("/bmrai followcombat off")
-            yield("/bmrai followoutofcombat off")
-        else
-            yield("/vbmai off")
-            --yield("/vbmai followtarget off")
-            --yield("/vbmai followcombat off")
-            --yield("/vbmai followoutofcombat off")
+        -- turn off BMR so you don't start following other mobs
+        if useBM and bossModAIActive then
+            if BMorBMR == "BMR" then
+                yield("/bmrai off")
+                yield("/bmrai followtarget off")
+                yield("/bmrai followcombat off")
+                yield("/bmrai followoutofcombat off")
+            else
+                yield("/vbmai off")
+                --yield("/vbmai followtarget off")
+                --yield("/vbmai followcombat off")
+                --yield("/vbmai followoutofcombat off")
+            end
+            bossModAIActive = false
         end
-        bossModAIActive = false
     end
 end
 
@@ -1494,15 +1486,14 @@ function HandleUnexpectedCombat()
     yield("/wait 1")
 end
 
+-- Pandora FATE Targeting Mode should only be turned on during DoFate
 function DoFate()
-    if not PandoraGetFeatureEnabled("FATE Targeting Mode") then
-        PandoraSetFeatureState("FATE Targeting Mode", true)
-        LogInfo("Turning on Pandora FATE Targeting Mode")
-    end
+    PandoraSetFeatureState("FATE Targeting Mode", true)
 
     if GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
         LogInfo("[FATE] State Change: Dead")
+        PandoraSetFeatureState("FATE Targeting Mode", false)
         return
     elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < 50 and
         not GetCharacterCondition(CharacterCondition.mounted)
@@ -1511,16 +1502,18 @@ function DoFate()
         yield("/wait 1")
         PathfindAndMoveTo(NextFate.x, NextFate.y, NextFate.z)
         return
-    elseif not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100) then -- leave turn in fates after they reach 100
+    elseif not IsInFate() then
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
+        PandoraSetFeatureState("FATE Targeting Mode", false)
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
         LogInfo("[FATE] State Change: Dismounting")
+        PandoraSetFeatureState("FATE Targeting Mode", false)
         return
     elseif IsCollectionsFate(NextFate.fateName) then
         -- random turn in 10% of the time
@@ -1599,6 +1592,7 @@ end
 
 function Ready()
     FoodCheck()
+    CombatModsOn = false -- expect RSR to turn off after every fate
 
     if (not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100)) and
         GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat
