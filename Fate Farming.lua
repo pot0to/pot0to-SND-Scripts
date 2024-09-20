@@ -8,9 +8,9 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.5  *
+*  2.5.6  *
 ***********
-    -> 2.5.5    Check IsPlayerAvailable
+    -> 2.5.6    Added checks for IsPlayerAvailable to ready and change instance
                 Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
                 Updated Garlemald and Raktikka fates, credit: Gigglels
                 Fixed limsa mender telepot town, removed debug echoes
@@ -1047,7 +1047,7 @@ end
 function ChangeInstance()
     --Change Instance
 
-    if LifestreamIsBusy() or GetCharacterCondition(CharacterCondition.transition) or SuccessiveInstanceChanges >= 3 then
+    if LifestreamIsBusy() or not IsPlayerAvailable() or SuccessiveInstanceChanges >= 3 then
         yield("/wait 10")
         SuccessiveInstanceChanges = 0
         return
@@ -1169,6 +1169,10 @@ end
 --Paths to the Fate
 function MoveToFate()
     SuccessiveInstanceChanges = 0
+
+    if not IsPlayerAvailable() then
+        return
+    end
 
     if not PathIsRunning() and IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
         State = CharacterState.doFate
@@ -1589,6 +1593,8 @@ function Ready()
     elseif GetCharacterCondition(CharacterCondition.dead) then
         State = CharacterState.dead
         LogInfo("[FATE] State Change: Dead")
+    elseif not IsPlayerAvailable() then
+        return
     elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("[FATE] State Change: Repair")
@@ -1969,7 +1975,7 @@ State = CharacterState.ready
 LogInfo("[FATE] Starting fate farming script.")
 NextFate = nil
 while true do
-    if NavIsReady() and IsPlayerAvailable() then
+    if NavIsReady() then
         if GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
@@ -1980,7 +1986,7 @@ while true do
             LogInfo("[FATE] State Change: UnexpectedCombat")
         end
 
-        if  State == CharacterState.ready or State == CharacterState.movingToFate then
+        if State == CharacterState.ready or State == CharacterState.movingToFate then
             NextFate = SelectNextFate()
         end
         
@@ -1992,7 +1998,6 @@ while true do
         then
             State()
         end
-        
     end
     yield("/wait 0.1")
 end
