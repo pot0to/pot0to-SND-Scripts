@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.6  *
+*  2.5.7  *
 ***********
-    -> 2.5.6    Added checks for IsPlayerAvailable to ready and change instance
+    -> 2.5.7    Fixed collections fates table for Living Memory
+                Added checks for IsPlayerAvailable to ready and change instance
                 Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
                 Updated Garlemald and Raktikka fates, credit: Gigglels
                 Fixed limsa mender telepot town, removed debug echoes
@@ -41,6 +42,8 @@ Plugins that are needed for it to work:
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
         -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
     -> TextAdvance: (for interacting with Fate NPCs)
+    -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
+    -> Lifestream :  (for changing Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
 
 *********************
 *  Optional Plugins *
@@ -48,8 +51,6 @@ Plugins that are needed for it to work:
 
 This Plugins are Optional and not needed unless you have it enabled in the settings:
 
-    -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
-    -> Lifestream :  (for chaning Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
     -> AutoRetainer : (for Retainers [Retainers])   https://love.puni.sh/ment.json
     -> Deliveroo : (for gc turn ins [TurnIn])   https://plugins.carvel.li/
     -> Bossmod/BossModReborn: (for AI dodging)  https://puni.sh/api/repository/veyn
@@ -769,8 +770,8 @@ FatesData = {
         },
         fatesList= {
             collectionsFates= {
-                "Seeds of Tomorrow",
-                "Scattered Memories"
+                { fateName="Seeds of Tomorrow", npcName="Unlost Sentry GX" },
+                { fateName="Scattered Memories", npcName="Unlost Sentry GX" }
             },
             otherNpcFates= {
                 { fateName="Canal Carnage", npcName="Unlost Sentry GX" },
