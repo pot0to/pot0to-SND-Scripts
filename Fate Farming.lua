@@ -8,9 +8,9 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.12  *
+*  2.5.13  *
 ***********
-    -> 2.5.12   Added Pandora autosync back
+    -> 2.5.13   Added Pandora autosync back
                 Fixed RSR spam when BM/R is turned off
                 Cleaned up pandora checks
                 Added check for do fates getting pushed out of bounds
@@ -1254,11 +1254,11 @@ function InteractWithFateNpc()
         yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
         yield("/wait 1")
         State = CharacterState.doFate
-        PandoraSetFeatureState("Auto-Sync FATEs", false)
+        PandoraSetFeatureState("Auto-Sync FATEs", true)
         LogInfo("[FATE] State Change: DoFate")
     elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
         State = CharacterState.ready
-        PandoraSetFeatureState("Auto-Sync FATEs", false)
+        PandoraSetFeatureState("Auto-Sync FATEs", true)
         LogInfo("[FATE] State Change: Ready")
     elseif PathfindInProgress() or PathIsRunning() then
         if HasTarget() and GetTargetName() == NextFate.npcName and GetDistanceToTarget() < 5 then
