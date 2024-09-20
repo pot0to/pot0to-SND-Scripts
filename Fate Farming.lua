@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.9  *
+*  2.5.10  *
 ***********
-    -> 2.5.9    Added check for do fates getting pushed out of bounds
+    -> 2.5.10   Cleaned up pandora checks
+                Added check for do fates getting pushed out of bounds
                 Fixing mount and leave after collections fate
                 Fixed collections fates table for Living Memory
                 Added checks for IsPlayerAvailable to ready and change instance
@@ -174,7 +175,6 @@ end
 --Fate settings
 PandoraSetFeatureState("Auto-Sync FATEs", true)
 PandoraSetFeatureState("FATE Targeting Mode", true)
-PandoraFateTargeting = true
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/at y")
 
@@ -1286,10 +1286,9 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    if PandoraFateTargeting then
+    if PandoraGetFeatureEnabled("FATE Targeting Mode") then
         PandoraSetFeatureState("FATE Targeting Mode", false)
         LogInfo("[FATE] Turning of Pandora FATE Targeting Mode")
-        PandoraFateTargeting = false
     end
 
     if not IsInFate() then
@@ -1486,10 +1485,9 @@ function HandleUnexpectedCombat()
 end
 
 function DoFate()
-    if not PandoraFateTargeting then
+    if not PandoraGetFeatureEnabled("FATE Targeting Mode") then
         PandoraSetFeatureState("FATE Targeting Mode", true)
         LogInfo("Turning on Pandora FATE Targeting Mode")
-        PandoraFateTargeting = true
     end
 
     if GetCharacterCondition(CharacterCondition.dead) then
