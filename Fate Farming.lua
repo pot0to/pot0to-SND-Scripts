@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.5.8  *
+*  2.5.9  *
 ***********
-    -> 2.5.8    Fixing mount and leave after collections fate
+    -> 2.5.9    Added check for do fates getting pushed out of bounds
+                Fixing mount and leave after collections fate
                 Fixed collections fates table for Living Memory
                 Added checks for IsPlayerAvailable to ready and change instance
                 Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
@@ -1495,7 +1496,9 @@ function DoFate()
         State = CharacterState.dead
         LogInfo("[FATE] State Change: Dead")
         return
-    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and not GetCharacterCondition(CharacterCondition.mounted) then -- got pushed out of fate. go back
+    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < 50 and
+        not GetCharacterCondition(CharacterCondition.mounted)
+    then -- got pushed out of fate. go back
         yield("/vnav stop")
         yield("/wait 1")
         PathfindAndMoveTo(NextFate.x, NextFate.y, NextFate.z)
