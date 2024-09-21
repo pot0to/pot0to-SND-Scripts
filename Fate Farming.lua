@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.1  *
+*  2.7.2  *
 ***********
-    -> 2.7.1    Changed pathing to land at npc
+    -> 2.7.2    Fixed inching back to fate
+                Changed pathing to land at npc
                 Rewrote parts of enemy pathing to avoid BMR follow
                 Fixed npcs for Panaq Attack and Fire Suppression
                 Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
@@ -1510,7 +1511,7 @@ function DoFate()
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
     elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < 50 and
-        not GetCharacterCondition(CharacterCondition.mounted)
+        not GetCharacterCondition(CharacterCondition.mounted) and not PathIsRunning() or PathfindInProgress()
     then -- got pushed out of fate. go back
         yield("/vnav stop")
         yield("/wait 1")
