@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.3  *
+*  2.7.4  *
 ***********
-    -> 2.7.3    Fixed dismount before interacting with npc
+    -> 2.7.4    Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
+                Fixed dismount before interacting with npc
                 Fixed inching back to fate
                 Changed pathing to land at npc
                 Rewrote parts of enemy pathing to avoid BMR follow
@@ -1415,14 +1416,14 @@ function TurnOnCombatMods()
             
             if BMorBMR == "BMR" then
                 yield("/bmrai on")
-                -- yield("/bmrai followtarget on") overrides navmesh path and runs into walls
+                yield("/bmrai followtarget on") -- overrides navmesh path and runs into walls sometimes
                 yield("/bmrai followcombat on")
                 -- yield("/bmrai followoutofcombat on")
                 yield("/bmrai maxdistancetarget " .. MaxDistance)
             else
                 yield("/vbmai on")
-                --yield("/vbmai followtarget on")
-                --yield("/vbmai followcombat on")
+                yield("/vbmai followtarget on")
+                yield("/vbmai followcombat on")
                 --yield("/vbmai followoutofcombat on")
             end
             bossModAIActive = true
