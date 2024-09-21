@@ -1415,7 +1415,7 @@ function TurnOnCombatMods()
             
             if BMorBMR == "BMR" then
                 yield("/bmrai on")
-                -- yield("/bmrai followtarget on") overrisdes navmesh path and runs into walls
+                -- yield("/bmrai followtarget on") overrides navmesh path and runs into walls
                 yield("/bmrai followcombat on")
                 -- yield("/bmrai followoutofcombat on")
                 yield("/bmrai maxdistancetarget " .. MaxDistance)
@@ -1578,17 +1578,16 @@ function DoFate()
             end
             return
         else
-            LogInfo("[DoFate] /targetenemy")
             yield("/targetenemy")
         end
     else
         if GetDistanceToTarget() <= MaxDistance then
             yield("/vnav stop")
-        -- else
-        --     if not (PathfindInProgress() or PathIsRunning()) then
-        --         yield("/wait 1")
-        --         PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-        --     end
+        else
+            if not (PathfindInProgress() or PathIsRunning()) then
+                yield("/wait 1")
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+            end
         end
     end
 end
