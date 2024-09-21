@@ -591,6 +591,8 @@ FatesData = {
             },
             otherNpcFates= {
                 { fateName="Wings of Glory", npcName="Ahl Ein's Kin" },
+                { fateName="Omicron Recall: Secure Connection", npcName="N-6205"},
+                { fateName="Only Just Begun", npcName="Myhk Nehr" }
             },
             bossFates= {
                 "Far from the Madding Horde",
@@ -1023,7 +1025,9 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
 
     if aetheryteForClosestFate ~=nil then
         TeleportTo(aetheryteForClosestFate.aetheryteName)
+        return true
     end
+    return false
 end
 
 function TeleportTo(aetheryteName)
@@ -1177,9 +1181,14 @@ function MoveToFate()
         return
     end
 
-    if not PathIsRunning() and IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
-        State = CharacterState.doFate
-        LogInfo("[FATE] State Change: DoFate")
+    if not PathIsRunning() and IsInFate() and GetFateProgress(NextFate.fateId) < 100 then
+        if IsCollectionsFate(NextFate.fateName) or IsOtherNpcFate(NextFate.fateName) then
+            State = CharacterState.interactWithNpc
+            LogInfo("[FATE] State Change: InteractWithFateNpc")
+        else
+            State = CharacterState.doFate
+            LogInfo("[FATE] State Change: DoFate")
+        end
         return
     end
 
@@ -1240,7 +1249,9 @@ function MoveToFate()
         SetMapFlag(SelectedZone.zoneId, nearestLandX, nearestLandY, nearestLandZ)
     end
 
-    TeleportToClosestAetheryteToFate(playerPosition, NextFate)
+    if TeleportToClosestAetheryteToFate(playerPosition, NextFate) then
+        return
+    end
     LogInfo("[FATE] Moving to "..nearestLandX..", "..nearestLandY..", "..nearestLandZ)
     yield("/vnavmesh stop")
     yield("/wait 1")
@@ -1490,6 +1501,7 @@ end
 
 -- Pandora FATE Targeting Mode should only be turned on during DoFate
 function DoFate()
+    LogInfo("DoFate")
     PandoraSetFeatureState("FATE Targeting Mode", true)
 
     if GetCharacterCondition(CharacterCondition.dead) then
@@ -1518,10 +1530,10 @@ function DoFate()
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
     elseif IsCollectionsFate(NextFate.fateName) then
-        -- random turn in 10% of the time
+        -- random turn in 1% of the time
         local r = math.random()
         LogInfo("[FATE] Random turn in number: "..r)
-        if r < 0.03 or GetFateProgress(NextFate.fateId) == 100 then
+        if r < 0.01 or GetFateProgress(NextFate.fateId) == 100 then
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
@@ -1555,30 +1567,29 @@ function DoFate()
 
     -- pathfind closer if enemies are too far
     if not GetCharacterCondition(CharacterCondition.inCombat) then
-        yield("/wait 1") -- give pandora a chance to find the enemy
         if HasTarget() then
-            if GetDistanceToTarget() > MaxDistance then
-                if not (PathfindInProgress() or PathIsRunning()) then
-                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-                end
-            else
-                if PathfindInProgress() or PathIsRunning() then
-                    yield("/vnav stop")
-                else
-                    --inch closer 3 seconds
-                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-                    yield("/wait 3")
-                end
+            if not (PathfindInProgress() or PathIsRunning()) then
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
             end
+
+            if GetDistanceToTarget() <= MaxDistance then
+                --inch closer 1 second. may be line of sight issue
+                yield("/wait 1")
+            end
+            return
         else
+            LogInfo("[DoFate] /targetenemy")
             yield("/targetenemy")
         end
     else
-        if GetDistanceToTarget() <= MaxDistance and PathfindInProgress() or PathIsRunning() then
+        if GetDistanceToTarget() <= MaxDistance then
             yield("/vnav stop")
+        else
+            if not (PathfindInProgress() or PathIsRunning()) then
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+            end
         end
     end
-    yield("/wait 1")
 end
 
 --#endregion
