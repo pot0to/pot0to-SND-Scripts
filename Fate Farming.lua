@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.2  *
+*  2.7.3  *
 ***********
-    -> 2.7.2    Fixed inching back to fate
+    -> 2.7.3    Fixed dismount before interacting with npc
+                Fixed inching back to fate
                 Changed pathing to land at npc
                 Rewrote parts of enemy pathing to avoid BMR follow
                 Fixed npcs for Panaq Attack and Fire Suppression
@@ -90,7 +91,6 @@ CompletionToIgnoreFate = 80     --Percent above which to ignore fate
 MinTimeLeftToIgnoreFate = 3*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
 CompletionToJoinBossFate = 20   --Percent above which to join boss fate
-fatewait = 0                    --the amount how long it should when before dismounting (0 = at the beginning of the fate 3-5 = should be in the middle of the fate)
 useBM = true                    --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
 
@@ -1134,7 +1134,7 @@ function Dismount()
         local z1 = GetPlayerRawZPos()
 
         yield('/ac dismount')
-        yield("/wait 2")
+        yield("/wait 1")
 
         local x2 = GetPlayerRawXPos()
         local y2 = GetPlayerRawYPos()
@@ -1254,11 +1254,6 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-    if GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.dismounting
-        LogInfo("State Change: Dismounting")
-        return
-    end
 
     PandoraSetFeatureState("Auto-Sync FATEs", false)
     LogInfo("[FATE] Disabling Pandora Auto-Sync FATEs")
@@ -1266,9 +1261,9 @@ function InteractWithFateNpc()
     if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) and NextFate.npcX ~= nil then
         yield("/wait 1")
         yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
-        yield("/wait 1")
-        State = CharacterState.doFate
+        yield("/wait 1") -- wait a moment re-enabling auto sync so there's no server tick with the manual lsync
         PandoraSetFeatureState("Auto-Sync FATEs", true)
+        State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
     elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
         State = CharacterState.ready
@@ -1292,6 +1287,11 @@ function InteractWithFateNpc()
 
         if GetDistanceToPoint(NextFate.npcX, NextFate.npcY, NextFate.npcZ) > 5 then
             MoveToNPC()
+            return
+        end
+
+        if GetCharacterCondition(CharacterCondition.mounted) then
+            yield("/ac dismount")
             return
         end
 
@@ -1409,7 +1409,6 @@ function TurnOnCombatMods()
         else
             yield("/rotation settings aoetype 1") -- cleave
         end
-        yield("/wait 1")
 
         if not bossModAIActive and useBM then
             SetMaxDistance()
@@ -1497,7 +1496,6 @@ function HandleUnexpectedCombat()
             end
         end
     end
-    yield("/wait 1")
 end
 
 -- Pandora FATE Targeting Mode should only be turned on during DoFate
