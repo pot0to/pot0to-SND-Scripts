@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.6.1  *
+*  2.6.2  *
 ***********
-    -> 2.6.1    Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
+    -> 2.6.2    Fixed npcs for Panaq Attack and Fire Suppression
+                Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
                 Fixed RSR spam when BM/R is turned off
                 Cleaned up pandora checks
                 Added check for do fates getting pushed out of bounds
@@ -641,7 +642,8 @@ FatesData = {
                 { fateName="Lay Off the Horns", npcName="Yok Huy Vigilkeeper" },
                 { fateName="Birds Up", npcName="Coffee Farmer" },
                 { fateName="Salty Showdown", npcName="Chirwagur Sabreur" },
-                { fateName="Fire Suppression", npcName="Tsivli Stoutstrider"}
+                { fateName="Fire Suppression", npcName="Tsivli Stoutstrider"},
+                { fateName="Panaq Attack", npcName="Pelupelu Peddler" }
             },
             bossFates= {
                 "Panaq Attack",
