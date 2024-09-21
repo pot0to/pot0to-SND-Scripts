@@ -8,9 +8,9 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.6.0  *
+*  2.6.1  *
 ***********
-    -> 2.6.0    Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
+    -> 2.6.1    Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
                 Fixed RSR spam when BM/R is turned off
                 Cleaned up pandora checks
                 Added check for do fates getting pushed out of bounds
@@ -640,7 +640,8 @@ FatesData = {
                 { fateName="Gust Stop Already", npcName="Mourning Yok Huy" },
                 { fateName="Lay Off the Horns", npcName="Yok Huy Vigilkeeper" },
                 { fateName="Birds Up", npcName="Coffee Farmer" },
-                { fateName="Salty Showdown", npcName="Chirwagur Sabreur" }
+                { fateName="Salty Showdown", npcName="Chirwagur Sabreur" },
+                { fateName="Fire Suppression", npcName="Tsivli Stoutstrider"}
             },
             bossFates= {
                 "Panaq Attack",
