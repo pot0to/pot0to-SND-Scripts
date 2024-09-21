@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.0  *
+*  2.7.1  *
 ***********
-    -> 2.7.0    Rewrote parts of enemy pathing to avoid BMR follow
+    -> 2.7.1    Changed pathing to land at npc
+                Rewrote parts of enemy pathing to avoid BMR follow
                 Fixed npcs for Panaq Attack and Fire Suppression
                 Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
                 Fixed RSR spam when BM/R is turned off, Cleaned up pandora checks
@@ -1183,13 +1184,8 @@ function MoveToFate()
     end
 
     if not PathIsRunning() and IsInFate() and GetFateProgress(NextFate.fateId) < 100 then
-        if IsCollectionsFate(NextFate.fateName) or IsOtherNpcFate(NextFate.fateName) then
-            State = CharacterState.interactWithNpc
-            LogInfo("[FATE] State Change: InteractWithFateNpc")
-        else
-            State = CharacterState.doFate
-            LogInfo("[FATE] State Change: DoFate")
-        end
+        State = CharacterState.doFate
+        LogInfo("[FATE] State Change: DoFate")
         return
     end
 
@@ -1219,16 +1215,13 @@ function MoveToFate()
     end
 
     if GetDistanceToPoint(NextFate.x, GetPlayerRawYPos(), NextFate.z) < 30 then
-        if GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.dismounting
-            LogInfo("[FATE] State Change: Dismounting")
-            return
-        end
-        
         if (IsOtherNpcFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) and NextFate.startTime == 0 then
             State = CharacterState.interactWithNpc
             LogInfo("[FATE] State Change: InteractWithFateNpc")
             return
+        else
+            State = CharacterState.dismounting
+            LogInfo("[FATE] State Change: Dismount")
         end
         return
     end
@@ -1260,6 +1253,12 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        State = CharacterState.dismounting
+        LogInfo("State Change: Dismounting")
+        return
+    end
+
     PandoraSetFeatureState("Auto-Sync FATEs", false)
     LogInfo("[FATE] Disabling Pandora Auto-Sync FATEs")
 
@@ -1417,7 +1416,7 @@ function TurnOnCombatMods()
             if BMorBMR == "BMR" then
                 yield("/bmrai on")
                 -- yield("/bmrai followtarget on") overrisdes navmesh path and runs into walls
-                -- yield("/bmrai followcombat on")
+                yield("/bmrai followcombat on")
                 -- yield("/bmrai followoutofcombat on")
                 yield("/bmrai maxdistancetarget " .. MaxDistance)
             else
@@ -1570,6 +1569,7 @@ function DoFate()
     if not GetCharacterCondition(CharacterCondition.inCombat) then
         if HasTarget() then
             if not (PathfindInProgress() or PathIsRunning()) then
+                yield("/wait 1")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
             end
 
@@ -1585,10 +1585,11 @@ function DoFate()
     else
         if GetDistanceToTarget() <= MaxDistance then
             yield("/vnav stop")
-        else
-            if not (PathfindInProgress() or PathIsRunning()) then
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-            end
+        -- else
+        --     if not (PathfindInProgress() or PathIsRunning()) then
+        --         yield("/wait 1")
+        --         PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+        --     end
         end
     end
 end
