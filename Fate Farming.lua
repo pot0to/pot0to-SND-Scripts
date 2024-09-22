@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.4  *
+*  2.7.5  *
 ***********
-    -> 2.7.4    Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
+    -> 2.7.5    Added toggle to skip all collections fates
+                Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
                 Fixed dismount before interacting with npc
                 Fixed inching back to fate
                 Changed pathing to land at npc
@@ -92,6 +93,7 @@ CompletionToIgnoreFate = 80     --Percent above which to ignore fate
 MinTimeLeftToIgnoreFate = 3*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
 CompletionToJoinBossFate = 20   --Percent above which to join boss fate
+JoinCollectionsFates = true     --Set to false if you never want to do collections fates
 useBM = true                    --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
 
@@ -958,7 +960,7 @@ function SelectNextFate()
                     else
                         LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
                     end
-                elseif IsOtherNpcFate(tempFate.fateName) or IsCollectionsFate(tempFate.fateName) then
+                elseif IsOtherNpcFate(tempFate.fateName) or (JoinCollectionsFates and IsCollectionsFate(tempFate.fateName)) then
                     if tempFate.startTime > 0 then -- if someone already opened this fate, then treat is as all the other fates
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else -- no one has opened this fate yet
@@ -1239,7 +1241,10 @@ function MoveToFate()
         yield("/echo [FATE] Moving to fate #"..NextFate.fateId.." "..NextFate.fateName)
     end
 
-    local nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(NextFate.x, NextFate.y, NextFate.z, 29)
+    local nearestLandX, nearestLandY, nearestLandZ = NextFate.x, NextFate.y + 10, NextFate.z
+    if not (IsCollectionsFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) then
+        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(NextFate.x, NextFate.y, NextFate.z, 29)
+    end
 
     if HasPlugin("ChatCoordinates") then
         SetMapFlag(SelectedZone.zoneId, nearestLandX, nearestLandY, nearestLandZ)
@@ -1248,7 +1253,7 @@ function MoveToFate()
     if TeleportToClosestAetheryteToFate(playerPosition, NextFate) then
         return
     end
-    LogInfo("[FATE] Moving to "..nearestLandX..", "..nearestLandY..", "..nearestLandZ)
+    
     yield("/vnavmesh stop")
     yield("/wait 1")
     PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId))
