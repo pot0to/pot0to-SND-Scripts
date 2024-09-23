@@ -697,11 +697,13 @@ FatesData = {
         fatesList={
             collectionsFates={
                 { fateName="Borne on the Backs of Burrowers", npcName="Moblin Forager" },
-                { fateName="Combing the Area", npcName="Hanuhanu Combmaker" }
+                { fateName="Combing the Area", npcName="Hanuhanu Combmaker" },
+                { fateName="There's Always a Bigger Beast", npcName="Hanuhanu Angler" }
             },
             otherNpcFates= {},
             bossFates= {
-                "Sayona Your Prayers"
+                "Sayona Your Prayers",
+                "There's Always a Bigger Beast"
             },
             fatesWithContinuations = {},
             blacklistedFates= {
@@ -785,7 +787,8 @@ FatesData = {
                 { fateName="Ware the Wolves", npcName="Imperiled Hunter" },
                 { fateName="Domo Arigato", npcName="Perplexed Reforger" },
                 { fateName="Old Stampeding Grounds", npcName="Driftdowns Reforger" },
-                { fateName="Pulling the Wool", npcName="Panicked Courier" }
+                { fateName="Pulling the Wool", npcName="Panicked Courier" },
+                { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
             bossFates= {
                 "A Scythe to an Axe Fight",
@@ -795,7 +798,7 @@ FatesData = {
                 "Domo Arigato"
             },
             blacklistedFates= {
-                "When It's So Salvage" -- { fateName="When It's So Salvage", npcName="Refined Reforger" }
+                "When It's So Salvage" -- terrain is terrible
             }
         }
     },
@@ -1125,6 +1128,11 @@ function ChangeInstance()
             end
         end
         TeleportTo(closestAetheryte.aetheryteName)
+        return
+    end
+
+    if WaitingForCollectionsFate ~= 0 then
+        yield("/wait 10")
         return
     end
 
@@ -1697,7 +1705,7 @@ function Ready()
     elseif GrandCompanyTurnIn and GetInventoryFreeSlotCount() < slots then
         State = CharacterState.gcTurnIn
         LogInfo("[FATE] State Change: GCTurnIn")
-    elseif WaitingForCollectionsFate == 0 and NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
+    elseif NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
         State = CharacterState.changingInstances
         LogInfo("[FATE] State Change: ChangingInstances")
     elseif NextFate == nil then
