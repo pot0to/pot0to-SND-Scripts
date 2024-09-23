@@ -8,9 +8,12 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.7  *
+*  2.8.1  *
 ***********
-    -> 2.7.7    Added checks for being moved and moved next fate selection within these checks
+    -> 2.8.1    Added 10s wait for continuation fates, reworked antistuck using os clock,
+                    added tracker for open collections fates, and fixing GC turnins
+                    added 1s wait after joining collections fate for event item to populate
+                Added checks for being moved and moved next fate selection within these checks
                 Rewrote collections fates to rely on number of items in inventory
                 Added toggle to skip all collections fates
                 Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
@@ -41,7 +44,7 @@ Plugins that are needed for it to work:
     -> Pandora :    (for Fate targeting and auto sync [ChocoboS])   https://love.puni.sh/ment.json             
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
-        -> Target -> "Engage settings" set to "Previously engaged targets (enagegd on countdown timer)"
+        -> Target -> "Engage settings" set to "All targets that are in range for any abilities (Tanks/Autoduty)" regardless of whether you are tank
     -> TextAdvance: (for interacting with Fate NPCs)
     -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
     -> Lifestream :  (for changing Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
@@ -79,7 +82,7 @@ Food = ""                   --Leave "" Blank if you don't want to use any food
                             --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
 --Retainer
 Retainers = true            --should it do Retainers
-    TurnIn = false              --should it to Turn ins at the GC (requires Deliveroo)
+    GrandCompanyTurnIn = false              --should it to Turn ins at the GC (requires Deliveroo)
     slots = 5                   --how much inventory space before turning in
 
 --Fate settings
@@ -140,7 +143,7 @@ if Retainers then
     if not HasPlugin("AutoRetainer") then
         yield("/echo [FATE] Please Install AutoRetainer")
     end
-    if TurnIn then
+    if GrandCompanyTurnIn then
         if not HasPlugin("Deliveroo") then
             yield("/echo [FATE] Please Install Deliveroo")
         end
@@ -244,6 +247,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -257,6 +261,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -270,6 +275,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -284,6 +290,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -297,6 +304,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -311,6 +319,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -325,6 +334,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -339,6 +349,7 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -359,6 +370,7 @@ FatesData = {
                 "A Beast among Men",
                 "Draconian Measures",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -379,6 +391,7 @@ FatesData = {
                 "Not Today (FATE)",
                 "A Finale Most Formidable",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -398,6 +411,7 @@ FatesData = {
                 "The Elderblade",
                 "The Odd Couple",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "Tolba No. 1", -- pathing is really bad to enemies
             }
@@ -427,6 +441,7 @@ FatesData = {
                 "Go Fuath a Conqueror",
                 "Fuath to Be Reckoned With",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -457,6 +472,7 @@ FatesData = {
                 "Attack the Block",
                 "Queen of the Harpies",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -482,6 +498,7 @@ FatesData = {
                 "The Devil in the Deep Blue Sea",
                 "The Head, the Tail, the Whole Damned Thing",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "Coral Support", -- escort fate
                 "The Seashells He Sells", -- escort fate
@@ -507,6 +524,7 @@ FatesData = {
                 "Incident Files: Steamed Vegetable",
                 "The Frailty of Life",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -527,6 +545,7 @@ FatesData = {
                 "The Accursed Kanabhuti",
                 "Return of the Tyrant",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -553,6 +572,7 @@ FatesData = {
                 "Artificial Malevolence: Mighty Metatron",
                 "The Man with the Golden Son",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -577,6 +597,7 @@ FatesData = {
                 "Lepus Lamentorum: Crazy Contraption",
                 "Head Empty, Only Thoughts"
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "Hunger Strikes", --really bad line of sight with rocks, get stuck not doing anything quite often
             }
@@ -604,6 +625,7 @@ FatesData = {
                 "Nevermore",
                 "Omicron Recall: Killing Order",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -630,6 +652,7 @@ FatesData = {
                 "Grand Designs: The Newest of New",
                 "Eurydike: All Bark, No Bite",
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -656,6 +679,7 @@ FatesData = {
                 "Big Storm Coming",
                 "Fire Suppression"
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "Young Volcanoes",
                 "Wolf Parade" -- multiple Pelupelu Peddler npcs, rng whether it tries to talk to the right one
@@ -679,6 +703,7 @@ FatesData = {
             bossFates= {
                 "Sayona Your Prayers"
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "Mole Patrol"
             }
@@ -704,6 +729,7 @@ FatesData = {
             bossFates= {
                 "Moths are Tough"
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "The Departed",
                 "Porting Is Such Sweet Sorrow" -- defence fate
@@ -737,6 +763,7 @@ FatesData = {
                 "Helms off to the Bull", -- boss NPC fate, Hhetsarro Herder
                 "The Dead Never Die", -- boss NPC fate, Tonawawtan Worker
             },
+            fatesWithContinuations = {},
             blacklistedFates= {}
         }
     },
@@ -764,6 +791,7 @@ FatesData = {
                 "A Scythe to an Axe Fight",
                 "(Got My Eye) Set on You"
             },
+            fatesWithContinuations = {},
             blacklistedFates= {
                 "When It's So Salvage" -- { fateName="When It's So Salvage", npcName="Refined Reforger" }
             }
@@ -792,6 +820,11 @@ FatesData = {
                 "Critical Corruption",
                 "Horse in the Round",
                 "Mascot Murder"
+            },
+            fatesWithContinuations =
+            {
+                "Plumbers Don't Fear Slimes",
+                "Mascot March"
             },
             blacklistedFates= {}
         }
@@ -822,6 +855,15 @@ end
 function IsOtherNpcFate(fateName)
     for i, otherNpcFate in ipairs(SelectedZone.fatesList.otherNpcFates) do
         if otherNpcFate.fateName == fateName then
+            return true
+        end
+    end
+    return false
+end
+
+function HasContinuation(fateName)
+    for i, continuationFates in ipairs(SelectedZone.fatesList.fatesWithContinuations) do
+        if continuationFates.fateName == fateName then
             return true
         end
     end
@@ -1137,23 +1179,29 @@ function Dismount()
         local z1 = GetPlayerRawZPos()
 
         yield('/ac dismount')
-        yield("/wait 1")
 
-        local x2 = GetPlayerRawXPos()
-        local y2 = GetPlayerRawYPos()
-        local z2 = GetPlayerRawZPos()
+        local now = os.clock()
+        if now - LastStuckCheckTime > 1 then
+            local x = GetPlayerRawXPos()
+            local y = GetPlayerRawYPos()
+            local z = GetPlayerRawZPos()
 
-        if GetCharacterCondition(CharacterCondition.flying) and DistanceBetween(x1, y1, z1, x2, y2, z2) < 2 then
-            LogInfo("[FATE] Unable to dismount here. Moving to another spot.")
-            local random_x, random_y, random_z = RandomAdjustCoordinates(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 10)
-            local nearestPointX = QueryMeshNearestPointX(random_x, random_y, random_z, 100, 100)
-            local nearestPointY = QueryMeshNearestPointY(random_x, random_y, random_z, 100, 100)
-            local nearestPointZ = QueryMeshNearestPointZ(random_x, random_y, random_z, 100, 100)
-            if nearestPointX ~= nil and nearestPointY ~= nil and nearestPointZ ~= nil then
-                PathfindAndMoveTo(nearestPointX, nearestPointY, nearestPointZ)
+            if GetCharacterCondition(CharacterCondition.flying) and GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 2 then
+                LogInfo("[FATE] Unable to dismount here. Moving to another spot.")
+                local random_x, random_y, random_z = RandomAdjustCoordinates(x, y, z, 10)
+                local nearestPointX = QueryMeshNearestPointX(random_x, random_y, random_z, 100, 100)
+                local nearestPointY = QueryMeshNearestPointY(random_x, random_y, random_z, 100, 100)
+                local nearestPointZ = QueryMeshNearestPointZ(random_x, random_y, random_z, 100, 100)
+                if nearestPointX ~= nil and nearestPointY ~= nil and nearestPointZ ~= nil then
+                    PathfindAndMoveTo(nearestPointX, nearestPointY, nearestPointZ)
+                    yield("/wait 1")
+                end
             end
-            yield("/wait 1")
+
+            LastStuckCheckTime = now
+            LastStuckCheckPosition = {x=x, y=y, z=z}
         end
+        
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
     else
@@ -1201,19 +1249,20 @@ function MoveToFate()
     end
 
     if (PathIsRunning() or PathfindInProgress()) and GetCharacterCondition(CharacterCondition.mounted) then
-        local x1 = GetPlayerRawXPos()
-        local y1 = GetPlayerRawYPos()
-        local z1 = GetPlayerRawZPos()
+        local now = os.clock()
+        if now - LastStuckCheckTime > 5 then
+            local x = GetPlayerRawXPos()
+            local y = GetPlayerRawYPos()
+            local z = GetPlayerRawZPos()
 
-        yield("/wait 5")
-
-        local x2 = GetPlayerRawXPos()
-        local y2 = GetPlayerRawYPos()
-        local z2 = GetPlayerRawZPos()
-
-        if DistanceBetween(x1, y1, z1, x2, y2, z2) < 3 then
-            yield("/vnav stop")
-            PathfindAndMoveTo(x2, y2 + 10, z2)
+            if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
+                yield("/vnav stop")
+                yield("/wait 1")
+                PathfindAndMoveTo(x, y + 10, z) -- fly up 10 then try again
+            end
+            
+            LastStuckCheckTime = now
+            LastStuckCheckPosition = {x=x, y=y, z=z}
         end
         return
     end
@@ -1311,11 +1360,6 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    if PandoraGetFeatureEnabled("FATE Targeting Mode") then
-        PandoraSetFeatureState("FATE Targeting Mode", false)
-        LogInfo("[FATE] Turning of Pandora FATE Targeting Mode")
-    end
-
     if not IsInFate() then
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
@@ -1343,8 +1387,10 @@ function CollectionsFateTurnIn()
             State = CharacterState.doFate
             LogInfo("[FATE] State Change: DoFate")
         else
-            State = CharacterState.ready
-            LogInfo("[FATE] State Change: Ready")
+            if GotCollectionsFullCredit then
+                State = CharacterState.ready
+                LogInfo("[FATE] State Change: Ready")
+            end
         end
 
         if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
@@ -1533,6 +1579,9 @@ function DoFate()
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
         PandoraSetFeatureState("FATE Targeting Mode", false)
+        if HasContinuation(NextFate.fateName) then
+            yield("/wait 10")
+        end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
@@ -1540,14 +1589,13 @@ function DoFate()
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
     elseif IsCollectionsFate(NextFate.fateName) then
-        -- random turn in 1% of the time
-        -- local r = math.random()
-        -- LogInfo("[FATE] Random turn in number: "..r)
-        -- if r < 0.01 or GetFateProgress(NextFate.fateId) == 100 then
+        WaitingForCollectionsFate = NextFate.fateId
+        yield("/wait 1") -- needs a moment after start of fate for GetFateEventItem to populate
         if GetItemCount(GetFateEventItem(NextFate.fateId)) >= 7 or (GotCollectionsFullCredit and GetFateProgress(NextFate.fateId) == 100) then
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
+            PandoraSetFeatureState("FATE Targeting Mode", false)
         end
     end
 
@@ -1638,13 +1686,16 @@ function Ready()
         LogInfo("[FATE] State Change: ExtractMateria")
     elseif NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
         yield("/wait 10")
-    elseif ShouldExchange and (BicolorGemCount >= 1400) then
+    elseif WaitingForCollectionsFate == 0 and ShouldExchange and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
-    elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
+    elseif WaitingForCollectionsFate == 0 and Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.processRetainers
         LogInfo("[FATE] State Change: ProcessingRetainers")
-    elseif NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
+    elseif GrandCompanyTurnIn and GetInventoryFreeSlotCount() < slots then
+        State = CharacterState.gcTurnIn
+        LogInfo("[FATE] State Change: GCTurnIn")
+    elseif WaitingForCollectionsFate == 0 and NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
         State = CharacterState.changingInstances
         LogInfo("[FATE] State Change: ChangingInstances")
     elseif NextFate == nil then
@@ -1821,24 +1872,23 @@ function ProcessRetainers()
     end
 end
 
-function TurnIn()
-    yield("/autoduty turnin")
-    yield("/wait 1")
-    while GetCharacterCondition(CharacterCondition.casting) do
-        yield("/wait 0.1")
-    end
-    yield("/wait 1")
-    while GetCharacterCondition(CharacterCondition.transition) do
-        yield("/wait 0.1")
-    end
-    yield("/wait 1")
-    while DeliverooIsTurnInRunning() do
-        yield("/wait 1")
-    end
-    yield("/wait 1")
-
-    if not IsInZone(SelectedZone.zoneId) then
-        TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+function GrandCompanyTurnIn()
+    if GetInventoryFreeSlotCount() <= slots then
+        if IsInZone(SelectedZone.zoneId) then
+            yield("/li gc")
+            yield("/wait 1")
+        elseif IsDeliverooRunning() then
+            return
+        else
+            yield("/deliveroo enable")
+        end
+    else
+        if not IsInZone(SelectedZone.zoneId) then
+            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+        else
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
+        end
     end
 end
 
@@ -1955,7 +2005,7 @@ CharacterState = {
     dead = HandleDeath,
     exchangingVouchers = ExchangeVouchers,
     processRetainers = ProcessRetainers,
-    turnIn = TurnIn,
+    gcTurnIn = GrandCompanyTurnIn,
     movingToFate = MoveToFate,
     interactWithNpc = InteractWithFateNpc,
     collectionsFateTurnIn = CollectionsFateTurnIn,
@@ -2003,6 +2053,11 @@ end
 
 LastTeleportTimeStamp = 0
 GotCollectionsFullCredit = false -- needs 7 items for  full credit
+LastStuckCheckTime = os.clock()
+LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
+-- variable to track collections fates that you have completed but are still active.
+-- will not leave area or change instance if value ~= 0
+WaitingForCollectionsFate = 0
 State = CharacterState.ready
 
 LogInfo("[FATE] Starting fate farming script.")
@@ -2020,6 +2075,10 @@ while true do
         end
         
         BicolorGemCount = GetItemCount(26807)
+
+        if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
+            WaitingForCollectionsFate = 0
+        end
 
         if not (IsPlayerCasting() or
             GetCharacterCondition(CharacterCondition.transition) or
