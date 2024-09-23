@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.8.4  *
+*  2.8.5  *
 ***********
-    -> 2.8.4    3rd for for blacklisting collections fates
+    -> 2.8.5    Improved detection for getting pushed out of bounds
+                3rd for for blacklisting collections fates
                 Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
                     added Salty Showdown as fate with continuation
                 Added 10s wait for continuation fates, reworked antistuck using os clock,
@@ -1598,8 +1599,8 @@ function DoFate()
         LogInfo("[FATE] State Change: Dead")
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
-    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < 50 and
-        not GetCharacterCondition(CharacterCondition.mounted) and not PathIsRunning() or PathfindInProgress()
+    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and (GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < GetFateRadius(NextFate.fateId) + 10) and
+        not GetCharacterCondition(CharacterCondition.mounted) and not (PathIsRunning() or PathfindInProgress())
     then -- got pushed out of fate. go back
         yield("/vnav stop")
         yield("/wait 1")
