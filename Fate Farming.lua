@@ -8,7 +8,7 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.6  *
+*  2.7.7  *
 ***********
     -> 2.7.7    Added checks for being moved and moved next fate selection within these checks
                 Rewrote collections fates to rely on number of items in inventory
