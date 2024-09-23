@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.7.5  *
+*  2.7.6  *
 ***********
-    -> 2.7.5    Added toggle to skip all collections fates
+    -> 2.7.6    Rewrote collections fates to rely on number of items in inventory
+                Added toggle to skip all collections fates
                 Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
                 Fixed dismount before interacting with npc
                 Fixed inching back to fate
@@ -228,9 +229,11 @@ CharacterCondition = {
     occupied=33,
     occupiedMateriaExtraction=39,
     transition=45,
-    jumping=48,
+    jumping48=48,
+    jumping61=61,
     occupiedSummoningBell=50,
-    mounting=64,
+    mounting57=57,
+    mounting64=64,
     flying=77
 }
 
@@ -926,6 +929,9 @@ end
 --Gets the Location of the next Fate. Prioritizes anything with progress above 0, then by shortest time left
 function SelectNextFate()
     local fates = GetActiveFates()
+    if fates == nil then
+        return
+    end
 
     local nextFate = nil
     for i = 0, fates.Count-1 do
@@ -1114,12 +1120,10 @@ function Mount()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
-        if not IsPlayerCasting() and not GetCharacterCondition(CharacterCondition.mounting) and not GetCharacterCondition(CharacterCondition.jumping) then
-            if MountToUse == "mount roulette" then
-                yield('/gaction "mount roulette"')
-            else
-                yield('/mount "' .. MountToUse)
-            end
+        if MountToUse == "mount roulette" then
+            yield('/gaction "mount roulette"')
+        else
+            yield('/mount "' .. MountToUse)
         end
     end
     yield("/wait 1")
@@ -1218,7 +1222,7 @@ function MoveToFate()
         return
     end
 
-    if GetDistanceToPoint(NextFate.x, GetPlayerRawYPos(), NextFate.z) < 30 then
+    if GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < GetFateRadius(NextFate.fateId) then
         if (IsOtherNpcFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) and NextFate.startTime == 0 then
             State = CharacterState.interactWithNpc
             LogInfo("[FATE] State Change: InteractWithFateNpc")
@@ -1260,14 +1264,15 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-
     PandoraSetFeatureState("Auto-Sync FATEs", false)
     LogInfo("[FATE] Disabling Pandora Auto-Sync FATEs")
 
     if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) and NextFate.npcX ~= nil then
-        yield("/wait 1")
-        yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
-        yield("/wait 1") -- wait a moment re-enabling auto sync so there's no server tick with the manual lsync
+        if GetFateMaxLevel(NextFate.fateId) < GetLevel() then
+            yield("/wait 1")
+            yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
+            yield("/wait 1") -- wait a moment re-enabling auto sync so there's no server tick with the manual lsync
+        end
         PandoraSetFeatureState("Auto-Sync FATEs", true)
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
@@ -1330,6 +1335,10 @@ function CollectionsFateTurnIn()
             MoveToNPC()
         end
     else
+        if GetItemCount(GetFateEventItem(NextFate.fateId)) >= 7 then
+            GotCollectionsFullCredit = true
+        end
+
         yield("/vnav stop")
         yield("/interact")
         yield("/wait 3")
@@ -1488,7 +1497,7 @@ function HandleUnexpectedCombat()
 
     -- pathfind closer if enemies are too far
     if HasTarget() then
-        if GetDistanceToTarget() > MaxDistance then
+        if GetDistanceToTarget() > (MaxDistance + GetTargetHitboxRadius()) then
             if not (PathfindInProgress() or PathIsRunning()) then
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
             end
@@ -1536,9 +1545,10 @@ function DoFate()
         return
     elseif IsCollectionsFate(NextFate.fateName) then
         -- random turn in 1% of the time
-        local r = math.random()
-        LogInfo("[FATE] Random turn in number: "..r)
-        if r < 0.01 or GetFateProgress(NextFate.fateId) == 100 then
+        -- local r = math.random()
+        -- LogInfo("[FATE] Random turn in number: "..r)
+        -- if r < 0.01 or GetFateProgress(NextFate.fateId) == 100 then
+        if GetItemCount(GetFateEventItem(NextFate.fateId)) >= 7 or (GotCollectionsFullCredit and GetFateProgress(NextFate.fateId) == 100) then
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
@@ -1578,7 +1588,7 @@ function DoFate()
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
             end
 
-            if GetDistanceToTarget() <= MaxDistance then
+            if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
                 --inch closer 1 second. may be line of sight issue
                 yield("/wait 1")
             end
@@ -1587,10 +1597,10 @@ function DoFate()
             yield("/targetenemy")
         end
     else
-        if GetDistanceToTarget() <= MaxDistance then
+        if HasTarget() and GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
             yield("/vnav stop")
         else
-            if not (PathfindInProgress() or PathIsRunning()) then
+            if not (PathfindInProgress() or PathIsRunning()) and not useBM then
                 yield("/wait 1")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
             end
@@ -1612,6 +1622,7 @@ end
 function Ready()
     FoodCheck()
     CombatModsOn = false -- expect RSR to turn off after every fate
+    GotCollectionsFullCredit = false
 
     if (not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100)) and
         GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat
@@ -1997,7 +2008,7 @@ if SelectedZone == nil then
 end
 
 LastTeleportTimeStamp = 0
-
+GotCollectionsFullCredit = false -- needs 7 items for  full credit
 State = CharacterState.ready
 
 LogInfo("[FATE] Starting fate farming script.")
@@ -2020,9 +2031,12 @@ while true do
         
         BicolorGemCount = GetItemCount(26807)
 
-        if not (GetCharacterCondition(CharacterCondition.transition) or
-            GetCharacterCondition(CharacterCondition.jumping) or
-            GetCharacterCondition(CharacterCondition.mounting))
+        if not (IsPlayerCasting() or
+            GetCharacterCondition(CharacterCondition.transition) or
+            GetCharacterCondition(CharacterCondition.jumping48) or
+            GetCharacterCondition(CharacterCondition.jumping61) or
+            GetCharacterCondition(CharacterCondition.mounting57) or
+            GetCharacterCondition(CharacterCondition.mounting64))
         then
             State()
         end

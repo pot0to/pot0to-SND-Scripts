@@ -1,3 +1,13 @@
+function Teleport(aetheryteName)
+    yield("/tp "..aetheryteName)
+    while not GetCharacterCondition(45) do
+        yield("/wait 0.1")
+    end
+    while GetCharacterCondition(45) do
+        yield("/wait 0.1")
+    end
+end
+
 function Start()
     if not IsInZone(144) then
         Teleport("Gold Saucer")
