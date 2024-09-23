@@ -8,9 +8,11 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.8.1  *
+*  2.8.3  *
 ***********
-    -> 2.8.1    Added 10s wait for continuation fates, reworked antistuck using os clock,
+    -> 2.8.3    Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
+                    added Salty Showdown as fate with continuation
+                Added 10s wait for continuation fates, reworked antistuck using os clock,
                     added tracker for open collections fates, and fixing GC turnins
                     added 1s wait after joining collections fate for event item to populate
                 Added checks for being moved and moved next fate selection within these checks
@@ -27,10 +29,6 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
                 Added check for do fates getting pushed out of bounds
                 Fixing mount and leave after collections fate
                 Fixed collections fates table for Living Memory
-                Added checks for IsPlayerAvailable to ready and change instance
-                Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
-                Updated Garlemald and Raktikka fates, credit: Gigglels
-                Fixed limsa mender telepot town, removed debug echoes
     -> 2.0.0    State system
 
 *********************
@@ -679,7 +677,9 @@ FatesData = {
                 "Big Storm Coming",
                 "Fire Suppression"
             },
-            fatesWithContinuations = {},
+            fatesWithContinuations = {
+                "Salty Showdown"
+            },
             blacklistedFates= {
                 "Young Volcanoes",
                 "Wolf Parade" -- multiple Pelupelu Peddler npcs, rng whether it tries to talk to the right one
@@ -881,6 +881,13 @@ function IsBlacklistedFate(fateName)
             return true
         end
     end
+    if not JoinCollectionsFates then
+        for i, collectionsFate in ipairs(SelectedZone.fatesList.collectionsFates) do
+            if collectionsFate == fateName then
+                return true
+            end
+        end
+    end
     return false
 end
 
@@ -1009,7 +1016,7 @@ function SelectNextFate()
                     else
                         LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
                     end
-                elseif IsOtherNpcFate(tempFate.fateName) or (JoinCollectionsFates and IsCollectionsFate(tempFate.fateName)) then
+                elseif IsOtherNpcFate(tempFate.fateName) then
                     if tempFate.startTime > 0 then -- if someone already opened this fate, then treat is as all the other fates
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else -- no one has opened this fate yet
@@ -1159,6 +1166,20 @@ function ChangeInstance()
     yield("/wait 1") -- wait for instance transfer to register
     State = CharacterState.ready
     LogInfo("[FATE] State Change: Ready")
+end
+
+function WaitForContinuation()
+    if IsInFate() then
+        State = CharacterState.doFate
+        LogInfo("State Change: DoFate")
+    elseif os.clock() - LastFateEndTime > 30 then
+        LogInfo("Over 30s since end of last fate. Giving up on part 2.")
+        TurnOffCombatMods()
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
+    else
+        yield("/wait 1")
+    end
 end
 
 function Mount()
@@ -1563,6 +1584,7 @@ function HandleUnexpectedCombat()
             end
         end
     end
+    yield("/wait 1")
 end
 
 -- Pandora FATE Targeting Mode should only be turned on during DoFate
@@ -1585,12 +1607,15 @@ function DoFate()
     elseif not IsInFate() then
         yield("/vnav stop")
         ClearTarget()
-        TurnOffCombatMods()
-        State = CharacterState.ready
-        LogInfo("[FATE] State Change: Ready")
         PandoraSetFeatureState("FATE Targeting Mode", false)
         if HasContinuation(NextFate.fateName) then
-            yield("/wait 10")
+            LastFateEndTime = os.clock()
+            State = CharacterState.waitForContinuation
+            LogInfo("[FATE] State Change: WaitForContinuation")
+        else
+            TurnOffCombatMods()
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
@@ -1679,7 +1704,7 @@ function Ready()
     GotCollectionsFullCredit = false
 
     if (not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100)) and
-        GetCharacterCondition(CharacterCondition.inCombat) and not State == CharacterState.unexpectedCombat
+        GetCharacterCondition(CharacterCondition.inCombat) and State ~= CharacterState.unexpectedCombat
     then
         State = CharacterState.unexpectedCombat
         LogInfo("[FATE] State Change: UnexpectedCombat")
@@ -2025,6 +2050,7 @@ CharacterState = {
     -- inCombat = HandleCombat,
     unexpectedCombat = HandleUnexpectedCombat,
     doFate = DoFate,
+    waitForContinuation = WaitForContinuation,
     extractMateria = ExtractMateria,
     repair = Repair
 }
@@ -2068,16 +2094,17 @@ LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlaye
 -- variable to track collections fates that you have completed but are still active.
 -- will not leave area or change instance if value ~= 0
 WaitingForCollectionsFate = 0
+LastFateEndTime = os.clock()
 State = CharacterState.ready
 
 LogInfo("[FATE] Starting fate farming script.")
 NextFate = nil
 while true do
     if NavIsReady() then
-        if GetCharacterCondition(CharacterCondition.dead) then
+        if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
-        elseif not IsInFate() and
+        elseif State ~= CharacterState.unexpectedCombat and not IsInFate() and
             GetCharacterCondition(CharacterCondition.inCombat) and not GetCharacterCondition(CharacterCondition.mounted)
         then
             State = CharacterState.unexpectedCombat
