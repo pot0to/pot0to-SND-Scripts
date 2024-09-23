@@ -234,6 +234,8 @@ CharacterCondition = {
     occupiedSummoningBell=50,
     mounting57=57,
     mounting64=64,
+    beingmoved70=70,
+    beingmoved75=75,
     flying=77
 }
 
@@ -1684,8 +1686,6 @@ function HandleDeath()
             yield("/callback SelectYesno true 0")
             yield("/wait 0.1")
         end
-    elseif GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.transition) then
-        return
     else
         if IsInZone(SelectedZone.zoneId) then
             State = CharacterState.ready
@@ -2036,7 +2036,9 @@ while true do
             GetCharacterCondition(CharacterCondition.jumping48) or
             GetCharacterCondition(CharacterCondition.jumping61) or
             GetCharacterCondition(CharacterCondition.mounting57) or
-            GetCharacterCondition(CharacterCondition.mounting64))
+            GetCharacterCondition(CharacterCondition.mounting64) or
+            GetCharacterCondition(CharacterCondition.beingmoved70) or
+            GetCharacterCondition(CharacterCondition.beingmoved75))
         then
             State()
         end
