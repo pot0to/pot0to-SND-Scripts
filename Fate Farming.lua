@@ -791,7 +791,9 @@ FatesData = {
                 "A Scythe to an Axe Fight",
                 "(Got My Eye) Set on You"
             },
-            fatesWithContinuations = {},
+            fatesWithContinuations = {
+                "Domo Arigato"
+            },
             blacklistedFates= {
                 "When It's So Salvage" -- { fateName="When It's So Salvage", npcName="Refined Reforger" }
             }
