@@ -10,7 +10,8 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 * Version *
 *  2.7.6  *
 ***********
-    -> 2.7.6    Rewrote collections fates to rely on number of items in inventory
+    -> 2.7.7    Added checks for being moved and moved next fate selection within these checks
+                Rewrote collections fates to rely on number of items in inventory
                 Added toggle to skip all collections fates
                 Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
                 Fixed dismount before interacting with npc
@@ -27,13 +28,6 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
                 Added check for getting pushed out of fate, keep pandora fate targeting mode off when out of fate
                 Updated Garlemald and Raktikka fates, credit: Gigglels
                 Fixed limsa mender telepot town, removed debug echoes
-                Reworked change instance spaghetti, Added limsa mender
-                Reworked combat into separate UnexpectedCombat and DoFate states, fixed repair
-                Fixed state transition out of combat for collections fates
-                Changed targting system to use Pandora FATE Targeting mode again
-                Changed order to check for bossfates before npc fates, in order to accommodate fates that are both
-                Attempted fixes for leaving collections fate at 100%, fixing some garlemald fates
-                Manually vnav stop and clear targets after fate
     -> 2.0.0    State system
 
 *********************
@@ -2024,10 +2018,6 @@ while true do
             State = CharacterState.unexpectedCombat
             LogInfo("[FATE] State Change: UnexpectedCombat")
         end
-
-        if State == CharacterState.ready or State == CharacterState.movingToFate then
-            NextFate = SelectNextFate()
-        end
         
         BicolorGemCount = GetItemCount(26807)
 
@@ -2040,6 +2030,10 @@ while true do
             GetCharacterCondition(CharacterCondition.beingmoved70) or
             GetCharacterCondition(CharacterCondition.beingmoved75))
         then
+            if State == CharacterState.ready or State == CharacterState.movingToFate then
+                NextFate = SelectNextFate()
+            end
+
             State()
         end
     end
