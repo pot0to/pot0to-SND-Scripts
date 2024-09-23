@@ -1398,8 +1398,8 @@ function CollectionsFateTurnIn()
             LogInfo("[FATE] State Change: DoFate")
         else
             if GotCollectionsFullCredit then
-                State = CharacterState.ready
-                LogInfo("[FATE] State Change: Ready")
+                State = CharacterState.unexpectedCombat
+                LogInfo("[FATE] State Change: UnexpectedCombat")
             end
         end
 
