@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.8.3  *
+*  2.8.4  *
 ***********
-    -> 2.8.3    Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
+    -> 2.8.4    3rd for for blacklisting collections fates
+                Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
                     added Salty Showdown as fate with continuation
                 Added 10s wait for continuation fates, reworked antistuck using os clock,
                     added tracker for open collections fates, and fixing GC turnins
@@ -883,7 +884,7 @@ function IsBlacklistedFate(fateName)
     end
     if not JoinCollectionsFates then
         for i, collectionsFate in ipairs(SelectedZone.fatesList.collectionsFates) do
-            if collectionsFate == fateName then
+            if collectionsFate.fateName == fateName then
                 return true
             end
         end
