@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.7  *
+*  2.10.8  *
 ***********
-    -> 2.10.7   Fix change instance dismount
+    -> 2.10.8   Added "on" to /rotation yield to fix toggle bug
+                Fix change instance dismount
                 Added new state transition: if CurrentFate becomes ineligible on the way
                     there and no new fates are eligible, then transition to Ready
                     (and eventually ChangeInstance)
@@ -1507,7 +1508,7 @@ function TurnOnCombatMods()
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
         -- yield("/rotation manual")
-        yield("/rotation "..RotationType)
+        yield("/rotation "..RotationType.." on")
         Class = GetClassJobId()
         
         if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
