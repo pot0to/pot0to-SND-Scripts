@@ -101,7 +101,7 @@ useBM = true                    --if you want to use the BossMod dodge/follow mo
 --users can adjust below settings to their liking
 MeleeDist = 2.5                 --distance for BMRAI melee
 RangedDist = 20                 --distance for BMRAI ranged
-
+RotationType = "auto"           -- "auto" or "manual". Manual recommended if using Pandora target
 
 --Other stuff
 ChocoboS = true                 --should it Activate the Chocobo settings in Pandora (to summon it)
@@ -1479,7 +1479,7 @@ function TurnOnCombatMods()
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
         -- yield("/rotation manual")
-        yield("/rotation auto")
+        yield("/rotation "..RotationType)
         Class = GetClassJobId()
         
         if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
