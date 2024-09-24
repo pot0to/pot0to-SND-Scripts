@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.8  *
+*  2.10.9  *
 ***********
-    -> 2.10.8   Added "on" to /rotation yield to fix toggle bug
+    -> 2.10.9   Added extra wait after /lsync to give the server a moment to register
+                Added "on" to /rotation yield to fix toggle bug
                 Fix change instance dismount
                 Added new state transition: if CurrentFate becomes ineligible on the way
                     there and no new fates are eligible, then transition to Ready
@@ -1611,6 +1612,7 @@ function DoFate()
     if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
         yield("/wait 1")
         yield("/lsync") -- there's a server tick between when the fate starts and the lsync command becomes available
+        yield("/wait 1")
     elseif not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
         (GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 10) and
         not GetCharacterCondition(CharacterCondition.mounted) and not (PathIsRunning() or PathfindInProgress())
