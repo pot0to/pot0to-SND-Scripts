@@ -8,10 +8,16 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
+<<<<<<< HEAD
 *  2.10.0  *
 ***********
     -> 2.10.0   Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
                 Fixing null issues with Current Fate
+=======
+*  2.9.2  *
+***********
+    -> 2.9.2    Fixing null issues with Current Fate
+>>>>>>> 6bc5edebf4ea7de93daf2e1ca10ab5f5268e5da2
                 Fixed manual materia extraction
                 Added hard stop outside of target hitbox, removed Pandora fate sync,
                     reworked CurrentFate and NextFate variables to better handle
@@ -1270,11 +1276,21 @@ function MoveToFate()
         return
     end
 
+<<<<<<< HEAD
     if not IsFateActive(CurrentFate.fateId) then
+=======
+    if CurrentFate == nil or not IsFateActive(CurrentFate.fateId) then
+>>>>>>> 6bc5edebf4ea7de93daf2e1ca10ab5f5268e5da2
         LogInfo("[FATE] Next Fate is dead, selecting new Fate.")
         yield("/vnav stop")
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
+        return
+    end
+
+    if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
+        State = CharacterState.doFate
+        LogInfo("[FATE] State Change: DoFate")
         return
     end
 
@@ -2110,6 +2126,9 @@ while true do
             GetCharacterCondition(CharacterCondition.beingmoved70) or
             GetCharacterCondition(CharacterCondition.beingmoved75))
         then
+            if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
+                CurrentFate = nil
+            end
             if State == CharacterState.ready or State == CharacterState.movingToFate then
                 NextFate = SelectNextFate()
             end
