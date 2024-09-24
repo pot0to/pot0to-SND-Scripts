@@ -1727,7 +1727,7 @@ function Ready()
             yield("/wait 10")
         end
         return
-    elseif (CurrentFate == nil or GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil then
+    elseif (CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil then
         CurrentFate = NextFate
         State = CharacterState.movingToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
@@ -1741,6 +1741,8 @@ function Ready()
             yield("/echo [FATE] Gems: "..tostring(BicolorGemCount).."/1500")
         end
     end
+
+    LogInfo("test 4")
 end
 
 DeathAnnouncementLock = false
