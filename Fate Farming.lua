@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.6  *
+*  2.10.7  *
 ***********
-    -> 2.10.6   Added new state transition: if CurrentFate becomes ineligible on the way
+    -> 2.10.7   Fix change instance dismount
+                Added new state transition: if CurrentFate becomes ineligible on the way
                     there and no new fates are eligible, then transition to Ready
                     (and eventually ChangeInstance)
                 Added separate dismounts for middle of fate, npc, and changing instances
@@ -1137,7 +1138,7 @@ function ChangeInstance()
     end
 
     if GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterCondition.changeInstanceDismount
+        State = CharacterState.changeInstanceDismount
         LogInfo("[FATE] State Change: ChangeInstanceDismount")
         return
     end
