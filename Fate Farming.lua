@@ -8,9 +8,9 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.10.0  *
+*  2.10.1  *
 ***********
-    -> 2.10.0   Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
+    -> 2.10.1   Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
                 Fixing null issues with Current Fate
                 Fixed manual materia extraction
                 Added hard stop outside of target hitbox, removed Pandora fate sync,
