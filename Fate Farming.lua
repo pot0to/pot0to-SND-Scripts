@@ -8,9 +8,16 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.8.5  *
+*  2.9.0  *
 ***********
-    -> 2.8.5    Improved detection for getting pushed out of bounds
+    -> 2.9.0    Added hard stop outside of target hitbox, removed Pandora fate sync,
+                    reworked CurrentFate and NextFate variables to better handle
+                    getting pushed out of CurrentFate while progress >= 80 and
+                    pathing to NextFate if it dies on your way there,
+                    Deliveroo TurnIns now working,
+                    Updated teleport orders so it can handle back to back errands (ex. bicolor exchange,
+                    processinig retainers, mender) without needing to return to fate zone in between
+                Improved detection for getting pushed out of bounds
                 3rd for for blacklisting collections fates
                 Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
                     added Salty Showdown as fate with continuation
@@ -24,13 +31,6 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
                 Fixed dismount before interacting with npc
                 Fixed inching back to fate
                 Changed pathing to land at npc
-                Rewrote parts of enemy pathing to avoid BMR follow
-                Fixed npcs for Panaq Attack and Fire Suppression
-                Fixing Pandora autotargeting, turned off bmrai follows, fixed pandora chocobo
-                Fixed RSR spam when BM/R is turned off, Cleaned up pandora checks
-                Added check for do fates getting pushed out of bounds
-                Fixing mount and leave after collections fate
-                Fixed collections fates table for Living Memory
     -> 2.0.0    State system
 
 *********************
@@ -179,7 +179,7 @@ elseif ChocoboS == false then
 end
 
 --Fate settings
-PandoraSetFeatureState("Auto-Sync FATEs", true)
+PandoraSetFeatureState("Auto-Sync FATEs", false)
 PandoraSetFeatureState("FATE Targeting Mode", false)
 PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/at y")
@@ -200,17 +200,6 @@ setSNDProperty("StopMacroIfCantUseItem", false)
 setSNDProperty("StopMacroIfItemNotFound", false)
 setSNDProperty("StopMacroIfAddonNotFound", false)
 setSNDProperty("StopMacroIfAddonNotVisible", false)
-
---vnavmesh building
-if not NavIsReady() then
-    yield("/echo [FATE] Building Mesh Please wait...")
-end
-while not NavIsReady() do
-    yield("/wait 1")
-end
-if NavIsReady() then
-    yield("/echo [FATE] Mesh is Ready!")
-end
 
 --#endregion Plugin Checks and Setting Init
 
@@ -978,6 +967,31 @@ function SelectNextFateHelper(tempFate, nextFate)
     return nextFate
 end
 
+function BuildFateTable(fateId)
+    local fateTable = {
+        fateId = fateId,
+        fateName = GetFateName(fateId),
+        progress = GetFateProgress(fateId),
+        duration = GetFateDuration(fateId),
+        startTime = GetFateStartTimeEpoch(fateId),
+        x = GetFateLocationX(fateId),
+        y = GetFateLocationY(fateId),
+        z = GetFateLocationZ(fateId),
+        isBonusFate = GetFateIsBonus(fateId),
+    }
+    fateTable.npcName = GetFateNpcName(fateTable.fateName)
+
+    local currentTime = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
+    if fateTable.startTime == 0 then
+        fateTable.timeLeft = 900
+    else
+        fateTable.timeElapsed = currentTime - fateTable.startTime
+        fateTable.timeLeft = fateTable.duration - fateTable.timeElapsed
+    end
+
+    return fateTable
+end
+
 --Gets the Location of the next Fate. Prioritizes anything with progress above 0, then by shortest time left
 function SelectNextFate()
     local fates = GetActiveFates()
@@ -987,27 +1001,8 @@ function SelectNextFate()
 
     local nextFate = nil
     for i = 0, fates.Count-1 do
-        local tempFate = {
-            fateId = fates[i],
-            fateName = GetFateName(fates[i]),
-            progress = GetFateProgress(fates[i]),
-            duration = GetFateDuration(fates[i]),
-            startTime = GetFateStartTimeEpoch(fates[i]),
-            x = GetFateLocationX(fates[i]),
-            y = GetFateLocationY(fates[i]),
-            z = GetFateLocationZ(fates[i]),
-            isBonusFate = GetFateIsBonus(fates[i]),
-        }
-        tempFate.npcName = GetFateNpcName(tempFate.fateName)
+        local tempFate = BuildFateTable(fates[i])
         LogInfo("[FATE] Considering fate #"..tempFate.fateId.." "..tempFate.fateName)
-
-        local currentTime = EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp())
-        if tempFate.startTime == 0 then
-            tempFate.timeLeft = 900
-        else
-            tempFate.timeElapsed = currentTime - tempFate.startTime
-            tempFate.timeLeft = tempFate.duration - tempFate.timeElapsed
-        end
         LogInfo("[FATE] Time left on fate #:"..tempFate.fateId..": "..math.floor(tempFate.timeLeft//60).."min, "..math.floor(tempFate.timeLeft%60).."s")
         
         if not (tempFate.x == 0 and tempFate.z == 0) then -- sometimes game doesn't send the correct coords
@@ -1116,7 +1111,7 @@ function TeleportTo(aetheryteName)
 end
 
 function ChangeInstance()
-    --Change Instance
+    CurrentFate = nil
 
     if LifestreamIsBusy() or not IsPlayerAvailable() or SuccessiveInstanceChanges >= 3 then
         yield("/wait 10")
@@ -1187,7 +1182,7 @@ end
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.movingToFate
-        LogInfo("[FATE] State Change: MovingToFate "..NextFate.fateName)
+        LogInfo("[FATE] State Change: MovingToFate "..CurrentFate.fateName)
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
@@ -1238,18 +1233,18 @@ function Dismount()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
     else
-        State = CharacterState.ready
-        LogInfo("[FATE] State Change: Ready")
+        State = CharacterState.movingToFate
+        LogInfo("[FATE] State Change: MovingToFate")
     end
 end
 
 --Paths to the Fate NPC Starter
 function MoveToNPC()
-    yield("/target "..NextFate.npcName)
-    if HasTarget() and GetTargetName()==NextFate.npcName then
+    yield("/target "..CurrentFate.npcName)
+    if HasTarget() and GetTargetName()==CurrentFate.npcName then
         if GetDistanceToTarget() > 5 then
-            if NextFate.npcX ~= nil then
-                PathfindAndMoveTo(NextFate.npcX, NextFate.npcY, NextFate.npcZ, GetCharacterCondition(CharacterCondition.flying))
+            if CurrentFate.npcX ~= nil then
+                PathfindAndMoveTo(CurrentFate.npcX, CurrentFate.npcY, CurrentFate.npcZ, GetCharacterCondition(CharacterCondition.flying))
             else
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
             end
@@ -1268,19 +1263,21 @@ function MoveToFate()
         return
     end
 
-    if not PathIsRunning() and IsInFate() and GetFateProgress(NextFate.fateId) < 100 then
+    if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
         return
     end
 
-    if NextFate == nil then
+    if CurrentFate == nil or not IsFateActive(CurrentFate.fateId) then
+        LogInfo("[FATE] Next Fate is dead, selecting new Fate.")
         yield("/vnav stop")
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
         return
     end
 
+    -- check for stuck
     if (PathIsRunning() or PathfindInProgress()) and GetCharacterCondition(CharacterCondition.mounted) then
         local now = os.clock()
         if now - LastStuckCheckTime > 5 then
@@ -1300,8 +1297,8 @@ function MoveToFate()
         return
     end
 
-    if GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < GetFateRadius(NextFate.fateId) then
-        if (IsOtherNpcFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) and NextFate.startTime == 0 then
+    if GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) then
+        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
             State = CharacterState.interactWithNpc
             LogInfo("[FATE] State Change: InteractWithFateNpc")
             return
@@ -1318,21 +1315,21 @@ function MoveToFate()
         return
     end
 
-    LogInfo("[FATE] Moving to fate #"..NextFate.fateId.." "..NextFate.fateName)
+    LogInfo("[FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
     if Echo == 2 then
-        yield("/echo [FATE] Moving to fate #"..NextFate.fateId.." "..NextFate.fateName)
+        yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
     end
 
-    local nearestLandX, nearestLandY, nearestLandZ = NextFate.x, NextFate.y + 10, NextFate.z
-    if not (IsCollectionsFate(NextFate.fateName) or IsCollectionsFate(NextFate.fateName)) then
-        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(NextFate.x, NextFate.y, NextFate.z, 29)
+    local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y + 10, CurrentFate.z
+    if not (IsCollectionsFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) then
+        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 29)
     end
 
     if HasPlugin("ChatCoordinates") then
         SetMapFlag(SelectedZone.zoneId, nearestLandX, nearestLandY, nearestLandZ)
     end
 
-    if TeleportToClosestAetheryteToFate(playerPosition, NextFate) then
+    if TeleportToClosestAetheryteToFate(playerPosition, CurrentFate) then
         return
     end
     
@@ -1342,39 +1339,29 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-    PandoraSetFeatureState("Auto-Sync FATEs", false)
-    LogInfo("[FATE] Disabling Pandora Auto-Sync FATEs")
-
-    if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) and NextFate.npcX ~= nil then
-        if GetFateMaxLevel(NextFate.fateId) < GetLevel() then
-            yield("/wait 1")
-            yield("/lsync") -- there's a milisecond between when the fate starts and the lsync command becomes available, so Pandora's lsync won't trigger
-            yield("/wait 1") -- wait a moment re-enabling auto sync so there's no server tick with the manual lsync
-        end
-        PandoraSetFeatureState("Auto-Sync FATEs", true)
+    if (IsInFate() or GetCharacterCondition(CharacterCondition.inCombat)) then
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
-    elseif NextFate == nil or not IsFateActive(NextFate.fateId) then
+    elseif CurrentFate == nil or not IsFateActive(CurrentFate.fateId) then
         State = CharacterState.ready
-        PandoraSetFeatureState("Auto-Sync FATEs", true)
         LogInfo("[FATE] State Change: Ready")
     elseif PathfindInProgress() or PathIsRunning() then
-        if HasTarget() and GetTargetName() == NextFate.npcName and GetDistanceToTarget() < 5 then
+        if HasTarget() and GetTargetName() == CurrentFate.npcName and GetDistanceToTarget() < 5 then
             yield("/vnav stop")
         end
         return
     else
         -- if target is already selected earlier during pathing, avoids having to target and move again
-        if (not HasTarget() or GetTargetName()~=NextFate.npcName) then
-            yield("/target "..NextFate.npcName)
+        if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
+            yield("/target "..CurrentFate.npcName)
             return
         end
 
-        NextFate.npcX = GetTargetRawXPos()
-        NextFate.npcY = GetTargetRawYPos()
-        NextFate.npcZ = GetTargetRawZPos()
+        CurrentFate.npcX = GetTargetRawXPos()
+        CurrentFate.npcY = GetTargetRawYPos()
+        CurrentFate.npcZ = GetTargetRawZPos()
 
-        if GetDistanceToPoint(NextFate.npcX, NextFate.npcY, NextFate.npcZ) > 5 then
+        if GetDistanceToPoint(CurrentFate.npcX, CurrentFate.npcY, CurrentFate.npcZ) > 5 then
             MoveToNPC()
             return
         end
@@ -1398,8 +1385,8 @@ function CollectionsFateTurnIn()
         LogInfo("[FATE] State Change: Ready")
     end
 
-    if (not HasTarget() or GetTargetName()~=NextFate.npcName) then
-        yield("/target "..NextFate.npcName)
+    if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
+        yield("/target "..CurrentFate.npcName)
         return
     end
 
@@ -1408,7 +1395,7 @@ function CollectionsFateTurnIn()
             MoveToNPC()
         end
     else
-        if GetItemCount(GetFateEventItem(NextFate.fateId)) >= 7 then
+        if GetItemCount(GetFateEventItem(CurrentFate.fateId)) >= 7 then
             GotCollectionsFullCredit = true
         end
 
@@ -1416,7 +1403,7 @@ function CollectionsFateTurnIn()
         yield("/interact")
         yield("/wait 3")
 
-        if GetFateProgress(NextFate.fateId) < 100 then
+        if GetFateProgress(CurrentFate.fateId) < 100 then
             State = CharacterState.doFate
             LogInfo("[FATE] State Change: DoFate")
         else
@@ -1426,7 +1413,7 @@ function CollectionsFateTurnIn()
             end
         end
 
-        if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
+        if CurrentFate ~=nil and CurrentFate.npcName ~=nil and GetTargetName() == CurrentFate.npcName then
             LogInfo("[FATE] Attempting to clear target.")
             ClearTarget()
             yield("/wait 1")
@@ -1491,7 +1478,8 @@ function TurnOnCombatMods()
     if not CombatModsOn then
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
-        yield("/rotation manual")
+        -- yield("/rotation manual")
+        yield("/rotation auto")
         Class = GetClassJobId()
         
         if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
@@ -1579,7 +1567,7 @@ function HandleUnexpectedCombat()
         else
             if PathfindInProgress() or PathIsRunning() then
                 yield("/vnav stop")
-            else
+            elseif not GetCharacterCondition(CharacterCondition.inCombat) then
                 --inch closer 3 seconds
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
                 yield("/wait 3")
@@ -1599,18 +1587,22 @@ function DoFate()
         LogInfo("[FATE] State Change: Dead")
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
-    elseif not IsInFate() and GetFateProgress(NextFate.fateId) < 100 and (GetDistanceToPoint(NextFate.x, NextFate.y, NextFate.z) < GetFateRadius(NextFate.fateId) + 10) and
+    elseif IsInFate() and GetFateMaxLevel(CurrentFate.fateId) < GetLevel() then
+        yield("/wait 1")
+        yield("/lsync") -- there's a server tick between when the fate starts and the lsync command becomes available
+    elseif not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
+        (GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 10) and
         not GetCharacterCondition(CharacterCondition.mounted) and not (PathIsRunning() or PathfindInProgress())
     then -- got pushed out of fate. go back
         yield("/vnav stop")
         yield("/wait 1")
-        PathfindAndMoveTo(NextFate.x, NextFate.y, NextFate.z)
+        PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
         return
     elseif not IsInFate() then
         yield("/vnav stop")
         ClearTarget()
         PandoraSetFeatureState("FATE Targeting Mode", false)
-        if HasContinuation(NextFate.fateName) then
+        if HasContinuation(CurrentFate.fateName) then
             LastFateEndTime = os.clock()
             State = CharacterState.waitForContinuation
             LogInfo("[FATE] State Change: WaitForContinuation")
@@ -1625,10 +1617,10 @@ function DoFate()
         LogInfo("[FATE] State Change: Dismounting")
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
-    elseif IsCollectionsFate(NextFate.fateName) then
-        WaitingForCollectionsFate = NextFate.fateId
+    elseif IsCollectionsFate(CurrentFate.fateName) then
+        WaitingForCollectionsFate = CurrentFate.fateId
         yield("/wait 1") -- needs a moment after start of fate for GetFateEventItem to populate
-        if GetItemCount(GetFateEventItem(NextFate.fateId)) >= 7 or (GotCollectionsFullCredit and GetFateProgress(NextFate.fateId) == 100) then
+        if GetItemCount(GetFateEventItem(CurrentFate.fateId)) >= 7 or (GotCollectionsFullCredit and GetFateProgress(CurrentFate.fateId) == 100) then
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
@@ -1637,7 +1629,7 @@ function DoFate()
     end
 
     -- do not target fate npc during combat
-    if NextFate ~=nil and NextFate.npcName ~=nil and GetTargetName() == NextFate.npcName then
+    if CurrentFate ~=nil and CurrentFate.npcName ~=nil and GetTargetName() == CurrentFate.npcName then
         LogInfo("[FATE] Attempting to clear target.")
         ClearTarget()
         yield("/wait 1")
@@ -1664,14 +1656,11 @@ function DoFate()
     -- pathfind closer if enemies are too far
     if not GetCharacterCondition(CharacterCondition.inCombat) then
         if HasTarget() then
-            if not (PathfindInProgress() or PathIsRunning()) then
+            if GetDistanceToTarget() <= (1 + GetTargetHitboxRadius()) then
+                yield("/vnav stop")
+            elseif not (PathfindInProgress() or PathIsRunning()) then
                 yield("/wait 1")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-            end
-
-            if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
-                --inch closer 1 second. may be line of sight issue
-                yield("/wait 1")
             end
             return
         else
@@ -1705,7 +1694,7 @@ function Ready()
     CombatModsOn = false -- expect RSR to turn off after every fate
     GotCollectionsFullCredit = false
 
-    if (not IsInFate() or (IsInFate() and GetFateProgress(GetNearestFate()) == 100)) and
+    if (not IsInFate() or (IsInFate() and GetFateProgress(CurrentFate.fateId) == 100)) and
         GetCharacterCondition(CharacterCondition.inCombat) and State ~= CharacterState.unexpectedCombat
     then
         State = CharacterState.unexpectedCombat
@@ -1732,14 +1721,20 @@ function Ready()
     elseif GrandCompanyTurnIn and GetInventoryFreeSlotCount() < slots then
         State = CharacterState.gcTurnIn
         LogInfo("[FATE] State Change: GCTurnIn")
+    elseif not IsInZone(SelectedZone.zoneId) then
+        if IsPlayerAvailable() then
+            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+        end
+        return
     elseif NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
         State = CharacterState.changingInstances
         LogInfo("[FATE] State Change: ChangingInstances")
     elseif NextFate == nil then
         yield("/wait 10")
-    else
+    elseif CurrentFate == nil or not IsFateActive(CurrentFate.fateId) or GetFateProgress(CurrentFate.fateId) == 100 then
+        CurrentFate = NextFate
         State = CharacterState.movingToFate
-        LogInfo("[FATE] State Change: MovingtoFate "..NextFate.fateName)
+        LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
     end
 
     if not GemAnnouncementLock and Echo >= 1 then
@@ -1754,6 +1749,8 @@ end
 
 DeathAnnouncementLock = false
 function HandleDeath()
+    CurrentFate = nil
+
     if CombatModsOn then
         TurnOffCombatMods()
     end
@@ -1769,13 +1766,9 @@ function HandleDeath()
             yield("/wait 0.1")
         end
     else
-        if IsInZone(SelectedZone.zoneId) then
-            State = CharacterState.ready
-            LogInfo("[FATE] State Change: Ready")
-            DeathAnnouncementLock = false
-        else
-            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
-        end
+        State = CharacterState.ready
+        LogInfo("[FATE] State Change: Ready")
+        DeathAnnouncementLock = false
     end
 end
 
@@ -1828,6 +1821,8 @@ function ExchangeNewVouchers()
 end
 
 function ExchangeVouchers()
+    CurrentFate = nil
+
     if BicolorGemCount >= 1400 then
         if IsAddonVisible("SelectYesno") then
             yield("/callback SelectYesno true 0")
@@ -1850,18 +1845,15 @@ function ExchangeVouchers()
             return
         end
 
-        if not IsInZone(SelectedZone.zoneId) then
-            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
-            return
-        else
-            State = CharacterState.ready
-            LogInfo("[FATE] State Change: Ready")
-            return
-        end
+        State = CharacterState.ready
+        LogInfo("[FATE] State Change: Ready")
+        return
     end
 end
 
 function ProcessRetainers()
+    CurrentFate = nil
+
     LogInfo("[FATE] Handling retainers...")
     if ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
     
@@ -1900,11 +1892,9 @@ function ProcessRetainers()
     else
         if IsAddonVisible("RetainerList") then
             yield("/callback RetainerList true -1")
-        elseif IsInZone(SelectedZone.zoneId) then
+        elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
-        elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
-            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         end
     end
 end
@@ -1914,18 +1904,14 @@ function GrandCompanyTurnIn()
         if IsInZone(SelectedZone.zoneId) then
             yield("/li gc")
             yield("/wait 1")
-        elseif IsDeliverooRunning() then
+        elseif DeliverooIsTurnInRunning() then
             return
         else
             yield("/deliveroo enable")
         end
     else
-        if not IsInZone(SelectedZone.zoneId) then
-            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
-        else
-            State = CharacterState.ready
-            LogInfo("State Change: Ready")
-        end
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
     end
 end
 
@@ -1992,13 +1978,8 @@ function Repair()
                 end
             end
         else
-            if not IsInZone(SelectedZone.zoneId) then
-                TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
-                return
-            else
-                State = CharacterState.ready
-                LogInfo("[FATE] State Change: Ready")
-            end
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
         end
     end
 end
@@ -2083,8 +2064,7 @@ if SelectedZone == nil then
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
-            blacklistedFates= {
-            }
+            blacklistedFates= {}
         }
     }
 end
@@ -2098,9 +2078,12 @@ LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlaye
 WaitingForCollectionsFate = 0
 LastFateEndTime = os.clock()
 State = CharacterState.ready
+CurrentFate = nil
+if IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
+    CurrentFate = BuildFateTable(GetNearestFate())
+end
 
 LogInfo("[FATE] Starting fate farming script.")
-NextFate = nil
 while true do
     if NavIsReady() then
         if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
