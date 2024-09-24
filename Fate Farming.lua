@@ -11,7 +11,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 * Version *
 *  2.10.4  *
 ***********
-    -> 2.10.4   Fixed order of operations parens for Ready() stuck
+    -> 2.10.4   Fix 4
                 Fix for CurrentFate 3, added state machine diagram
                 Another fix for CurrentFate
                 Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
@@ -1536,11 +1536,9 @@ function TurnOffCombatMods()
 end
 
 function HandleUnexpectedCombat()
-    if GetCharacterCondition(CharacterCondition.dead) then
-        State = CharacterState.dead
-        LogInfo("[FATE] State Change: Dead")
-        return
-    elseif not GetCharacterCondition(CharacterCondition.inCombat) then
+    CurrentFate = nil
+
+    if not GetCharacterCondition(CharacterCondition.inCombat) then
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
@@ -1742,8 +1740,6 @@ function Ready()
             yield("/echo [FATE] Gems: "..tostring(BicolorGemCount).."/1500")
         end
     end
-
-    LogInfo("test 4")
 end
 
 DeathAnnouncementLock = false
