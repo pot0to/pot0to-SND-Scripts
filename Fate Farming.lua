@@ -5,12 +5,14 @@
 ****************************************
 
 Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
+State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
 ***********
 * Version *
-*  2.10.2  *
+*  2.10.3  *
 ***********
-    -> 2.10.2   Another fix for CurrentFate
+    -> 2.10.3   Fix for CurrentFate 3, added state machine diagram
+                Another fix for CurrentFate
                 Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
                 Fixing null issues with Current Fate
                 Fixed manual materia extraction
@@ -119,9 +121,6 @@ if not HasPlugin("vnavmesh") then
 end
 if not HasPlugin("RotationSolverReborn") and not HasPlugin("RotationSolver") then
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
-end
-if not HasPlugin("PandorasBox") then
-    yield("/echo [FATE] Please Install Pandora's Box")
 end
 if not HasPlugin("TextAdvance") then
     yield("/echo [FATE] Please Install TextAdvance")
@@ -2109,10 +2108,6 @@ while true do
             GetCharacterCondition(CharacterCondition.beingmoved70) or
             GetCharacterCondition(CharacterCondition.beingmoved75))
         then
-            if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
-                CurrentFate = nil
-            end
-
             State()
         end
     end
