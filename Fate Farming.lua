@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.4  *
+*  2.10.5  *
 ***********
-    -> 2.10.4   Fix 4
+    -> 2.10.5   Added separate dismounts for middle of fate, npc, and changing instances
+                Fix 4
                 Fix for CurrentFate 3, added state machine diagram
                 Another fix for CurrentFate
                 Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
@@ -1105,8 +1106,6 @@ function TeleportTo(aetheryteName)
 end
 
 function ChangeInstance()
-    CurrentFate = nil
-
     if LifestreamIsBusy() or not IsPlayerAvailable() or SuccessiveInstanceChanges >= 3 then
         yield("/wait 10")
         SuccessiveInstanceChanges = 0
@@ -1135,8 +1134,8 @@ function ChangeInstance()
     end
 
     if GetCharacterCondition(CharacterCondition.mounted) then
-        yield("/ac dismount")
-        yield("/wait 1")
+        State = CharacterCondition.changeInstanceDismount
+        LogInfo("[FATE] State Change: ChangeInstanceDismount")
         return
     end
 
@@ -1193,7 +1192,7 @@ function Mount()
     yield("/wait 1")
 end
 
-function FateArrivalDismount()
+function Dismount()
     if PathIsRunning() or PathfindInProgress() then
         yield("/vnav stop")
         return
@@ -1227,12 +1226,35 @@ function FateArrivalDismount()
             LastStuckCheckTime = now
             LastStuckCheckPosition = {x=x, y=y, z=z}
         end
-        
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
+    end
+end
+
+function MiddleOfFateDismount()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        Dismount()
     else
         State = CharacterState.movingToFate
         LogInfo("[FATE] State Change: MovingToFate")
+    end
+end
+
+function NPCDismount()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        Dismount()
+    else
+        State = CharacterState.interactWithNpc
+        LogInfo("[FATE] State Change: InteractWithFateNpc")
+    end
+end
+
+function ChangeInstanceDismount()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        Dismount()
+    else
+        State = CharacterState.changingInstances
+        LogInfo("[FATE] State Change: ChangingInstance")
     end
 end
 
@@ -1241,11 +1263,8 @@ function MoveToNPC()
     yield("/target "..CurrentFate.npcName)
     if HasTarget() and GetTargetName()==CurrentFate.npcName then
         if GetDistanceToTarget() > 5 then
-            if CurrentFate.npcX ~= nil then
-                PathfindAndMoveTo(CurrentFate.npcX, CurrentFate.npcY, CurrentFate.npcZ, GetCharacterCondition(CharacterCondition.flying))
-            else
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
-            end
+            local x, y, z = RandomAdjustCoordinates(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), 5)
+            PathfindAndMoveTo(x, y, z, GetCharacterCondition(CharacterCondition.flying))
         else
             yield("/vnav stop")
         end
@@ -1365,17 +1384,14 @@ function InteractWithFateNpc()
             return
         end
 
-        CurrentFate.npcX = GetTargetRawXPos()
-        CurrentFate.npcY = GetTargetRawYPos()
-        CurrentFate.npcZ = GetTargetRawZPos()
-
-        if GetDistanceToPoint(CurrentFate.npcX, CurrentFate.npcY, CurrentFate.npcZ) > 5 then
+        if GetDistanceToPoint(GetTargetRawXPos(), GetPlayerRawYPos(), GetTargetRawZPos()) > 5 then
             MoveToNPC()
             return
         end
 
         if GetCharacterCondition(CharacterCondition.mounted) then
-            yield("/ac dismount")
+            State = CharacterState.npcDismount
+            LogInfo("[FATE] State Change: NPCDismount")
             return
         end
 
@@ -1608,7 +1624,7 @@ function DoFate()
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.dismounting
+        State = CharacterState.middleOfFateDismount
         LogInfo("[FATE] State Change: Dismounting")
         PandoraSetFeatureState("FATE Targeting Mode", false)
         return
@@ -1934,7 +1950,7 @@ function Repair()
 
     if SelfRepair then
         if GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.dismounting
+            State = CharacterState.middleOfFateDismount
             LogInfo("[FATE] State Change: Dismounting")
             return
         end
@@ -1981,7 +1997,7 @@ end
 
 function ExtractMateria()
     if GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.dismounting
+        State = CharacterState.middleOfFateDismount
         LogInfo("[FATE] State Change: Dismounting")
         return
     end
@@ -2023,7 +2039,9 @@ CharacterState = {
     interactWithNpc = InteractWithFateNpc,
     collectionsFateTurnIn = CollectionsFateTurnIn,
     mounting = Mount,
-    dismounting = FateArrivalDismount,
+    middleOfFateDismount = MiddleOfFateDismount,
+    npcDismount = NPCDismount,
+    changeInstanceDismount = ChangeInstanceDismount,
     changingInstances = ChangeInstance,
     -- inCombat = HandleCombat,
     unexpectedCombat = HandleUnexpectedCombat,
