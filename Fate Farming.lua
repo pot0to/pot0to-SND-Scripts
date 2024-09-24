@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.9.0  *
+*  2.9.1  *
 ***********
-    -> 2.9.0    Added hard stop outside of target hitbox, removed Pandora fate sync,
+    -> 2.9.1    Fixed manual materia extraction
+                Added hard stop outside of target hitbox, removed Pandora fate sync,
                     reworked CurrentFate and NextFate variables to better handle
                     getting pushed out of CurrentFate while progress >= 80 and
                     pathing to NextFate if it dies on your way there,
@@ -2004,13 +2005,13 @@ function ExtractMateria()
         LogInfo("[FATE] Extracting materia...")
             
         if IsAddonVisible("MaterializeDialog") then
-            yield("/pcall MaterializeDialog true 0")
+            yield("/callback MaterializeDialog true 0")
         else
-            yield("/pcall Materialize true 2")
+            yield("/callback Materialize true 2 0")
         end
     else
         if IsAddonVisible("Materialize") then
-            yield("/pcall Materialize true -1")
+            yield("/callback Materialize true -1")
         else
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
