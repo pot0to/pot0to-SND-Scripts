@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.3  *
+*  2.10.4  *
 ***********
-    -> 2.10.3   Fix for CurrentFate 3, added state machine diagram
+    -> 2.10.4   Fixed order of operations parens for Ready() stuck
+                Fix for CurrentFate 3, added state machine diagram
                 Another fix for CurrentFate
                 Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
                 Fixing null issues with Current Fate
