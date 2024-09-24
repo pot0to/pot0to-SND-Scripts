@@ -8,9 +8,10 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
 
 ***********
 * Version *
-*  2.10.1  *
+*  2.10.2  *
 ***********
-    -> 2.10.1   Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
+    -> 2.10.2   Another fix for CurrentFate
+                Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
                 Fixing null issues with Current Fate
                 Fixed manual materia extraction
                 Added hard stop outside of target hitbox, removed Pandora fate sync,
@@ -24,16 +25,6 @@ Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
                 3rd for for blacklisting collections fates
                 Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
                     added Salty Showdown as fate with continuation
-                Added 10s wait for continuation fates, reworked antistuck using os clock,
-                    added tracker for open collections fates, and fixing GC turnins
-                    added 1s wait after joining collections fate for event item to populate
-                Added checks for being moved and moved next fate selection within these checks
-                Rewrote collections fates to rely on number of items in inventory
-                Added toggle to skip all collections fates
-                Added BMR/VBM AI followtarget and followcombat. Up to people whether to use it
-                Fixed dismount before interacting with npc
-                Fixed inching back to fate
-                Changed pathing to land at npc
     -> 2.0.0    State system
 
 *********************
@@ -1278,6 +1269,13 @@ function MoveToFate()
         return
     end
 
+    NextFate = SelectNextFate()
+    if NextFate.fateId ~= CurrentFate.fateId then
+        yield("/vnav stop")
+        CurrentFate = NextFate
+        return
+    end
+
     if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
@@ -1584,7 +1582,6 @@ end
 
 -- Pandora FATE Targeting Mode should only be turned on during DoFate
 function DoFate()
-    LogInfo("DoFate")
     PandoraSetFeatureState("FATE Targeting Mode", true)
 
     if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
@@ -1694,6 +1691,7 @@ function Ready()
     CombatModsOn = false -- expect RSR to turn off after every fate
     GotCollectionsFullCredit = false
 
+    NextFate = SelectNextFate()
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
         CurrentFate = nil
     end
@@ -1722,12 +1720,15 @@ function Ready()
             TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         end
         return
-    elseif NextFate == nil and EnableChangeInstance and GetZoneInstance() > 0 then
-        State = CharacterState.changingInstances
-        LogInfo("[FATE] State Change: ChangingInstances")
     elseif NextFate == nil then
-        yield("/wait 10")
-    elseif CurrentFate == nil or not IsFateActive(CurrentFate.fateId) or GetFateProgress(CurrentFate.fateId) == 100 then
+        if EnableChangeInstance and GetZoneInstance() > 0 then
+            State = CharacterState.changingInstances
+            LogInfo("[FATE] State Change: ChangingInstances")
+        else
+            yield("/wait 10")
+        end
+        return
+    elseif (CurrentFate == nil or GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil then
         CurrentFate = NextFate
         State = CharacterState.movingToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
@@ -2110,9 +2111,6 @@ while true do
         then
             if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
                 CurrentFate = nil
-            end
-            if State == CharacterState.ready or State == CharacterState.movingToFate then
-                NextFate = SelectNextFate()
             end
 
             State()
