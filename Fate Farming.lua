@@ -9,9 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.5  *
+*  2.10.6  *
 ***********
-    -> 2.10.5   Added separate dismounts for middle of fate, npc, and changing instances
+    -> 2.10.6   Added new state transition: if CurrentFate becomes ineligible on the way
+                    there and no new fates are eligible, then transition to Ready
+                    (and eventually ChangeInstance)
+                Added separate dismounts for middle of fate, npc, and changing instances
                 Fix 4
                 Fix for CurrentFate 3, added state machine diagram
                 Another fix for CurrentFate
@@ -1289,7 +1292,12 @@ function MoveToFate()
     end
 
     NextFate = SelectNextFate()
-    if NextFate.fateId ~= CurrentFate.fateId then
+    if NextFate == nil then
+        yield("/vnav stop")
+        State = CharacterState.ready
+        LogInfo("[FATE] State Change: Ready")
+        return
+    elseif NextFate.fateId ~= CurrentFate.fateId then
         yield("/vnav stop")
         CurrentFate = NextFate
         return
