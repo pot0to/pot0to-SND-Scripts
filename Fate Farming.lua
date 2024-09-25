@@ -9,9 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.11  *
+*  2.10.12  *
 ***********
-    -> 2.10.11  Switches to single target if forlorn shows up, added check for case where
+    -> 2.10.12  Waits for LifestreamIsBusy() to complete before attempting to resume farming
+                    and checks if you're waiting for a collections fate after instead of before
+                Switches to single target if forlorn shows up, added check for case where
                     someone snipes the fate npc interaction before you, and you are flying
                     too high to be inside fate radius, fixed deliveroo turn ins for cases
                     where you're teleporting from elsewhere (ex. after limsa retainer) to
@@ -220,7 +222,7 @@ CharacterCondition = {
     occupiedShopkeeper=32,
     occupied=33,
     occupiedMateriaExtraction=39,
-    transition=45,
+    betweenAreas=45,
     jumping48=48,
     jumping61=61,
     occupiedSummoningBell=50,
@@ -1108,7 +1110,7 @@ function TeleportTo(aetheryteName)
         yield("/wait 1")
     end
     yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
-    while GetCharacterCondition(CharacterCondition.transition) do
+    while GetCharacterCondition(CharacterCondition.betweenAreas) do
         LogInfo("[FATE] Teleporting...")
         yield("/wait 1")
     end
@@ -1117,7 +1119,7 @@ function TeleportTo(aetheryteName)
 end
 
 function ChangeInstance()
-    if LifestreamIsBusy() or not IsPlayerAvailable() or SuccessiveInstanceChanges >= 3 then
+    if IsPlayerAvailable() or SuccessiveInstanceChanges >= 3 then
         yield("/wait 10")
         SuccessiveInstanceChanges = 0
         return
@@ -2162,19 +2164,20 @@ while true do
         
         BicolorGemCount = GetItemCount(26807)
 
-        if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
-            WaitingForCollectionsFate = 0
-        end
-
         if not (IsPlayerCasting() or
-            GetCharacterCondition(CharacterCondition.transition) or
+            GetCharacterCondition(CharacterCondition.betweenAreas) or
             GetCharacterCondition(CharacterCondition.jumping48) or
             GetCharacterCondition(CharacterCondition.jumping61) or
             GetCharacterCondition(CharacterCondition.mounting57) or
             GetCharacterCondition(CharacterCondition.mounting64) or
             GetCharacterCondition(CharacterCondition.beingmoved70) or
-            GetCharacterCondition(CharacterCondition.beingmoved75))
+            GetCharacterCondition(CharacterCondition.beingmoved75) or
+            LifestreamIsBusy())
         then
+            if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
+                WaitingForCollectionsFate = 0
+            end
+
             State()
         end
     end
