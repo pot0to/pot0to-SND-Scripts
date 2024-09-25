@@ -9,9 +9,13 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.9  *
+*  2.10.10  *
 ***********
-    -> 2.10.9   Added extra wait after /lsync to give the server a moment to register
+    -> 2.10.10  Switches to single target if forlorn shows up, added check for case where
+                    someone snipes the fate npc interaction before you, and you are flying
+                    too high to be inside fate radius, added vnav stop at beginning of
+                    process retainers
+                Added extra wait after /lsync to give the server a moment to register
                 Added "on" to /rotation yield to fix toggle bug
                 Fix change instance dismount
                 Added new state transition: if CurrentFate becomes ineligible on the way
@@ -1377,7 +1381,7 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-    if IsInFate() then
+    if IsInFate() or GetFateStartTimeEpoch(CurrentFate.fateId) > 0 then
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
     elseif not IsFateActive(CurrentFate.fateId) then
@@ -1666,6 +1670,19 @@ function DoFate()
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
 
+    if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
+        if not SingleTargetForlornMode then
+            SingleTargetForlornMode = true
+            yield("/rotation manual")
+            yield("/rotation settings aoetype 0") -- single target
+        end
+    else
+        if SingleTargetForlornMode then
+            SingleTargetForlornMode = false
+            TurnOnCombatMods()
+        end
+    end
+
     -- targets whatever is trying to kill you
     if not HasTarget() then
         yield("/battletarget")
@@ -1720,6 +1737,18 @@ function Ready()
     NextFate = SelectNextFate()
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
         CurrentFate = nil
+    end
+
+    if CurrentFate == nil then
+        LogInfo("[FATE] CurrentFate is nil")
+    else
+        LogInfo("[FATE] CurrentFate is "..CurrentFate.fateName)
+    end
+
+    if NextFate == nil then
+        LogInfo("[FATE] NextFate is nil")
+    else
+        LogInfo("[FATE] NextFate is "..NextFate.fateName)
     end
 
     if not IsPlayerAvailable() then
@@ -1885,6 +1914,7 @@ function ProcessRetainers()
         end
 
         if not IsInZone(129) then
+            yield("/vnav stop")
             TeleportTo("Limsa Lominsa Lower Decks")
             return
         end
@@ -2104,6 +2134,7 @@ WaitingForCollectionsFate = 0
 LastFateEndTime = os.clock()
 State = CharacterState.ready
 CurrentFate = nil
+SingleTargetForlornMode = false
 if IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
     CurrentFate = BuildFateTable(GetNearestFate())
 end
