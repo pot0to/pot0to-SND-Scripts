@@ -4,14 +4,15 @@
 *            Fate Farming              * 
 ****************************************
 
-Created by: Prawellp, sugarplum done updates v0.1.8 to v0.1.9, pot0to
+Created by: pot0to
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
 ***********
 * Version *
-*  2.10.15  *
+*  2.10.16  *
 ***********
-    -> 2.10.15  Fixed changing instances
+    -> 2.10.16  Added Feathery Dustup and The Pama-yawa Dilemma to Kozama'uka boss fates list
+                Fixed changing instances
                 Temporarily removed single target forlorn
                 Added a lot of debug statements
                 Waits for LifestreamIsBusy() to complete before attempting to resume farming
@@ -694,7 +695,9 @@ FatesData = {
             otherNpcFates= {},
             bossFates= {
                 "Sayona Your Prayers",
-                "There's Always a Bigger Beast"
+                "There's Always a Bigger Beast",
+                "Feathery Dustup",
+                "The Pama-yawa Dilemma"
             },
             fatesWithContinuations = {},
             blacklistedFates= {
