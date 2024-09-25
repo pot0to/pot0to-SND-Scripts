@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.12  *
+*  2.10.13  *
 ***********
-    -> 2.10.12  Waits for LifestreamIsBusy() to complete before attempting to resume farming
+    -> 2.10.13  Added a lot of debug statements
+                Waits for LifestreamIsBusy() to complete before attempting to resume farming
                     and checks if you're waiting for a collections fate after instead of before
                 Switches to single target if forlorn shows up, added check for case where
                     someone snipes the fate npc interaction before you, and you are flying
@@ -31,17 +32,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
                 Fixing null issues with Current Fate
                 Fixed manual materia extraction
-                Added hard stop outside of target hitbox, removed Pandora fate sync,
-                    reworked CurrentFate and NextFate variables to better handle
-                    getting pushed out of CurrentFate while progress >= 80 and
-                    pathing to NextFate if it dies on your way there,
-                    Deliveroo TurnIns now working,
-                    Updated teleport orders so it can handle back to back errands (ex. bicolor exchange,
-                    processinig retainers, mender) without needing to return to fate zone in between
-                Improved detection for getting pushed out of bounds
-                3rd for for blacklisting collections fates
-                Fix for blacklisting collections fates. Added print checks and waits for unexpectedCombat,
-                    added Salty Showdown as fate with continuation
     -> 2.0.0    State system
 
 *********************
@@ -1680,6 +1670,7 @@ function DoFate()
             yield("/rotation settings aoetype 0") -- single target
         end
     else
+        yield("/rotation off")
         if SingleTargetForlornMode then
             SingleTargetForlornMode = false
             TurnOnCombatMods()
@@ -1754,31 +1745,29 @@ function Ready()
         LogInfo("[FATE] NextFate is "..NextFate.fateName)
     end
 
-    if not IsPlayerAvailable() then
+    if not LogInfo("[FATE] Ready -> IsPlayerAvailable()") and not IsPlayerAvailable() then
         return
-    elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
+    elseif not LogInfo("[FATE] Ready -> Repair") and RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("[FATE] State Change: Repair")
-    elseif ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
+    elseif not LogInfo("[FATE] Ready -> ExtractMateria") and ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
-    elseif NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
+    elseif not LogInfo("[FATE] Ready -> Wait10") and NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
         yield("/wait 10")
-    elseif WaitingForCollectionsFate == 0 and ShouldExchange and (BicolorGemCount >= 1400) then
+    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and ShouldExchange and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
-    elseif WaitingForCollectionsFate == 0 and Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
+    elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForCollectionsFate == 0 and Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.processRetainers
         LogInfo("[FATE] State Change: ProcessingRetainers")
-    elseif GrandCompanyTurnIn and GetInventoryFreeSlotCount() < slots then
+    elseif not LogInfo("[FATE] Ready -> GC TurnIn") and GrandCompanyTurnIn and GetInventoryFreeSlotCount() < slots then
         State = CharacterState.gcTurnIn
         LogInfo("[FATE] State Change: GCTurnIn")
-    elseif not IsInZone(SelectedZone.zoneId) then
-        if IsPlayerAvailable() then
-            TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
-        end
+    elseif not LogInfo("[FATE] Ready -> TeleportBackToFarmingZone") and not IsInZone(SelectedZone.zoneId) then
+        TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         return
-    elseif NextFate == nil then
+    elseif not LogInfo("[FATE] Ready -> ChangingInstances") and NextFate == nil then
         if EnableChangeInstance and GetZoneInstance() > 0 then
             State = CharacterState.changingInstances
             LogInfo("[FATE] State Change: ChangingInstances")
@@ -1786,7 +1775,7 @@ function Ready()
             yield("/wait 10")
         end
         return
-    elseif (CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil then
+    elseif not LogInfo("[FATE] Ready -> MovingToFate") and (CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil then
         CurrentFate = NextFate
         State = CharacterState.movingToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
