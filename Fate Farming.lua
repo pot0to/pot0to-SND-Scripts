@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.13  *
+*  2.10.14  *
 ***********
-    -> 2.10.13  Added a lot of debug statements
+    -> 2.10.14  Temporarily removed single target forlorn
+                Added a lot of debug statements
                 Waits for LifestreamIsBusy() to complete before attempting to resume farming
                     and checks if you're waiting for a collections fate after instead of before
                 Switches to single target if forlorn shows up, added check for case where
@@ -1663,19 +1664,18 @@ function DoFate()
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
 
-    if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
-        if not SingleTargetForlornMode then
-            SingleTargetForlornMode = true
-            yield("/rotation manual")
-            yield("/rotation settings aoetype 0") -- single target
-        end
-    else
-        yield("/rotation off")
-        if SingleTargetForlornMode then
-            SingleTargetForlornMode = false
-            TurnOnCombatMods()
-        end
-    end
+    -- if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
+    --     if not SingleTargetForlornMode then
+    --         SingleTargetForlornMode = true
+    --         yield("/rotation manual")
+    --         yield("/rotation settings aoetype 0") -- single target
+    --     end
+    -- else
+    --     if SingleTargetForlornMode then
+    --         SingleTargetForlornMode = false
+    --         TurnOnCombatMods()
+    --     end
+    -- end
 
     -- targets whatever is trying to kill you
     if not HasTarget() then
