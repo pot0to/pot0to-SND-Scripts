@@ -13,8 +13,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 ***********
     -> 2.10.10  Switches to single target if forlorn shows up, added check for case where
                     someone snipes the fate npc interaction before you, and you are flying
-                    too high to be inside fate radius, added vnav stop at beginning of
-                    process retainers
+                    too high to be inside fate radius, fixed deliveroo turn ins for cases
+                    where you're teleporting from elsewhere (ex. after limsa retainer) to
+                    GC area, added vnav stop at beginning of process retainers
                 Added extra wait after /lsync to give the server a moment to register
                 Added "on" to /rotation yield to fix toggle bug
                 Fix change instance dismount
@@ -1954,7 +1955,13 @@ end
 
 function GrandCompanyTurnIn()
     if GetInventoryFreeSlotCount() <= slots then
-        if IsInZone(SelectedZone.zoneId) then
+        local playerGC = GetPlayerGC()
+        local gcZoneIds = {
+            129, --Limsa Lominsa
+            132, --New Gridania
+            130 --"Ul'dah - Steps of Nald"
+        }
+        if not IsInZone(gcZoneIds[playerGC]) then
             yield("/li gc")
             yield("/wait 1")
         elseif DeliverooIsTurnInRunning() then
