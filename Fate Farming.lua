@@ -9,9 +9,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.10  *
+*  2.10.11  *
 ***********
-    -> 2.10.10  Switches to single target if forlorn shows up, added check for case where
+    -> 2.10.11  Switches to single target if forlorn shows up, added check for case where
                     someone snipes the fate npc interaction before you, and you are flying
                     too high to be inside fate radius, fixed deliveroo turn ins for cases
                     where you're teleporting from elsewhere (ex. after limsa retainer) to
