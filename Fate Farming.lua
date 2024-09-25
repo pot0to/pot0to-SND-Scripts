@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.14  *
+*  2.10.15  *
 ***********
-    -> 2.10.14  Temporarily removed single target forlorn
+    -> 2.10.15  Fixed changing instances
+                Temporarily removed single target forlorn
                 Added a lot of debug statements
                 Waits for LifestreamIsBusy() to complete before attempting to resume farming
                     and checks if you're waiting for a collections fate after instead of before
@@ -1110,7 +1111,7 @@ function TeleportTo(aetheryteName)
 end
 
 function ChangeInstance()
-    if IsPlayerAvailable() or SuccessiveInstanceChanges >= 3 then
+    if SuccessiveInstanceChanges >= 3 then
         yield("/wait 10")
         SuccessiveInstanceChanges = 0
         return
