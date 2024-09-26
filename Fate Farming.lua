@@ -9,9 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.16  *
+*  2.10.17  *
 ***********
-    -> 2.10.16  Added Feathery Dustup and The Pama-yawa Dilemma to Kozama'uka boss fates list
+    -> 2.10.17  Fixed pathing closer to npcs for npc fates, reduced random adjust distance to 20
+                Added Feathery Dustup and The Pama-yawa Dilemma to Kozama'uka boss fates list
                 Fixed changing instances
                 Temporarily removed single target forlorn
                 Added a lot of debug statements
@@ -94,7 +95,7 @@ WaitIfBonusBuff = true          --Don't change instances if you have the Twist o
 CompletionToIgnoreFate = 80     --Percent above which to ignore fate
 MinTimeLeftToIgnoreFate = 3*60  --Seconds below which to ignore fate
 JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
-CompletionToJoinBossFate = 20   --Percent above which to join boss fate
+CompletionToJoinBossFate = 0    --Percent above which to join boss fate
 JoinCollectionsFates = true     --Set to false if you never want to do collections fates
 useBM = true                    --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
@@ -674,7 +675,8 @@ FatesData = {
             },
             blacklistedFates= {
                 "Young Volcanoes",
-                "Wolf Parade" -- multiple Pelupelu Peddler npcs, rng whether it tries to talk to the right one
+                "Wolf Parade", -- multiple Pelupelu Peddler npcs, rng whether it tries to talk to the right one
+                "Panaq Attack" -- multiple Pelupleu Peddler npcs
             }
         }
     },
@@ -1361,8 +1363,8 @@ function MoveToFate()
     end
 
     local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y + 10, CurrentFate.z
-    if not (IsCollectionsFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) then
-        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 29)
+    if not (IsCollectionsFate(CurrentFate.fateName) or IsOtherNpcFate(CurrentFate.fateName)) then
+        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 20)
     end
 
     if HasPlugin("ChatCoordinates") then
