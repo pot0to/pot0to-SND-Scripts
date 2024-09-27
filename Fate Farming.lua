@@ -9,9 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.10.17  *
+*  2.11.0  *
 ***********
-    -> 2.10.17  Fixed pathing closer to npcs for npc fates, reduced random adjust distance to 20
+    -> 2.11.0   Cleaned up settings section for clarity, added mount when no eligible fates left,
+                    to avoid running the chocobo timer
+                Fixed pathing closer to npcs for npc fates, reduced random adjust distance to 20
                 Added Feathery Dustup and The Pama-yawa Dilemma to Kozama'uka boss fates list
                 Fixed changing instances
                 Temporarily removed single target forlorn
@@ -71,46 +73,37 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --#region Settings
 
---true = yes
---false = no
+--Pre Fate Settings
+Food = ""                       --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+SummonChocobo = true            --Requires UsePandora=true and Pandora's Box plugin installed
+MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates
 
---Teleport and Voucher
-EnableChangeInstance = true --should it Change Instance when there is no Fate (only works on DT fates)
-ShouldExchange = true       --should it Exchange Vouchers
-    OldV = true             --should it Exchange Old Vouchers (set to false if you want the new Turali ones)
 
---Utilities
-SelfRepair = false          --if false,  will go to Limsa mender
-    RepairAmount = 20       --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
-ExtractMateria = true       --should it Extract Materia
-Food = ""                   --Leave "" Blank if you don't want to use any food
-                            --if its HQ include <hq> next to the name "Baked Eggplant <hq>"
---Retainer
-Retainers = true            --should it do Retainers
-    GrandCompanyTurnIn = false              --should it to Turn ins at the GC (requires Deliveroo)
-    slots = 5                   --how much inventory space before turning in
-
---Fate settings
-WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
-CompletionToIgnoreFate = 80     --Percent above which to ignore fate
-MinTimeLeftToIgnoreFate = 3*60  --Seconds below which to ignore fate
-JoinBossFatesIfActive = true    --Join boss fates if someone is already working on it (to avoid soloing long boss fates). If false, avoid boss fates entirely.
-CompletionToJoinBossFate = 0    --Percent above which to join boss fate
-JoinCollectionsFates = true     --Set to false if you never want to do collections fates
-useBM = true                    --if you want to use the BossMod dodge/follow mode
+--Fate Combat Settings
+CompletionToIgnoreFate = 80         --If the fate has more than this much progress already, skip it
+MinTimeLeftToIgnoreFate = 3*60      --If the fate has less than this many seconds left on the timer, skip it
+CompletionToJoinBossFate = 0        --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
+JoinCollectionsFates = true         --Set to false if you never want to do collections fates
+UsePandora = true                   --Set to false if experiencing lag issues, but you will lose chocobo companion.
+                                    --UsePandora=false also makes you pull more mobs (good or bad depending on whether you're a tank)
+                                    --and may cause targeting to ping-pong around, esp when forlorn shows up.
+useBM = true                        --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
+    MeleeDist = 2.5                     --distance for BMRAI melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
+    RangedDist = 20                     --distance for BMRAI ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
 
---Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"
---Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
---ranged and casters have a further max distance so not always running all way up to target
---users can adjust below settings to their liking
-MeleeDist = 2.5                 --distance for BMRAI melee
-RangedDist = 20                 --distance for BMRAI ranged
-RotationType = "auto"           -- "auto" or "manual". Manual recommended if using Pandora target
 
---Other stuff
-ChocoboS = true                 --should it Activate the Chocobo settings in Pandora (to summon it)
-MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates, leave empty for mount roulette 
+--Post Fate Settings
+EnableChangeInstance = true                     --should it Change Instance when there is no Fate (only works on DT fates)
+    WaitIfBonusBuff = true                          --Don't change instances if you have the Twist of Fate bonus buff
+ShouldExchangeBicolorVouchers = true            --Should it exchange Bicolor Gemstone Vouchers?
+    VoucherType = "Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
+SelfRepair = false                              --if false, will go to Limsa mender
+    RepairAmount = 20                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+ExtractMateria = true                           --should it Extract Materia
+Retainers = true                                --should it do Retainers
+GrandCompanyTurnIn = false                      --should it to Turn ins at the GC (requires Deliveroo)
+    slots = 5                                       --how much inventory space before turning in
 
 --Change this value for how much echos u want in chat 
 --0 no echos
@@ -172,18 +165,20 @@ if not HasPlugin("ChatCoordinates") then
 end
 
 --Chocobo settings
-if ChocoboS == true then
-    PandoraSetFeatureState("Auto-Summon Chocobo", true)
-    PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
-elseif ChocoboS == false then
-    PandoraSetFeatureState("Auto-Summon Chocobo", false) 
-    PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
+if UsePandora then
+    if SummonChocobo == true then
+        PandoraSetFeatureState("Auto-Summon Chocobo", true)
+        PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
+    elseif SummonChocobo == false then
+        PandoraSetFeatureState("Auto-Summon Chocobo", false) 
+        PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
+    end
+    
+    --Fate settings
+    PandoraSetFeatureState("Auto-Sync FATEs", false)
+    PandoraSetFeatureState("FATE Targeting Mode", false)
+    PandoraSetFeatureState("Action Combat Targeting", false)
 end
-
---Fate settings
-PandoraSetFeatureState("Auto-Sync FATEs", false)
-PandoraSetFeatureState("FATE Targeting Mode", false)
-PandoraSetFeatureState("Action Combat Targeting", false)
 yield("/at y")
 
 --snd property
@@ -1013,7 +1008,7 @@ function SelectNextFate()
         if not (tempFate.x == 0 and tempFate.z == 0) then -- sometimes game doesn't send the correct coords
             if not IsBlacklistedFate(tempFate.fateName) then -- check fate is not blacklisted for any reason
                 if IsBossFate(tempFate.fateName) then
-                    if JoinBossFatesIfActive and tempFate.progress >= CompletionToJoinBossFate then
+                    if tempFate.progress >= CompletionToJoinBossFate then
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else
                         LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
@@ -1512,8 +1507,11 @@ function TurnOnCombatMods()
     if not CombatModsOn then
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
-        -- yield("/rotation manual")
-        yield("/rotation "..RotationType.." on")
+        if UsePandora then
+            yield("/rotation manual")
+        else
+            yield("/rotation auto on")
+        end
         Class = GetClassJobId()
         
         if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
@@ -1544,6 +1542,8 @@ end
 
 function TurnOffCombatMods()
     if CombatModsOn then
+        yield("/rotation off")
+
         LogInfo("[FATE] Turning off combat mods")
         CombatModsOn = false
         -- no need to turn RSR off
@@ -1611,7 +1611,9 @@ end
 
 -- Pandora FATE Targeting Mode should only be turned on during DoFate
 function DoFate()
-    PandoraSetFeatureState("FATE Targeting Mode", true)
+    if UsePandora then
+        PandoraSetFeatureState("FATE Targeting Mode", true)
+    end
 
     if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
         yield("/wait 1")
@@ -1628,7 +1630,9 @@ function DoFate()
     elseif not IsFateActive(CurrentFate.fateId) then
         yield("/vnav stop")
         ClearTarget()
-        PandoraSetFeatureState("FATE Targeting Mode", false)
+        if UsePandora then
+            PandoraSetFeatureState("FATE Targeting Mode", false)
+        end
         if HasContinuation(CurrentFate.fateName) then
             LastFateEndTime = os.clock()
             State = CharacterState.waitForContinuation
@@ -1642,7 +1646,9 @@ function DoFate()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.middleOfFateDismount
         LogInfo("[FATE] State Change: Dismounting")
-        PandoraSetFeatureState("FATE Targeting Mode", false)
+        if UsePandora then
+            PandoraSetFeatureState("FATE Targeting Mode", false)
+        end
         return
     elseif IsCollectionsFate(CurrentFate.fateName) then
         WaitingForCollectionsFate = CurrentFate.fateId
@@ -1651,7 +1657,9 @@ function DoFate()
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
-            PandoraSetFeatureState("FATE Targeting Mode", false)
+            if UsePandora then
+                PandoraSetFeatureState("FATE Targeting Mode", false)
+            end
         end
     end
 
@@ -1760,8 +1768,13 @@ function Ready()
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
     elseif not LogInfo("[FATE] Ready -> Wait10") and NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
-        yield("/wait 10")
-    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and ShouldExchange and (BicolorGemCount >= 1400) then
+        if not GetCharacterCondition(CharacterCondition.mounted) then
+            State = CharacterState.mounting
+            LogInfo("[FATE] State Change: Mounting")
+        else
+            yield("/wait 10")
+        end
+    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and ShouldExchangeBicolorVouchers and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
     elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForCollectionsFate == 0 and Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
@@ -1884,7 +1897,7 @@ function ExchangeVouchers()
             return
         end
 
-        if OldV then
+        if VoucherType == "Bicolor Gemstone Voucher" then
             ExchangeOldVouchers()
         else
             ExchangeNewVouchers()
@@ -2149,7 +2162,9 @@ while true do
         if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
-            PandoraSetFeatureState("FATE Targeting Mode", false)
+            if UsePandora then
+                PandoraSetFeatureState("FATE Targeting Mode", false)
+            end
         elseif State ~= CharacterState.unexpectedCombat and not IsInFate() and
             GetCharacterCondition(CharacterCondition.inCombat) and not GetCharacterCondition(CharacterCondition.mounted)
         then
@@ -2167,6 +2182,7 @@ while true do
             GetCharacterCondition(CharacterCondition.mounting64) or
             GetCharacterCondition(CharacterCondition.beingmoved70) or
             GetCharacterCondition(CharacterCondition.beingmoved75) or
+            GetCharacterCondition(CharacterCondition.occupiedMateriaExtraction) or
             LifestreamIsBusy())
         then
             if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
