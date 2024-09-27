@@ -84,7 +84,7 @@ CompletionToIgnoreFate = 80         --If the fate has more than this much progre
 MinTimeLeftToIgnoreFate = 3*60      --If the fate has less than this many seconds left on the timer, skip it
 CompletionToJoinBossFate = 0        --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
-UsePandora = true                   --Set to false if experiencing lag issues, but you will lose chocobo companion.
+UsePandora = true                   --Set to false and turn off the Pandora plugin if experiencing lag issues, but you will lose chocobo companion.
                                     --UsePandora=false also makes you pull more mobs (good or bad depending on whether you're a tank)
                                     --and may cause targeting to ping-pong around, esp when forlorn shows up.
 useBM = true                        --if you want to use the BossMod dodge/follow mode
