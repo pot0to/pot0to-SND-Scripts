@@ -11,7 +11,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 * Version *
 *  2.11.0  *
 ***********
-    -> 2.11.0   Cleaned up settings section for clarity, added mount when no eligible fates left,
+    -> 2.11.0   Fixed flying to (0,0,0) issue, added option to switch to a different class for boss
+                    fates, changed logic to detect boss fates and cleaned up fate lists
+                Cleaned up settings section for clarity, added mount when no eligible fates left,
                     to avoid running the chocobo timer
                 Fixed pathing closer to npcs for npc fates, reduced random adjust distance to 20
                 Added Feathery Dustup and The Pama-yawa Dilemma to Kozama'uka boss fates list
@@ -83,6 +85,7 @@ MountToUse = "mount roulette"   --The mount you'd like to use when flying betwee
 CompletionToIgnoreFate = 80         --If the fate has more than this much progress already, skip it
 MinTimeLeftToIgnoreFate = 3*60      --If the fate has less than this many seconds left on the timer, skip it
 CompletionToJoinBossFate = 0        --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
+    ClassForBossFates = "PLD"          --If you want to use a different class for boss fates, set this to the 3 letter abbreviation for the class ex: "PLD"
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
 UsePandora = true                   --Set to false and turn off the Pandora plugin if experiencing lag issues, but you will lose chocobo companion.
                                     --UsePandora=false also makes you pull more mobs (good or bad depending on whether you're a tank)
@@ -166,18 +169,23 @@ end
 
 --Chocobo settings
 if UsePandora then
-    if SummonChocobo == true then
-        PandoraSetFeatureState("Auto-Summon Chocobo", true)
-        PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
-    elseif SummonChocobo == false then
-        PandoraSetFeatureState("Auto-Summon Chocobo", false) 
-        PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
+    if HasPlugin("PandorasBox") then
+        if SummonChocobo == true then
+            PandoraSetFeatureState("Auto-Summon Chocobo", true)
+            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
+        elseif SummonChocobo == false then
+            PandoraSetFeatureState("Auto-Summon Chocobo", false) 
+            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
+        end
+        
+        --Fate settings
+        PandoraSetFeatureState("Auto-Sync FATEs", false)
+        PandoraSetFeatureState("FATE Targeting Mode", false)
+        PandoraSetFeatureState("Action Combat Targeting", false)
+    else
+        UsePandora = false
+        yield("/echo [FATE] Please install Pandora's box or turn off the UsePandora setting to silence this warning message.")
     end
-    
-    --Fate settings
-    PandoraSetFeatureState("Auto-Sync FATEs", false)
-    PandoraSetFeatureState("FATE Targeting Mode", false)
-    PandoraSetFeatureState("Action Combat Targeting", false)
 end
 yield("/at y")
 
@@ -222,6 +230,32 @@ CharacterCondition = {
     flying=77
 }
 
+ClassList =
+{
+    PLD = { classId=19, className="Paladin", isMelee=true, isTank=true },
+    MNK = { classId=20, className="Monk", isMelee=true, isTank=false },
+    WAR = { classId=21, className="Warrior", isMelee=true, isTank=true },
+    DRG = { classId=22, className="Dragoon", isMelee=true, isTank=false },
+    BRD = { classId=23, className="Bard", isMelee=false, isTank=false },
+    WHM = { classId=24, className="White Mage", isMelee=false, isTank=false },
+    BLM = { classId=25, className="Black Mage", isMelee=false, isTank=false },
+    SMN = { classId=27, className="Summoner", isMelee=false, isTank=false },
+    SCH = { classId=28, className="Scholar", isMelee=false, isTank=false },
+    NIN = { classId=30, className="Ninja", isMelee=true, isTank=false },
+    MCH = { classId=31, className="Machinist", isMelee=false, isTank=false},
+    DRK = { classId=32, className="Dark Knight", isMelee=true, isTank=true },
+    AST = { classId=33, className="Astrologian", isMelee=false, isTank=false },
+    SAM = { classId=34, className="Samurai", isMelee=true, isTank=false },
+    RDM = { classId=35, className="Red Mage", isMelee=false, isTank=false },
+    BLU = { classId=36, className="Blue Mage", isMelee=false, isTank=false },
+    GNB = { classId=37, className="Gunbreaker", isMelee=true, isTank=true },
+    DNC = { classId=38, className="Dancer", isMelee=false, isTank=false },
+    RPR = { classId=39, className="Reaper", isMelee=true, isTank=false },
+    SGE = { classId=40, className="Sage", isMelee=false, isTank=false },
+    VPR = { classId=41, className="Viper", isMelee=true, isTank=false },
+    PCT = { classId=42, className="Pictomancer", isMelee=false, isTank=false }
+}
+
 FatesData = {
     {
         zoneName = "Coerthas Central Highlands",
@@ -232,7 +266,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -246,7 +279,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -260,7 +292,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -275,7 +306,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -289,7 +319,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -304,7 +333,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -319,7 +347,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -334,7 +361,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {},
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -351,11 +377,6 @@ FatesData = {
                 { fateName="Pick-up Sticks", npcName="Crystarium Botanist" }
             },
             otherNpcFates= {},
-            bossFates= {
-                "Calm a Chameleon",
-                "A Beast among Men",
-                "Draconian Measures",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -373,10 +394,6 @@ FatesData = {
                 { fateName="Ironbeard Builders - Rebuilt", npcName="Tholl Engineer" }
             },
             otherNpcFates= {},
-            bossFates= {
-                "Not Today (FATE)",
-                "A Finale Most Formidable",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -392,11 +409,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            bossFates= {
-                "Bayawak Attack",
-                "The Elderblade",
-                "The Odd Couple",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {
                 "Tolba No. 1", -- pathing is really bad to enemies
@@ -417,15 +429,6 @@ FatesData = {
             },
             otherNpcFates= {
                 { fateName="Once Upon a Time", npcName="Nectar-seeking Pixie" },
-            },
-            bossFates= {
-                "Thrice Upon a Time",
-                "Locus Terribilis",
-                "Mad Magic",
-                "Brute Fuath",
-                "Breaking the Fuath Wall",
-                "Go Fuath a Conqueror",
-                "Fuath to Be Reckoned With",
             },
             fatesWithContinuations = {},
             blacklistedFates= {}
@@ -448,16 +451,6 @@ FatesData = {
                 { fateName="Queen of the Harpies", npcName="Fanow Huntress" },
                 { fateName="Shot Through the Hart", npcName="Qilmet Redspear" },
             },
-            bossFates= {
-                "Attack of the Killer Tomatl",
-                "I'll Be Bark",
-                "Tojil War",
-                "Tojil Annihilation",
-                "Tojil Carnage",
-                "Tojil Eclipse",
-                "Attack the Block",
-                "Queen of the Harpies",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -478,11 +471,6 @@ FatesData = {
                 { fateName="Where has the Dagon", npcName="Teushs Ooan" },
                 { fateName="Ondo of Blood", npcName="Teushs Ooan" },
                 { fateName="Lookin' Back on the Track", npcName="Teushs Ooan" },
-            },
-            bossFates= {
-                "Ondo of Blood",
-                "The Devil in the Deep Blue Sea",
-                "The Head, the Tail, the Whole Damned Thing",
             },
             fatesWithContinuations = {},
             blacklistedFates= {
@@ -505,11 +493,6 @@ FatesData = {
                 { fateName="Moisture Farming", npcName="Well-moisturized Researcher" }
             },
             otherNpcFates= {},
-            bossFates= {
-                "Let It Grow",
-                "Incident Files: Steamed Vegetable",
-                "The Frailty of Life",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -527,10 +510,6 @@ FatesData = {
                 { fateName="Full Petal ALchemist: Perilous Pickings", npcName="???" }
             },
             otherNpcFates= {},
-            bossFates= {
-                "The Accursed Kanabhuti",
-                "Return of the Tyrant",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -552,12 +531,6 @@ FatesData = {
                 { fateName="Artificial Malevolence: Unmanned Aerial Villains", npcName="Keltlona" },
                 { fateName="Amazing Crates", npcName="Hardy Refugee" }
             },
-            bossFates= {
-                "Artificial Malevolence: 15 Minutes to Comply",
-                "Roses Are Red, Violence is Due",
-                "Artificial Malevolence: Mighty Metatron",
-                "The Man with the Golden Son",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -577,11 +550,6 @@ FatesData = {
             otherNpcFates= {
                 { fateName="Lepus Lamentorum: Dynamite Disaster", npcName="Warringway" },
                 { fateName="Lepus Lamentorum: Cleaner Catastrophe", npcName="Fallingway" },
-            },
-            bossFates= {
-                "The Stones of Silence",
-                "Lepus Lamentorum: Crazy Contraption",
-                "Head Empty, Only Thoughts"
             },
             fatesWithContinuations = {},
             blacklistedFates= {
@@ -606,11 +574,6 @@ FatesData = {
                 { fateName="Omicron Recall: Secure Connection", npcName="N-6205"},
                 { fateName="Only Just Begun", npcName="Myhk Nehr" }
             },
-            bossFates= {
-                "Far from the Madding Horde",
-                "Nevermore",
-                "Omicron Recall: Killing Order",
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -631,12 +594,6 @@ FatesData = {
                 { fateName="Grand Designs: Unknown Execution", npcName="Meletos the Inscrutable" },
                 { fateName="Grand Designs: Aigokeros", npcName="Meletos the Inscrutable" },
                 { fateName="Nature's Staunch Protector", npcName="Monoceros Monitor" },
-            },
-            bossFates= {
-                "Grand Designs: Io",
-                "The Rustling of Murderous Leaves",
-                "Grand Designs: The Newest of New",
-                "Eurydike: All Bark, No Bite",
             },
             fatesWithContinuations = {},
             blacklistedFates= {}
@@ -659,11 +616,6 @@ FatesData = {
                 { fateName="Salty Showdown", npcName="Chirwagur Sabreur" },
                 { fateName="Fire Suppression", npcName="Tsivli Stoutstrider"},
                 { fateName="Panaq Attack", npcName="Pelupelu Peddler" }
-            },
-            bossFates= {
-                "Panaq Attack",
-                "Big Storm Coming",
-                "Fire Suppression"
             },
             fatesWithContinuations = {
                 "Salty Showdown"
@@ -690,12 +642,6 @@ FatesData = {
                 { fateName="There's Always a Bigger Beast", npcName="Hanuhanu Angler" }
             },
             otherNpcFates= {},
-            bossFates= {
-                "Sayona Your Prayers",
-                "There's Always a Bigger Beast",
-                "Feathery Dustup",
-                "The Pama-yawa Dilemma"
-            },
             fatesWithContinuations = {},
             blacklistedFates= {
                 "Mole Patrol"
@@ -719,9 +665,6 @@ FatesData = {
                 { fateName="Stabbing Gutward", npcName="Doppro Spearbrother" },
                 --{ fateName=, npcName="Xbr'aal Sentry" }, -- 2 npcs named same thing.....
             },
-            bossFates= {
-                "Moths are Tough"
-            },
             fatesWithContinuations = {},
             blacklistedFates= {
                 "The Departed",
@@ -733,7 +676,7 @@ FatesData = {
         zoneName="Shaaloani",
         zoneId=1190,
         aetheryteList= {
-            { aetheryteName="Hhusatahwi", x=390, y=0, z=465 },
+            { aetheryteName="Hhusatahwi", x=390, y=0, z=465 }, -- 23 collections
             { aetheryteName="Sheshenewezi Springs", x=-295, y=19, z=-115 },
             { aetheryteName="Mehwahhetsoan", x=310, y=-15, z=-567 }
         },
@@ -743,18 +686,12 @@ FatesData = {
                 { fateName="The Serpentlord Sires", npcName="Br'uk Vaw of the Setting Sun" }
             },
             otherNpcFates= {
-                { fateName="The Dead Never Die", npcName="Tonawawtan Worker" },
-                { fateName="Ain't What I Herd", npcName="Hhetsarro Herder" },
-                { fateName="Helms off to the Bull", npcName="Hhetsarro Herder" },
-                { fateName="A Raptor Runs Through It", npcName="Hhetsarro Angler" },
+                { fateName="The Dead Never Die", npcName="Tonawawtan Worker" }, --22 boss
+                { fateName="Ain't What I Herd", npcName="Hhetsarro Herder" }, --23 normal
+                { fateName="Helms off to the Bull", npcName="Hhetsarro Herder" }, --22 boss
+                { fateName="A Raptor Runs Through It", npcName="Hhetsarro Angler" }, --24 tower defense
                 { fateName="The Serpentlord Suffers", npcName="Br'uk Vaw of the Setting Sun" },
                 { fateName="That's Me and the Porter", npcName="Pelupelu Peddler" },
-            },
-            bossFates= {
-                "The Serpentlord Seethes",
-                "Breaking the Jaw",
-                "Helms off to the Bull", -- boss NPC fate, Hhetsarro Herder
-                "The Dead Never Die", -- boss NPC fate, Tonawawtan Worker
             },
             fatesWithContinuations = {},
             blacklistedFates= {}
@@ -781,10 +718,6 @@ FatesData = {
                 { fateName="Pulling the Wool", npcName="Panicked Courier" },
                 { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
-            bossFates= {
-                "A Scythe to an Axe Fight",
-                "(Got My Eye) Set on You"
-            },
             fatesWithContinuations = {
                 "Domo Arigato"
             },
@@ -810,13 +743,6 @@ FatesData = {
                 { fateName="Canal Carnage", npcName="Unlost Sentry GX" },
                 { fateName="Mascot March", npcName="The Grand Marshal" }
             },
-            bossFates= {
-                "Feed Me, Sentries",
-                "Slime to Die",
-                "Critical Corruption",
-                "Horse in the Round",
-                "Mascot Murder"
-            },
             fatesWithContinuations =
             {
                 "Plumbers Don't Fear Slimes",
@@ -839,13 +765,15 @@ function IsCollectionsFate(fateName)
     return false
 end
 
-function IsBossFate(fateName)
-    for i, bossFate in ipairs(SelectedZone.fatesList.bossFates) do
-        if bossFate == fateName then
-            return true
-        end
-    end
-    return false
+function IsBossFate(fateId)
+    -- for i, bossFate in ipairs(SelectedZone.fatesList.bossFates) do
+    --     if bossFate == fateName then
+    --         return true
+    --     end
+    -- end
+    -- return false
+    local fateIcon = GetFateIconId(fateId)
+    return fateIcon == 60722
 end
 
 function IsOtherNpcFate(fateName)
@@ -1007,7 +935,7 @@ function SelectNextFate()
         
         if not (tempFate.x == 0 and tempFate.z == 0) then -- sometimes game doesn't send the correct coords
             if not IsBlacklistedFate(tempFate.fateName) then -- check fate is not blacklisted for any reason
-                if IsBossFate(tempFate.fateName) then
+                if IsBossFate(tempFate.fateId) then
                     if tempFate.progress >= CompletionToJoinBossFate then
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else
@@ -1160,6 +1088,7 @@ function ChangeInstance()
     yield("/li "..nextInstance) -- start instance transfer
     yield("/wait 1") -- wait for instance transfer to register
     State = CharacterState.ready
+    SuccessiveInstanceChanges = SuccessiveInstanceChanges + 1
     LogInfo("[FATE] State Change: Ready")
 end
 
@@ -1303,6 +1232,20 @@ function MoveToFate()
         yield("/vnav stop")
         CurrentFate = NextFate
         return
+    end
+
+    if BossFatesClass ~= nil then
+        if IsBossFate(CurrentFate.fateId) and CurrentClass.classId ~= BossFatesClass.classId then
+            yield("/echo changing to boss class")
+            yield("/gs change "..BossFatesClass.className)
+            CurrentClass = BossFatesClass
+            return
+        elseif not IsBossFate(CurrentFate.fateId) and CurrentClass.classId ~= MainClass.classId then
+            yield("/echo changing back")
+            yield("/gs change "..MainClass.className)
+            CurrentClass = MainClass
+            return
+        end
     end
 
     if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
@@ -1454,6 +1397,20 @@ end
 
 --#region Combat Functions
 
+function GetClassJobTable(jobId)
+    if jobId == nil then
+        LogInfo("[FATE] JobId is nil")
+        return nil
+    end
+    for _, classJob in pairs(ClassList) do
+        if classJob.classId == jobId then
+            return classJob
+        end
+    end
+    LogInfo("[FATE] Cannot recognize combat job.")
+    return nil
+end
+
 --Paths to the enemy (for Meele)
 function EnemyPathing()
     while HasTarget() and GetDistanceToTarget() > 3.5 do
@@ -1485,20 +1442,9 @@ function AvoidEnemiesWhileFlying()
 end
 
 function SetMaxDistance()
-    local ClassJob = GetClassJobId()
     MaxDistance = MeleeDist --default to melee distance
     --ranged and casters have a further max distance so not always running all way up to target
-    if ClassJob == 5 or ClassJob == 23 or -- Archer/Bard
-        ClassJob == 6 or ClassJob == 24 or -- Conjurer/White Mage
-        ClassJob == 7 or ClassJob == 25 or -- Thaumaturge/Black Mage
-        ClassJob == 26 or ClassJob == 27 or ClassJob == 28 or -- Arcanist/Summoner/Scholar
-        ClassJob == 31 or -- Machinist
-        ClassJob == 33 or -- Astrologian
-        ClassJob == 35 or -- Red Mage
-        ClassJob == 38 or -- Dancer
-        ClassJob == 40 or -- Sage
-        ClassJob == 42 -- Pictomancer
-    then
+    if not CurrentClass.isMelee then
         MaxDistance = RangedDist
     end
 end
@@ -1512,9 +1458,9 @@ function TurnOnCombatMods()
         else
             yield("/rotation auto on")
         end
-        Class = GetClassJobId()
+        local class = GetClassJobId()
         
-        if Class == 21 or Class == 37 or Class == 19 or Class == 32 or Class == 24 then -- white mage holy OP, or tank classes
+        if class.isTank or class.className == "White Mage" then -- white mage holy OP, or tank classes
             yield("/rotation settings aoetype 2") -- aoe
         else
             yield("/rotation settings aoetype 1") -- cleave
@@ -1619,7 +1565,7 @@ function DoFate()
         yield("/wait 1")
         yield("/lsync") -- there's a server tick between when the fate starts and the lsync command becomes available
         yield("/wait 1")
-    elseif not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
+    elseif IsFateActive(CurrentFate.fateId) and not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
         (GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 10) and
         not GetCharacterCondition(CharacterCondition.mounted) and not (PathIsRunning() or PathfindInProgress())
     then -- got pushed out of fate. go back
@@ -1794,7 +1740,7 @@ function Ready()
             yield("/wait 10")
         end
         return
-    elseif not LogInfo("[FATE] Ready -> MovingToFate") and (CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil then
+    elseif not LogInfo("[FATE] Ready -> MovingToFate") then -- and ((CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil) then
         CurrentFate = NextFate
         State = CharacterState.movingToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
@@ -2118,6 +2064,12 @@ GemAnnouncementLock = false
 AvailableFateCount = 0
 SuccessiveInstanceChanges = 0
 LastInstanceChangeTimestamp = 0
+MainClass = GetClassJobTable(GetClassJobId())
+BossFatesClass = nil
+CurrentClass = MainClass
+if ClassForBossFates ~= "" then
+    BossFatesClass = GetClassJobTable(ClassList[ClassForBossFates].classId)
+end
 SetMaxDistance()
 
 local selectedZoneId = GetZoneID()
@@ -2188,7 +2140,6 @@ while true do
             if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
                 WaitingForCollectionsFate = 0
             end
-
             State()
         end
     end
