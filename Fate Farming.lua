@@ -9,9 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.11.0  *
+*  2.11.1 *
 ***********
-    -> 2.11.0   Fixed flying to (0,0,0) issue, added option to switch to a different class for boss
+    -> 2.11.1   Changed mounted -> ready because new mount after no eligible fates breaks CurrentFate
+                    state, fixed class parsing bug
+                Fixed flying to (0,0,0) issue, added option to switch to a different class for boss
                     fates, changed logic to detect boss fates and cleaned up fate lists
                 Cleaned up settings section for clarity, added mount when no eligible fates left,
                     to avoid running the chocobo timer
@@ -1113,8 +1115,9 @@ end
 
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
-        State = CharacterState.movingToFate
-        LogInfo("[FATE] State Change: MovingToFate "..CurrentFate.fateName)
+        State = CharacterState.ready
+        LogInfo("[FATE] State Change: Ready")
+        -- LogInfo("[FATE] State Change: MovingToFate "..CurrentFate.fateName)
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
@@ -1207,7 +1210,7 @@ function MoveToNPC()
     end
 end
 
---Paths to the Fate
+--Paths to the Fate. Assumes CurrentFate is not nil
 function MoveToFate()
     SuccessiveInstanceChanges = 0
 
@@ -1236,15 +1239,14 @@ function MoveToFate()
     end
 
     if BossFatesClass ~= nil then
-        if IsBossFate(CurrentFate.fateId) and CurrentClass.classId ~= BossFatesClass.classId then
+        local currentClass = GetClassJobId()
+        if IsBossFate(CurrentFate.fateId) and currentClass ~= BossFatesClass.classId then
             yield("/echo changing to boss class")
             yield("/gs change "..BossFatesClass.className)
-            CurrentClass = BossFatesClass
             return
-        elseif not IsBossFate(CurrentFate.fateId) and CurrentClass.classId ~= MainClass.classId then
+        elseif not IsBossFate(CurrentFate.fateId) and currentClass ~= MainClass.classId then
             yield("/echo changing back")
             yield("/gs change "..MainClass.className)
-            CurrentClass = MainClass
             return
         end
     end
@@ -1445,7 +1447,8 @@ end
 function SetMaxDistance()
     MaxDistance = MeleeDist --default to melee distance
     --ranged and casters have a further max distance so not always running all way up to target
-    if not CurrentClass.isMelee then
+    local currentClass = GetClassJobTable(GetClassJobId())
+    if not currentClass.isMelee then
         MaxDistance = RangedDist
     end
 end
@@ -1459,7 +1462,8 @@ function TurnOnCombatMods()
         else
             yield("/rotation auto on")
         end
-        local class = GetClassJobId()
+
+        local class = GetClassJobTable(GetClassJobId())
         
         if class.isTank or class.className == "White Mage" then -- white mage holy OP, or tank classes
             yield("/rotation settings aoetype 2") -- aoe
@@ -2067,7 +2071,6 @@ SuccessiveInstanceChanges = 0
 LastInstanceChangeTimestamp = 0
 MainClass = GetClassJobTable(GetClassJobId())
 BossFatesClass = nil
-CurrentClass = MainClass
 if ClassForBossFates ~= "" then
     BossFatesClass = GetClassJobTable(ClassList[ClassForBossFates].classId)
 end
