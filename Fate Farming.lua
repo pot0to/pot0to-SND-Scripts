@@ -4,15 +4,18 @@
 *            Fate Farming              * 
 ****************************************
 
-Created by: pot0to
+Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
 ***********
 * Version *
-*  2.11.2 *
+*  2.12.0 *
 ***********
-
-    -> 2.11.2   Added ability to summon chocobo without Pandora, updated to manually fly back
+        
+    -> 2.12.0   Changed pathing to fate: upon approaching fate, bot will target either the npc
+                    or a random fate mob and switch to pathing towards new target. Fixed wait for
+                    continuation fates, fixed pathfinding while flying
+                Added ability to summon chocobo without Pandora, updated to manually fly back
                     to closest aetheryte if no eligible fates and not changing instances,
                     added random waits during mounting up and teleporting to make it more humanlike
                 Changed mounted -> ready because new mount after no eligible fates breaks CurrentFate
@@ -73,7 +76,6 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 Food = ""                       --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 ShouldSummonChocobo = true            --Summon chocobo?
 MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates
-
 
 --Fate Combat Settings
 CompletionToIgnoreFate = 80         --If the fate has more than this much progress already, skip it
@@ -1072,7 +1074,7 @@ function ChangeInstance()
 
     if GetDistanceToTarget() > 10 then
         if not (PathfindInProgress() or PathIsRunning()) then
-            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
             return
         end
     else
@@ -1120,7 +1122,7 @@ function FlyBackToAetheryte()
         if not (PathfindInProgress() or PathIsRunning()) then
             local closestAetheryte = GetClosestAethertyeToPoint(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
             if closestAetheryte ~= nil and DistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
-                PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z)
+                PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
             end
         end
         yield("/wait 10")
@@ -1138,7 +1140,7 @@ end
 
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
-        State = CharacterState.movingToFate
+        State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MoveToFate")
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
@@ -1178,7 +1180,7 @@ function Dismount()
                 local nearestPointY = QueryMeshNearestPointY(random_x, random_y, random_z, 100, 100)
                 local nearestPointZ = QueryMeshNearestPointZ(random_x, random_y, random_z, 100, 100)
                 if nearestPointX ~= nil and nearestPointY ~= nil and nearestPointZ ~= nil then
-                    PathfindAndMoveTo(nearestPointX, nearestPointY, nearestPointZ)
+                    PathfindAndMoveTo(nearestPointX, nearestPointY, nearestPointZ, GetCharacterCondition(CharacterCondition.flying))
                     yield("/wait 1")
                 end
             end
@@ -1195,8 +1197,8 @@ function MiddleOfFateDismount()
     if GetCharacterCondition(CharacterCondition.mounted) then
         Dismount()
     else
-        State = CharacterState.movingToFate
-        LogInfo("[FATE] State Change: MovingToFate")
+        State = CharacterState.moveToFate
+        LogInfo("[FATE] State Change: MoveToFate")
     end
 end
 
@@ -1223,8 +1225,7 @@ function MoveToNPC()
     yield("/target "..CurrentFate.npcName)
     if HasTarget() and GetTargetName()==CurrentFate.npcName then
         if GetDistanceToTarget() > 5 then
-            local x, y, z = RandomAdjustCoordinates(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), 5)
-            PathfindAndMoveTo(x, y, z, GetCharacterCondition(CharacterCondition.flying))
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
         else
             yield("/vnav stop")
         end
@@ -1237,6 +1238,7 @@ function MoveToFate()
     SuccessiveInstanceChanges = 0
 
     if not IsPlayerAvailable() then
+        yield("/echo player not available")
         return
     end
 
@@ -1260,6 +1262,7 @@ function MoveToFate()
         return
     end
 
+    -- change to secondary class if it's a boss fate
     if BossFatesClass ~= nil then
         local currentClass = GetClassJobId()
         if IsBossFate(CurrentFate.fateId) and currentClass ~= BossFatesClass.classId then
@@ -1273,11 +1276,47 @@ function MoveToFate()
         end
     end
 
-    if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
-        State = CharacterState.doFate
-        LogInfo("[FATE] State Change: DoFate")
+    -- upon approaching fate, pick a target and switch to pathing towards target
+    if HasTarget() then
+        yield("/echo has target")
+        if GetTargetName() == CurrentFate.npcName then
+            yield("/echo targeting npc")
+            State = CharacterState.interactWithNpc
+        elseif GetTargetFateID() ~= 0 then
+            yield("/echo targeting mob")
+            if GetDistanceToTarget() > MaxDistance then
+                yield("/echo too far")
+                if not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+                end
+            else
+                yield("/echo close to mob")
+                yield("/vnav stop")
+                State = CharacterState.doFate
+                LogInfo("[FATE] State Change: DoFate")
+            end
+        else
+            ClearTarget()
+        end
+        return
+    elseif GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 40 then
+        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.StartTime == 0 then
+            yield("/target "..CurrentFate.npcName)
+        else
+            TargetClosestFateEnemy()
+        end
+
+        if HasTarget() then
+            yield("/vnav stop")
+        end
         return
     end
+
+    -- if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
+    --     State = CharacterState.doFate
+    --     LogInfo("[FATE] State Change: DoFate")
+    --     return
+    -- end
 
     -- check for stuck
     if (PathIsRunning() or PathfindInProgress()) and GetCharacterCondition(CharacterCondition.mounted) then
@@ -1290,7 +1329,8 @@ function MoveToFate()
             if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
                 yield("/vnav stop")
                 yield("/wait 1")
-                PathfindAndMoveTo(x, y + 10, z) -- fly up 10 then try again
+                LogInfo("[FATE] Antistuck")
+                PathfindAndMoveTo(x, y + 10, z, GetCharacterCondition(CharacterCondition.flying)) -- fly up 10 then try again
             end
             
             LastStuckCheckTime = now
@@ -1299,20 +1339,20 @@ function MoveToFate()
         return
     end
 
-    if GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 20 then
-        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
-            State = CharacterState.interactWithNpc
-            LogInfo("[FATE] State Change: InteractWithFateNpc")
-            return
-        else
-            if not PathIsRunning() and GetFateProgress(CurrentFate.fateId) < 100 then
-                State = CharacterState.doFate
-                LogInfo("[FATE] State Change: DoFate")
-                return
-            end
-        end
-        return
-    end
+    -- if GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 20 then
+    --     if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
+    --         State = CharacterState.interactWithNpc
+    --         LogInfo("[FATE] State Change: InteractWithFateNpc")
+    --         return
+    --     else
+    --         if not PathIsRunning() and GetFateProgress(CurrentFate.fateId) < 100 then
+    --             State = CharacterState.doFate
+    --             LogInfo("[FATE] State Change: DoFate")
+    --             return
+    --         end
+    --     end
+    --     return
+    -- end
 
     if not GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.mounting
@@ -1325,7 +1365,7 @@ function MoveToFate()
         yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
     end
 
-    local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y + 10, CurrentFate.z
+    local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y, CurrentFate.z
     if not (IsCollectionsFate(CurrentFate.fateName) or IsOtherNpcFate(CurrentFate.fateName)) then
         nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 20)
     end
@@ -1337,9 +1377,7 @@ function MoveToFate()
     if TeleportToClosestAetheryteToFate(CurrentFate) then
         return
     end
-    
-    yield("/vnavmesh stop")
-    yield("/wait 1")
+
     PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId))
 end
 
@@ -1347,6 +1385,7 @@ function InteractWithFateNpc()
     if IsInFate() or GetFateStartTimeEpoch(CurrentFate.fateId) > 0 then
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
+        yield("/wait 1") -- give the fate a second to register before dofate and lsync
     elseif not IsFateActive(CurrentFate.fateId) then
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
@@ -1449,28 +1488,28 @@ function EnemyPathing()
         local enemy_y = GetTargetRawYPos()
         local enemy_z = GetTargetRawZPos()
         if PathIsRunning() == false then
-            PathfindAndMoveTo(enemy_x, enemy_y, enemy_z)
+            PathfindAndMoveTo(enemy_x, enemy_y, enemy_z, GetCharacterCondition(CharacterCondition.flying))
         end
         yield("/wait 0.1")
     end
 end
 
-function AvoidEnemiesWhileFlying()
-    --If you get attacked it flies up
-    if GetCharacterCondition(CharacterCondition.inCombat) then
-        Name = GetCharacterName()
-        PlocX = GetPlayerRawXPos(Name)
-        PlocY = GetPlayerRawYPos(Name)+40
-        PlocZ = GetPlayerRawZPos(Name)
-        yield("/gaction jump")
-        yield("/wait 0.5")
-        yield("/vnavmesh stop")
-        yield("/wait 1")
-        PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
-        PathStop()
-        yield("/wait 2")
-    end
-end
+-- function AvoidEnemiesWhileFlying()
+--     --If you get attacked it flies up
+--     if GetCharacterCondition(CharacterCondition.inCombat) then
+--         Name = GetCharacterName()
+--         PlocX = GetPlayerRawXPos(Name)
+--         PlocY = GetPlayerRawYPos(Name)+40
+--         PlocZ = GetPlayerRawZPos(Name)
+--         yield("/gaction jump")
+--         yield("/wait 0.5")
+--         yield("/vnavmesh stop")
+--         yield("/wait 1")
+--         PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
+--         PathStop()
+--         yield("/wait 2")
+--     end
+-- end
 
 function SetMaxDistance()
     MaxDistance = MeleeDist --default to melee distance
@@ -1574,14 +1613,14 @@ function HandleUnexpectedCombat()
     if HasTarget() then
         if GetDistanceToTarget() > (MaxDistance + GetTargetHitboxRadius()) then
             if not (PathfindInProgress() or PathIsRunning()) then
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
             end
         else
             if PathfindInProgress() or PathIsRunning() then
                 yield("/vnav stop")
             elseif not GetCharacterCondition(CharacterCondition.inCombat) then
                 --inch closer 3 seconds
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
                 yield("/wait 3")
             end
         end
@@ -1596,16 +1635,14 @@ function DoFate()
     end
 
     if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
-        yield("/wait 1")
-        yield("/lsync") -- there's a server tick between when the fate starts and the lsync command becomes available
-        yield("/wait 1")
+        yield("/lsync")
     elseif IsFateActive(CurrentFate.fateId) and not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
         (GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 10) and
         not GetCharacterCondition(CharacterCondition.mounted) and not (PathIsRunning() or PathfindInProgress())
     then -- got pushed out of fate. go back
         yield("/vnav stop")
         yield("/wait 1")
-        PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
+        PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z, GetCharacterCondition(CharacterCondition.flying))
         return
     elseif not IsFateActive(CurrentFate.fateId) then
         yield("/vnav stop")
@@ -1689,7 +1726,7 @@ function DoFate()
                 yield("/vnav stop")
             elseif not (PathfindInProgress() or PathIsRunning()) then
                 yield("/wait 1")
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
             end
             return
         else
@@ -1701,7 +1738,7 @@ function DoFate()
         else
             if not (PathfindInProgress() or PathIsRunning()) and not UseBM then
                 yield("/wait 1")
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
             end
         end
     end
@@ -1777,7 +1814,7 @@ function Ready()
         return
     elseif not LogInfo("[FATE] Ready -> MovingToFate") then -- and ((CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil) then
         CurrentFate = NextFate
-        State = CharacterState.movingToFate
+        State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
     end
 
@@ -2076,7 +2113,7 @@ CharacterState = {
     mounting = Mount,
     npcDismount = NPCDismount,
     middleOfFateDismount = MiddleOfFateDismount,
-    movingToFate = MoveToFate,
+    moveToFate = MoveToFate,
     interactWithNpc = InteractWithFateNpc,
     collectionsFateTurnIn = CollectionsFateTurnIn,
     doFate = DoFate,
@@ -2151,7 +2188,8 @@ while true do
             if UsePandora then
                 PandoraSetFeatureState("FATE Targeting Mode", false)
             end
-        elseif State ~= CharacterState.unexpectedCombat and not IsInFate() and
+        elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate
+            and State ~= CharacterState.waitForContinuation and not IsInFate() and
             GetCharacterCondition(CharacterCondition.inCombat) and not GetCharacterCondition(CharacterCondition.mounted)
         then
             State = CharacterState.unexpectedCombat
