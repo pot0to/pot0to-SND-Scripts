@@ -1321,7 +1321,7 @@ function MoveToFate()
     -- check for stuck
     if (PathIsRunning() or PathfindInProgress()) and GetCharacterCondition(CharacterCondition.mounted) then
         local now = os.clock()
-        if now - LastStuckCheckTime > 5 then
+        if now - LastStuckCheckTime > 10 then
             local x = GetPlayerRawXPos()
             local y = GetPlayerRawYPos()
             local z = GetPlayerRawZPos()
