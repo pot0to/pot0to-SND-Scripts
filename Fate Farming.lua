@@ -9,10 +9,14 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.11.1 *
+*  2.11.2 *
 ***********
-    -> 2.11.1   Changed mounted -> ready because new mount after no eligible fates breaks CurrentFate
-                    state, fixed class parsing bug
+
+    -> 2.11.2   Added ability to summon chocobo without Pandora, updated to manually fly back
+                    to closest aetheryte if no eligible fates and not changing instances,
+                    added random waits during mounting up and teleporting to make it more humanlike
+                Changed mounted -> ready because new mount after no eligible fates breaks CurrentFate
+                    convention, fixed class parsing bug
                 Fixed flying to (0,0,0) issue, added option to switch to a different class for boss
                     fates, changed logic to detect boss fates and cleaned up fate lists
                 Cleaned up settings section for clarity, added mount when no eligible fates left,
@@ -30,18 +34,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                     where you're teleporting from elsewhere (ex. after limsa retainer) to
                     GC area, added vnav stop at beginning of process retainers
                 Added extra wait after /lsync to give the server a moment to register
-                Added "on" to /rotation yield to fix toggle bug
-                Fix change instance dismount
-                Added new state transition: if CurrentFate becomes ineligible on the way
-                    there and no new fates are eligible, then transition to Ready
-                    (and eventually ChangeInstance)
-                Added separate dismounts for middle of fate, npc, and changing instances
-                Fix 4
-                Fix for CurrentFate 3, added state machine diagram
-                Another fix for CurrentFate
-                Rewrote all the CurrentFate/NextFate spaghetti, added check for IsLevelSynced
-                Fixing null issues with Current Fate
-                Fixed manual materia extraction
     -> 2.0.0    State system
 
 *********************
@@ -79,7 +71,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --Pre Fate Settings
 Food = ""                       --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
-SummonChocobo = true            --Requires UsePandora=true and Pandora's Box plugin installed
+ShouldSummonChocobo = true            --Summon chocobo?
 MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates
 
 
@@ -92,7 +84,7 @@ JoinCollectionsFates = true         --Set to false if you never want to do colle
 UsePandora = true                   --Set to false and turn off the Pandora plugin if experiencing lag issues, but you will lose chocobo companion.
                                     --UsePandora=false also makes you pull more mobs (good or bad depending on whether you're a tank)
                                     --and may cause targeting to ping-pong around, esp when forlorn shows up.
-useBM = true                        --if you want to use the BossMod dodge/follow mode
+UseBM = true                        --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
     MeleeDist = 2.5                     --distance for BMRAI melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
     RangedDist = 20                     --distance for BMRAI ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
@@ -154,15 +146,15 @@ if ExtractMateria == true then
         yield("/echo [FATE] Please Install YesAlready")
     end 
 end   
-if useBM then
-    if HasPlugin("BossModReborn") == false and HasPlugin("BossMod") == false then
-        yield("/echo [FATE] Please Install BossMod")
+if UseBM then
+    if HasPlugin("BossModReborn") then
+        BMorBMR = "BMR"
+    elseif HasPlugin("BossMod") then
+        BMorBMR = "BM"
     else
-        if HasPlugin("BossModReborn") then
-            BMorBMR = "BMR"
-        else
-            BMorBMR = "BM"
-        end
+        UseBM = false
+        yield("/echo Neither BossMod nor BossModReborn have been detected. " +
+            "Please set useBM to false or install one of these plugins to silence this warning.")
     end
 end
 if not HasPlugin("ChatCoordinates") then
@@ -172,11 +164,11 @@ end
 --Chocobo settings
 if UsePandora then
     if HasPlugin("PandorasBox") then
-        if SummonChocobo == true then
+        if ShouldSummonChocobo then
             PandoraSetFeatureState("Auto-Summon Chocobo", true)
             PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
-        elseif SummonChocobo == false then
-            PandoraSetFeatureState("Auto-Summon Chocobo", false) 
+        else
+            PandoraSetFeatureState("Auto-Summon Chocobo", false)
             PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
         end
         
@@ -995,14 +987,12 @@ end
 
 --#region Movement Functions
 
-function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
-    teleportTimePenalty = 200 -- to account for how long teleport takes you
-
+function GetClosestAethertyeToPoint(x, y, z, teleportTimePenalty)
     local aetheryteForClosestFate = nil
-    local closestTravelDistance = GetDistanceToPoint(nextFate.x, nextFate.y, nextFate.z)
+    local closestTravelDistance = GetDistanceToPoint(x, y, z)
     LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
     for j, aetheryte in ipairs(SelectedZone.aetheryteList) do
-        local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, nextFate.x, nextFate.y, nextFate.z)
+        local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, x, y, z)
         local comparisonDistance = distanceAetheryteToFate + teleportTimePenalty
         LogInfo("[FATE] Distance via "..aetheryte.aetheryteName.." adjusted for tp penalty is "..tostring(comparisonDistance))
 
@@ -1013,6 +1003,11 @@ function TeleportToClosestAetheryteToFate(playerPosition, nextFate)
         end
     end
 
+    return aetheryteForClosestFate
+end
+
+function TeleportToClosestAetheryteToFate(nextFate)
+    local aetheryteForClosestFate = GetClosestAethertyeToPoint(nextFate.x, nextFate.y, nextFate.z, 200)
     if aetheryteForClosestFate ~=nil then
         TeleportTo(aetheryteForClosestFate.aetheryteName)
         return true
@@ -1113,11 +1108,38 @@ function WaitForContinuation()
     end
 end
 
-function Mount()
-    if GetCharacterCondition(CharacterCondition.flying) then
+function FlyBackToAetheryte()
+    NextFate = SelectNextFate()
+    if NextFate ~= nil then
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
-        -- LogInfo("[FATE] State Change: MovingToFate "..CurrentFate.fateName)
+        return
+    end
+
+    if GetCharacterCondition(CharacterCondition.flying) then
+        if not (PathfindInProgress() or PathIsRunning()) then
+            local closestAetheryte = GetClosestAethertyeToPoint(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
+            if closestAetheryte ~= nil and DistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
+                PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z)
+            end
+        end
+        yield("/wait 10")
+    elseif GetCharacterCondition(CharacterCondition.mounted) then
+        yield("/gaction jump")
+    else
+        if MountToUse == "mount roulette" then
+            yield('/gaction "mount roulette"')
+        else
+            yield('/mount "' .. MountToUse)
+        end
+    end
+    yield("/wait 1")
+end
+
+function Mount()
+    if GetCharacterCondition(CharacterCondition.flying) then
+        State = CharacterState.movingToFate
+        LogInfo("[FATE] State Change: MoveToFate")
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
@@ -1312,7 +1334,7 @@ function MoveToFate()
         SetMapFlag(SelectedZone.zoneId, nearestLandX, nearestLandY, nearestLandZ)
     end
 
-    if TeleportToClosestAetheryteToFate(playerPosition, CurrentFate) then
+    if TeleportToClosestAetheryteToFate(CurrentFate) then
         return
     end
     
@@ -1414,6 +1436,12 @@ function GetClassJobTable(jobId)
     return nil
 end
 
+function SummonChocobo()
+    if ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 and GetItemCount(4868) > 0 then
+        yield("/item Gysahl Greens")
+    end
+end
+
 --Paths to the enemy (for Meele)
 function EnemyPathing()
     while HasTarget() and GetDistanceToTarget() > 3.5 do
@@ -1471,7 +1499,7 @@ function TurnOnCombatMods()
             yield("/rotation settings aoetype 1") -- cleave
         end
 
-        if not bossModAIActive and useBM then
+        if not bossModAIActive and UseBM then
             SetMaxDistance()
             
             if BMorBMR == "BMR" then
@@ -1500,7 +1528,7 @@ function TurnOffCombatMods()
         -- no need to turn RSR off
 
         -- turn off BMR so you don't start following other mobs
-        if useBM and bossModAIActive then
+        if UseBM and bossModAIActive then
             if BMorBMR == "BMR" then
                 yield("/bmrai off")
                 yield("/bmrai followtarget off")
@@ -1526,6 +1554,7 @@ function HandleUnexpectedCombat()
         TurnOffCombatMods()
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
+        yield("/wait "..math.random()*3)
         return
     end
 
@@ -1537,7 +1566,7 @@ function HandleUnexpectedCombat()
     end
 
     --Paths to enemys when Bossmod is disabled
-    if not useBM then
+    if not UseBM then
         EnemyPathing()
     end
 
@@ -1592,6 +1621,7 @@ function DoFate()
             TurnOffCombatMods()
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
+            yield("/wait "..math.random()*3)
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
@@ -1648,7 +1678,7 @@ function DoFate()
     end
 
     --Paths to enemys when Bossmod is disabled
-    if not useBM then
+    if not UseBM then
         EnemyPathing()
     end
 
@@ -1669,7 +1699,7 @@ function DoFate()
         if HasTarget() and GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
             yield("/vnav stop")
         else
-            if not (PathfindInProgress() or PathIsRunning()) and not useBM then
+            if not (PathfindInProgress() or PathIsRunning()) and not UseBM then
                 yield("/wait 1")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
             end
@@ -1690,6 +1720,8 @@ end
 
 function Ready()
     FoodCheck()
+    SummonChocobo()
+    
     CombatModsOn = false -- expect RSR to turn off after every fate
     GotCollectionsFullCredit = false
 
@@ -1718,13 +1750,9 @@ function Ready()
     elseif not LogInfo("[FATE] Ready -> ExtractMateria") and ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
-    elseif not LogInfo("[FATE] Ready -> Wait10") and NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
-        if not GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.mounting
-            LogInfo("[FATE] State Change: Mounting")
-        else
-            yield("/wait 10")
-        end
+    elseif not LogInfo("[FATE] Ready -> Wait10") and NextFate == nil and (WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))) then
+        State = CharacterState.flyBackToAethertye
+        LogInfo("[FATE] State Change: FlyBackToAetheryte")
     elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and ShouldExchangeBicolorVouchers and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
@@ -1742,6 +1770,8 @@ function Ready()
             State = CharacterState.changingInstances
             LogInfo("[FATE] State Change: ChangingInstances")
         else
+            State = CharacterState.flyBackToAethertye
+            LogInfo("[FATE] State Change: FlyBackToAetheryte")
             yield("/wait 10")
         end
         return
@@ -2042,23 +2072,23 @@ end
 CharacterState = {
     ready = Ready,
     dead = HandleDeath,
-    exchangingVouchers = ExchangeVouchers,
-    processRetainers = ProcessRetainers,
-    gcTurnIn = GrandCompanyTurnIn,
+    unexpectedCombat = HandleUnexpectedCombat,
+    mounting = Mount,
+    npcDismount = NPCDismount,
+    middleOfFateDismount = MiddleOfFateDismount,
     movingToFate = MoveToFate,
     interactWithNpc = InteractWithFateNpc,
     collectionsFateTurnIn = CollectionsFateTurnIn,
-    mounting = Mount,
-    middleOfFateDismount = MiddleOfFateDismount,
-    npcDismount = NPCDismount,
-    changeInstanceDismount = ChangeInstanceDismount,
-    changingInstances = ChangeInstance,
-    -- inCombat = HandleCombat,
-    unexpectedCombat = HandleUnexpectedCombat,
     doFate = DoFate,
     waitForContinuation = WaitForContinuation,
+    changingInstances = ChangeInstance,
+    changeInstanceDismount = ChangeInstanceDismount,
+    flyBackToAethertye = FlyBackToAetheryte,
     extractMateria = ExtractMateria,
-    repair = Repair
+    repair = Repair,
+    exchangingVouchers = ExchangeVouchers,
+    processRetainers = ProcessRetainers,
+    gcTurnIn = GrandCompanyTurnIn,
 }
 
 --#endregion State Transition Functions
