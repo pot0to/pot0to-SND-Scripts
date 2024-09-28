@@ -1300,7 +1300,7 @@ function MoveToFate()
         end
         return
     elseif GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 40 then
-        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.StartTime == 0 then
+        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
             yield("/target "..CurrentFate.npcName)
         else
             TargetClosestFateEnemy()
