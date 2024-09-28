@@ -9,10 +9,10 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.0 *
+*  2.12.1 *
 ***********
         
-    -> 2.12.0   Changed pathing to fate: upon approaching fate, bot will target either the npc
+    -> 2.12.1   Changed pathing to fate: upon approaching fate, bot will target either the npc
                     or a random fate mob and switch to pathing towards new target. Fixed wait for
                     continuation fates, fixed pathfinding while flying
                 Added ability to summon chocobo without Pandora, updated to manually fly back
