@@ -9,10 +9,14 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.1 *
+*  2.12.2 *
 ***********
         
-    -> 2.12.1   Changed pathing to fate: upon approaching fate, bot will target either the npc
+    -> 2.12.2   Updated logic to only target mobs that are part of CurrentFate, updated random
+                    adjust coordinates to bring you within 10 distance of center of fate, to make
+                    it easier to find targets but also provide some variation in where you land,
+                    in case others in the area are using the same script
+                Changed pathing to fate: upon approaching fate, bot will target either the npc
                     or a random fate mob and switch to pathing towards new target. Fixed wait for
                     continuation fates, fixed pathfinding while flying
                 Added ability to summon chocobo without Pandora, updated to manually fly back
@@ -31,12 +35,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Added a lot of debug statements
                 Waits for LifestreamIsBusy() to complete before attempting to resume farming
                     and checks if you're waiting for a collections fate after instead of before
-                Switches to single target if forlorn shows up, added check for case where
-                    someone snipes the fate npc interaction before you, and you are flying
-                    too high to be inside fate radius, fixed deliveroo turn ins for cases
-                    where you're teleporting from elsewhere (ex. after limsa retainer) to
-                    GC area, added vnav stop at beginning of process retainers
-                Added extra wait after /lsync to give the server a moment to register
     -> 2.0.0    State system
 
 *********************
@@ -120,7 +118,12 @@ Echo = 2
 if not HasPlugin("vnavmesh") then
     yield("/echo [FATE] Please Install vnavmesh")
 end
-if not HasPlugin("RotationSolverReborn") and not HasPlugin("RotationSolver") then
+
+if HasPlugin("RotationSolverReborn") then
+    yield("/rotation Settings TargetingTypes removeall")
+    yield("/rotation Settings TargetingTypes add LowHP")
+elseif HasPlugin("RotationSolver") then
+else
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
 end
 if not HasPlugin("TextAdvance") then
@@ -1119,9 +1122,12 @@ function FlyBackToAetheryte()
     end
 
     if GetCharacterCondition(CharacterCondition.flying) then
+        yield("/echo 1")
         if not (PathfindInProgress() or PathIsRunning()) then
+            yield("/echo 2")
             local closestAetheryte = GetClosestAethertyeToPoint(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
             if closestAetheryte ~= nil and DistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
+                yield("/echo 3")
                 PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
             end
         end
@@ -1282,7 +1288,7 @@ function MoveToFate()
         if GetTargetName() == CurrentFate.npcName then
             yield("/echo targeting npc")
             State = CharacterState.interactWithNpc
-        elseif GetTargetFateID() ~= 0 then
+        elseif GetTargetFateID() == CurrentFate.fateId then
             yield("/echo targeting mob")
             if GetDistanceToTarget() > MaxDistance then
                 yield("/echo too far")
@@ -1300,17 +1306,23 @@ function MoveToFate()
         end
         return
     elseif GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 40 then
+        yield("/echo no target")
         if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
+            yield("/echo targeting npc 2")
             yield("/target "..CurrentFate.npcName)
         else
+            yield("/echo targeting closest fate enemy")
             TargetClosestFateEnemy()
         end
 
         if HasTarget() then
+            yield("/echo found target")
             yield("/vnav stop")
         end
         return
     end
+
+    yield("/echo no targets within range")
 
     -- if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
     --     State = CharacterState.doFate
@@ -1367,7 +1379,7 @@ function MoveToFate()
 
     local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y, CurrentFate.z
     if not (IsCollectionsFate(CurrentFate.fateName) or IsOtherNpcFate(CurrentFate.fateName)) then
-        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 20)
+        nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 10)
     end
 
     if HasPlugin("ChatCoordinates") then
