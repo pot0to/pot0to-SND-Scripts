@@ -9,10 +9,14 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.2 *
+*  2.12.3 *
 ***********
         
-    -> 2.12.2   Updated logic to only target mobs that are part of CurrentFate, updated random
+    -> 2.12.3   Fix arrival logic that caused you to look for an npc, even if someone else had already
+                    started the fate, fixed check for finding closest aetheryte, added option to set RSR
+                    auto type, updated ClassForBossFates to work with lowercase, fixed dismount options
+                    for middle of fate and interacting with npc
+                Updated logic to only target mobs that are part of CurrentFate, updated random
                     adjust coordinates to bring you within 10 distance of center of fate, to make
                     it easier to find targets but also provide some variation in where you land,
                     in case others in the area are using the same script
@@ -81,9 +85,13 @@ MinTimeLeftToIgnoreFate = 3*60      --If the fate has less than this many second
 CompletionToJoinBossFate = 0        --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
     ClassForBossFates = ""          --If you want to use a different class for boss fates, set this to the 3 letter abbreviation for the class ex: "PLD"
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
-UsePandora = true                   --Set to false and turn off the Pandora plugin if experiencing lag issues, but you will lose chocobo companion.
-                                    --UsePandora=false also makes you pull more mobs (good or bad depending on whether you're a tank)
-                                    --and may cause targeting to ping-pong around, esp when forlorn shows up.
+
+                                    --"Pandora"/"RSR". Use RSR if the Pandora plugin if experiencing lag issues.
+TargetingSystem = "Pandora"         --Using also makes you pull more mobs (good or bad depending on whether you're a tank).
+    RSRAutoType = "LowHP"               --Only used if TargetingSystem = "RSR"
+                                        --Recommended for all classes using RSR targeting: List > Map Specific Settings > "Prio Target", add Forlorn Maiden and The Forlorn
+                                        --Additionally recommended for tanks: HighHP, Target > Configuration > gapcloser distance = 20y
+                                    
 UseBM = true                        --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
     MeleeDist = 2.5                     --distance for BMRAI melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
@@ -96,7 +104,7 @@ EnableChangeInstance = true                     --should it Change Instance when
 ShouldExchangeBicolorVouchers = true            --Should it exchange Bicolor Gemstone Vouchers?
     VoucherType = "Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
 SelfRepair = false                              --if false, will go to Limsa mender
-    RepairAmount = 20                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+    RepairAmount = 20                              --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
 ExtractMateria = true                           --should it Extract Materia
 Retainers = true                                --should it do Retainers
 GrandCompanyTurnIn = false                      --should it to Turn ins at the GC (requires Deliveroo)
@@ -121,7 +129,7 @@ end
 
 if HasPlugin("RotationSolverReborn") then
     yield("/rotation Settings TargetingTypes removeall")
-    yield("/rotation Settings TargetingTypes add LowHP")
+    yield("/rotation Settings TargetingTypes add "..RSRAutoType)
 elseif HasPlugin("RotationSolver") then
 else
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
@@ -158,7 +166,7 @@ if UseBM then
         BMorBMR = "BM"
     else
         UseBM = false
-        yield("/echo Neither BossMod nor BossModReborn have been detected. " +
+        yield("/echo [FATE] Neither BossMod nor BossModReborn have been detected. " +
             "Please set useBM to false or install one of these plugins to silence this warning.")
     end
 end
@@ -167,7 +175,7 @@ if not HasPlugin("ChatCoordinates") then
 end
 
 --Chocobo settings
-if UsePandora then
+if TargetingSystem == "Pandora" then
     if HasPlugin("PandorasBox") then
         if ShouldSummonChocobo then
             PandoraSetFeatureState("Auto-Summon Chocobo", true)
@@ -182,7 +190,7 @@ if UsePandora then
         PandoraSetFeatureState("FATE Targeting Mode", false)
         PandoraSetFeatureState("Action Combat Targeting", false)
     else
-        UsePandora = false
+        TargetingSystem = "RSR"
         yield("/echo [FATE] Please install Pandora's box or turn off the UsePandora setting to silence this warning message.")
     end
 end
@@ -231,28 +239,28 @@ CharacterCondition = {
 
 ClassList =
 {
-    PLD = { classId=19, className="Paladin", isMelee=true, isTank=true },
-    MNK = { classId=20, className="Monk", isMelee=true, isTank=false },
-    WAR = { classId=21, className="Warrior", isMelee=true, isTank=true },
-    DRG = { classId=22, className="Dragoon", isMelee=true, isTank=false },
-    BRD = { classId=23, className="Bard", isMelee=false, isTank=false },
-    WHM = { classId=24, className="White Mage", isMelee=false, isTank=false },
-    BLM = { classId=25, className="Black Mage", isMelee=false, isTank=false },
-    SMN = { classId=27, className="Summoner", isMelee=false, isTank=false },
-    SCH = { classId=28, className="Scholar", isMelee=false, isTank=false },
-    NIN = { classId=30, className="Ninja", isMelee=true, isTank=false },
-    MCH = { classId=31, className="Machinist", isMelee=false, isTank=false},
-    DRK = { classId=32, className="Dark Knight", isMelee=true, isTank=true },
-    AST = { classId=33, className="Astrologian", isMelee=false, isTank=false },
-    SAM = { classId=34, className="Samurai", isMelee=true, isTank=false },
-    RDM = { classId=35, className="Red Mage", isMelee=false, isTank=false },
-    BLU = { classId=36, className="Blue Mage", isMelee=false, isTank=false },
-    GNB = { classId=37, className="Gunbreaker", isMelee=true, isTank=true },
-    DNC = { classId=38, className="Dancer", isMelee=false, isTank=false },
-    RPR = { classId=39, className="Reaper", isMelee=true, isTank=false },
-    SGE = { classId=40, className="Sage", isMelee=false, isTank=false },
-    VPR = { classId=41, className="Viper", isMelee=true, isTank=false },
-    PCT = { classId=42, className="Pictomancer", isMelee=false, isTank=false }
+    pld = { classId=19, className="Paladin", isMelee=true, isTank=true },
+    mnk = { classId=20, className="Monk", isMelee=true, isTank=false },
+    war = { classId=21, className="Warrior", isMelee=true, isTank=true },
+    drg = { classId=22, className="Dragoon", isMelee=true, isTank=false },
+    brd = { classId=23, className="Bard", isMelee=false, isTank=false },
+    whm = { classId=24, className="White Mage", isMelee=false, isTank=false },
+    blm = { classId=25, className="Black Mage", isMelee=false, isTank=false },
+    smn = { classId=27, className="Summoner", isMelee=false, isTank=false },
+    sch = { classId=28, className="Scholar", isMelee=false, isTank=false },
+    nin = { classId=30, className="Ninja", isMelee=true, isTank=false },
+    mch = { classId=31, className="Machinist", isMelee=false, isTank=false},
+    drk = { classId=32, className="Dark Knight", isMelee=true, isTank=true },
+    ast = { classId=33, className="Astrologian", isMelee=false, isTank=false },
+    sam = { classId=34, className="Samurai", isMelee=true, isTank=false },
+    rdm = { classId=35, className="Red Mage", isMelee=false, isTank=false },
+    blu = { classId=36, className="Blue Mage", isMelee=false, isTank=false },
+    gnb = { classId=37, className="Gunbreaker", isMelee=true, isTank=true },
+    dnc = { classId=38, className="Dancer", isMelee=false, isTank=false },
+    rpr = { classId=39, className="Reaper", isMelee=true, isTank=false },
+    sge = { classId=40, className="Sage", isMelee=false, isTank=false },
+    vpr = { classId=41, className="Viper", isMelee=true, isTank=false },
+    pct = { classId=42, className="Pictomancer", isMelee=false, isTank=false }
 }
 
 FatesData = {
@@ -992,9 +1000,9 @@ end
 
 --#region Movement Functions
 
-function GetClosestAethertyeToPoint(x, y, z, teleportTimePenalty)
-    local aetheryteForClosestFate = nil
-    local closestTravelDistance = GetDistanceToPoint(x, y, z)
+function GetClosestAetheryte(x, y, z, teleportTimePenalty)
+    local closestAetheryte = nil
+    local closestTravelDistance = math.maxinteger
     LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
     for j, aetheryte in ipairs(SelectedZone.aetheryteList) do
         local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, x, y, z)
@@ -1004,15 +1012,28 @@ function GetClosestAethertyeToPoint(x, y, z, teleportTimePenalty)
         if comparisonDistance < closestTravelDistance then
             LogInfo("[FATE] Updating closest aetheryte to "..aetheryte.aetheryteName)
             closestTravelDistance = comparisonDistance
-            aetheryteForClosestFate = aetheryte
+            closestAetheryte = aetheryte
         end
     end
 
-    return aetheryteForClosestFate
+    return closestAetheryte
+end
+
+function GetClosestAetheryteToPoint(x, y, z, teleportTimePenalty)
+    local aetheryteForClosestFate = nil
+    local closestTravelDistance = GetDistanceToPoint(x, y, z)
+    LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
+    local closestAetheryte = GetClosestAetheryte(x, y, z, teleportTimePenalty)
+
+    if DistanceBetween(x, y, z, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) < closestTravelDistance then
+        return closestAetheryte
+    else
+        return nil
+    end
 end
 
 function TeleportToClosestAetheryteToFate(nextFate)
-    local aetheryteForClosestFate = GetClosestAethertyeToPoint(nextFate.x, nextFate.y, nextFate.z, 200)
+    local aetheryteForClosestFate = GetClosestAetheryteToPoint(nextFate.x, nextFate.y, nextFate.z, 200)
     if aetheryteForClosestFate ~=nil then
         TeleportTo(aetheryteForClosestFate.aetheryteName)
         return true
@@ -1122,12 +1143,9 @@ function FlyBackToAetheryte()
     end
 
     if GetCharacterCondition(CharacterCondition.flying) then
-        yield("/echo 1")
         if not (PathfindInProgress() or PathIsRunning()) then
-            yield("/echo 2")
-            local closestAetheryte = GetClosestAethertyeToPoint(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
+            local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
             if closestAetheryte ~= nil and DistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
-                yield("/echo 3")
                 PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
             end
         end
@@ -1200,6 +1218,15 @@ function Dismount()
 end
 
 function MiddleOfFateDismount()
+    if PathfindInProgress() or PathIsRunning() then
+        return
+    end
+
+    if HasTarget() and GetDistanceToTarget() > RangedDist and not (PathfindInProgress() or PathIsRunning()) then
+        PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+        return
+    end
+
     if GetCharacterCondition(CharacterCondition.mounted) then
         Dismount()
     else
@@ -1244,7 +1271,7 @@ function MoveToFate()
     SuccessiveInstanceChanges = 0
 
     if not IsPlayerAvailable() then
-        yield("/echo player not available")
+        yield("/echo [FATE] Player not available")
         return
     end
 
@@ -1257,7 +1284,7 @@ function MoveToFate()
     end
 
     NextFate = SelectNextFate()
-    if NextFate == nil then
+    if NextFate == nil then -- when moving to next fate, CurrentFate == NextFate
         yield("/vnav stop")
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
@@ -1272,11 +1299,9 @@ function MoveToFate()
     if BossFatesClass ~= nil then
         local currentClass = GetClassJobId()
         if IsBossFate(CurrentFate.fateId) and currentClass ~= BossFatesClass.classId then
-            yield("/echo changing to boss class")
             yield("/gs change "..BossFatesClass.className)
             return
         elseif not IsBossFate(CurrentFate.fateId) and currentClass ~= MainClass.classId then
-            yield("/echo changing back")
             yield("/gs change "..MainClass.className)
             return
         end
@@ -1284,45 +1309,29 @@ function MoveToFate()
 
     -- upon approaching fate, pick a target and switch to pathing towards target
     if HasTarget() then
-        yield("/echo has target")
+        yield("/vnav stop")
         if GetTargetName() == CurrentFate.npcName then
-            yield("/echo targeting npc")
+            yield("/vnav stop")
             State = CharacterState.interactWithNpc
         elseif GetTargetFateID() == CurrentFate.fateId then
-            yield("/echo targeting mob")
-            if GetDistanceToTarget() > MaxDistance then
-                yield("/echo too far")
-                if not (PathfindInProgress() or PathIsRunning()) then
-                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
-                end
-            else
-                yield("/echo close to mob")
-                yield("/vnav stop")
-                State = CharacterState.doFate
-                LogInfo("[FATE] State Change: DoFate")
-            end
+            State = CharacterState.middleOfFateDismount
+            LogInfo("[FATE] State Change: DoFate")
         else
             ClearTarget()
         end
         return
     elseif GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 40 then
-        yield("/echo no target")
-        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
-            yield("/echo targeting npc 2")
+        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and not IsInFate() then
             yield("/target "..CurrentFate.npcName)
         else
-            yield("/echo targeting closest fate enemy")
             TargetClosestFateEnemy()
         end
 
-        if HasTarget() then
-            yield("/echo found target")
+        if HasTarget() and GetDistanceToTarget() < 30 then
             yield("/vnav stop")
         end
         return
     end
-
-    yield("/echo no targets within range")
 
     -- if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
     --     State = CharacterState.doFate
@@ -1473,13 +1482,27 @@ end
 
 --#region Combat Functions
 
-function GetClassJobTable(jobId)
+function GetClassJobTableFromId(jobId)
     if jobId == nil then
         LogInfo("[FATE] JobId is nil")
         return nil
     end
     for _, classJob in pairs(ClassList) do
         if classJob.classId == jobId then
+            return classJob
+        end
+    end
+    LogInfo("[FATE] Cannot recognize combat job.")
+    return nil
+end
+
+function GetClassJobTableFromAbbrev(classString)
+    if classString == "" then
+        LogInfo("[FATE] No class set")
+        return nil
+    end
+    for classJobAbbrev, classJob in pairs(ClassList) do
+        if classJobAbbrev == string.lower(classString) then
             return classJob
         end
     end
@@ -1526,7 +1549,7 @@ end
 function SetMaxDistance()
     MaxDistance = MeleeDist --default to melee distance
     --ranged and casters have a further max distance so not always running all way up to target
-    local currentClass = GetClassJobTable(GetClassJobId())
+    local currentClass = GetClassJobTableFromId(GetClassJobId())
     if not currentClass.isMelee then
         MaxDistance = RangedDist
     end
@@ -1536,13 +1559,13 @@ function TurnOnCombatMods()
     if not CombatModsOn then
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
-        if UsePandora then
+        if TargetingSystem == "Pandora" then
             yield("/rotation manual")
         else
             yield("/rotation auto on")
         end
 
-        local class = GetClassJobTable(GetClassJobId())
+        local class = GetClassJobTableFromId(GetClassJobId())
         
         if class.isTank or class.className == "White Mage" then -- white mage holy OP, or tank classes
             yield("/rotation settings aoetype 2") -- aoe
@@ -1642,7 +1665,7 @@ end
 
 -- Pandora FATE Targeting Mode should only be turned on during DoFate
 function DoFate()
-    if UsePandora then
+    if TargetingSystem == "Pandora" then
         PandoraSetFeatureState("FATE Targeting Mode", true)
     end
 
@@ -1659,7 +1682,7 @@ function DoFate()
     elseif not IsFateActive(CurrentFate.fateId) then
         yield("/vnav stop")
         ClearTarget()
-        if UsePandora then
+        if TargetingSystem == "Pandora" then
             PandoraSetFeatureState("FATE Targeting Mode", false)
         end
         if HasContinuation(CurrentFate.fateName) then
@@ -1676,7 +1699,7 @@ function DoFate()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.middleOfFateDismount
         LogInfo("[FATE] State Change: Dismounting")
-        if UsePandora then
+        if TargetingSystem == "Pandora" then
             PandoraSetFeatureState("FATE Targeting Mode", false)
         end
         return
@@ -1687,7 +1710,7 @@ function DoFate()
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
-            if UsePandora then
+            if TargetingSystem == "Pandora" then
                 PandoraSetFeatureState("FATE Targeting Mode", false)
             end
         end
@@ -1724,6 +1747,11 @@ function DoFate()
     -- targets whatever is trying to kill you
     if not HasTarget() then
         yield("/battletarget")
+    end
+
+    -- clears target
+    if GetTargetFateID() ~= CurrentFate.fateId and not IsTargetInCombat() then
+        ClearTarget()
     end
 
     --Paths to enemys when Bossmod is disabled
@@ -2039,7 +2067,7 @@ function Repair()
 
     if SelfRepair then
         if GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.middleOfFateDismount
+            Dismount()
             LogInfo("[FATE] State Change: Dismounting")
             return
         end
@@ -2086,7 +2114,7 @@ end
 
 function ExtractMateria()
     if GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.middleOfFateDismount
+        Dismount()
         LogInfo("[FATE] State Change: Dismounting")
         return
     end
@@ -2148,10 +2176,10 @@ GemAnnouncementLock = false
 AvailableFateCount = 0
 SuccessiveInstanceChanges = 0
 LastInstanceChangeTimestamp = 0
-MainClass = GetClassJobTable(GetClassJobId())
+MainClass = GetClassJobTableFromId(GetClassJobId())
 BossFatesClass = nil
 if ClassForBossFates ~= "" then
-    BossFatesClass = GetClassJobTable(ClassList[ClassForBossFates].classId)
+    BossFatesClass = GetClassJobTableFromAbbrev(ClassForBossFates)
 end
 SetMaxDistance()
 
@@ -2197,7 +2225,7 @@ while true do
         if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
-            if UsePandora then
+            if TargetingSystem == "Pandora" then
                 PandoraSetFeatureState("FATE Targeting Mode", false)
             end
         elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate
