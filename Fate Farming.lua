@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.4 *
+*  2.12.5 *
 ***********
         
-    -> 2.12.4   Fixed teleport penalty
+    -> 2.12.5   Fixed get distance to point
+                Fixed teleport penalty
                 Fix arrival logic that caused you to look for an npc, even if someone else had already
                     started the fate, fixed check for finding closest aetheryte, added option to set RSR
                     auto type, updated ClassForBossFates to work with lowercase, fixed dismount options
@@ -160,10 +161,12 @@ if UseBM then
     end
 end
 
-if HasPlugin("RotationSolver") and TargetingSystem ~= "Pandora" then
-    yield("/echo changing rsr")
-    yield("/rotation Settings TargetingTypes removeall")
-    yield("/rotation Settings TargetingTypes add "..RSRAutoType)
+if HasPlugin("RotationSolver") then
+    if TargetingSystem ~= "Pandora" then
+        yield("/echo changing rsr")
+        yield("/rotation Settings TargetingTypes removeall")
+        yield("/rotation Settings TargetingTypes add "..RSRAutoType)
+    end
 else
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
 end
@@ -1147,7 +1150,7 @@ function FlyBackToAetheryte()
     if GetCharacterCondition(CharacterCondition.flying) then
         if not (PathfindInProgress() or PathIsRunning()) then
             local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
-            if closestAetheryte ~= nil and DistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
+            if closestAetheryte ~= nil and GetDistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
                 PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
             end
         end
