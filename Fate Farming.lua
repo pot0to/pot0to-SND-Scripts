@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.3 *
+*  2.12.4 *
 ***********
         
-    -> 2.12.3   Fix arrival logic that caused you to look for an npc, even if someone else had already
+    -> 2.12.4   Fixed teleport penalty
+                Fix arrival logic that caused you to look for an npc, even if someone else had already
                     started the fate, fixed check for finding closest aetheryte, added option to set RSR
                     auto type, updated ClassForBossFates to work with lowercase, fixed dismount options
                     for middle of fate and interacting with npc
@@ -127,10 +128,42 @@ if not HasPlugin("vnavmesh") then
     yield("/echo [FATE] Please Install vnavmesh")
 end
 
-if HasPlugin("RotationSolverReborn") then
+if TargetingSystem == "Pandora" then
+    if HasPlugin("PandorasBox") then
+        if ShouldSummonChocobo then
+            PandoraSetFeatureState("Auto-Summon Chocobo", true)
+            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
+        else
+            PandoraSetFeatureState("Auto-Summon Chocobo", false)
+            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
+        end
+        
+        --Fate settings
+        PandoraSetFeatureState("Auto-Sync FATEs", false)
+        PandoraSetFeatureState("FATE Targeting Mode", false)
+        PandoraSetFeatureState("Action Combat Targeting", false)
+    else
+        TargetingSystem = "RSR"
+        yield("/echo [FATE] Please install Pandora's box or turn off the UsePandora setting to silence this warning message.")
+    end
+end
+
+if UseBM then
+    if HasPlugin("BossModReborn") then
+        BMorBMR = "BMR"
+    elseif HasPlugin("BossMod") then
+        BMorBMR = "BM"
+    else
+        UseBM = false
+        yield("/echo [FATE] Neither BossMod nor BossModReborn have been detected. " +
+            "Please set useBM to false or install one of these plugins to silence this warning.")
+    end
+end
+
+if HasPlugin("RotationSolver") and TargetingSystem ~= "Pandora" then
+    yield("/echo changing rsr")
     yield("/rotation Settings TargetingTypes removeall")
     yield("/rotation Settings TargetingTypes add "..RSRAutoType)
-elseif HasPlugin("RotationSolver") then
 else
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
 end
@@ -159,41 +192,11 @@ if ExtractMateria == true then
         yield("/echo [FATE] Please Install YesAlready")
     end 
 end   
-if UseBM then
-    if HasPlugin("BossModReborn") then
-        BMorBMR = "BMR"
-    elseif HasPlugin("BossMod") then
-        BMorBMR = "BM"
-    else
-        UseBM = false
-        yield("/echo [FATE] Neither BossMod nor BossModReborn have been detected. " +
-            "Please set useBM to false or install one of these plugins to silence this warning.")
-    end
-end
+
 if not HasPlugin("ChatCoordinates") then
     yield("/echo [FATE] ChatCoordinates is not installed. Map will not show flag when moving to next Fate.")
 end
 
---Chocobo settings
-if TargetingSystem == "Pandora" then
-    if HasPlugin("PandorasBox") then
-        if ShouldSummonChocobo then
-            PandoraSetFeatureState("Auto-Summon Chocobo", true)
-            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
-        else
-            PandoraSetFeatureState("Auto-Summon Chocobo", false)
-            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
-        end
-        
-        --Fate settings
-        PandoraSetFeatureState("Auto-Sync FATEs", false)
-        PandoraSetFeatureState("FATE Targeting Mode", false)
-        PandoraSetFeatureState("Action Combat Targeting", false)
-    else
-        TargetingSystem = "RSR"
-        yield("/echo [FATE] Please install Pandora's box or turn off the UsePandora setting to silence this warning message.")
-    end
-end
 yield("/at y")
 
 --snd property
@@ -1003,7 +1006,6 @@ end
 function GetClosestAetheryte(x, y, z, teleportTimePenalty)
     local closestAetheryte = nil
     local closestTravelDistance = math.maxinteger
-    LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
     for j, aetheryte in ipairs(SelectedZone.aetheryteList) do
         local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, x, y, z)
         local comparisonDistance = distanceAetheryteToFate + teleportTimePenalty
@@ -1020,12 +1022,12 @@ function GetClosestAetheryte(x, y, z, teleportTimePenalty)
 end
 
 function GetClosestAetheryteToPoint(x, y, z, teleportTimePenalty)
-    local aetheryteForClosestFate = nil
-    local closestTravelDistance = GetDistanceToPoint(x, y, z)
-    LogInfo("[FATE] Direct flight distance is: "..closestTravelDistance)
+    local directFlightDistance = GetDistanceToPoint(x, y, z)
+    LogInfo("[FATE] Direct flight distance is: "..directFlightDistance)
     local closestAetheryte = GetClosestAetheryte(x, y, z, teleportTimePenalty)
+    local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) + teleportTimePenalty
 
-    if DistanceBetween(x, y, z, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) < closestTravelDistance then
+    if closestAetheryteDistance < directFlightDistance then
         return closestAetheryte
     else
         return nil
@@ -1230,7 +1232,7 @@ function MiddleOfFateDismount()
     if GetCharacterCondition(CharacterCondition.mounted) then
         Dismount()
     else
-        State = CharacterState.moveToFate
+        State = CharacterState.doFate
         LogInfo("[FATE] State Change: MoveToFate")
     end
 end
@@ -1315,7 +1317,7 @@ function MoveToFate()
             State = CharacterState.interactWithNpc
         elseif GetTargetFateID() == CurrentFate.fateId then
             State = CharacterState.middleOfFateDismount
-            LogInfo("[FATE] State Change: DoFate")
+            LogInfo("[FATE] State Change: MiddleOfFateDismount")
         else
             ClearTarget()
         end
@@ -1698,7 +1700,7 @@ function DoFate()
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.middleOfFateDismount
-        LogInfo("[FATE] State Change: Dismounting")
+        LogInfo("[FATE] State Change: MiddleOfFateDismount")
         if TargetingSystem == "Pandora" then
             PandoraSetFeatureState("FATE Targeting Mode", false)
         end
@@ -1715,6 +1717,8 @@ function DoFate()
             end
         end
     end
+
+    LogInfo("DoFate->Finished transition checks")
 
     -- do not target fate npc during combat
     if CurrentFate.npcName ~=nil and GetTargetName() == CurrentFate.npcName then
