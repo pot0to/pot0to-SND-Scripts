@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.8 *
+*  2.12.9 *
 ***********
         
-    -> 2.12.8   Marks forlorns with Attack1 so RSR knows to single target
+    -> 2.12.9   Moved return for ChangeInstance and added more logging
+                Marks forlorns with Attack1 so RSR knows to single target
                 Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
                     check in MoveToFate, fixed bug that caused collections fates to be skipped under
                     certain conditions
@@ -1081,6 +1082,7 @@ function ChangeInstance()
 
     yield("/target aetheryte") -- search for nearby aetheryte
     if not HasTarget() or GetTargetName() ~= "aetheryte" then -- if no aetheryte within targeting range, teleport to it
+        LogInfo("[FATE] Aetheryte not within targetable range")
         local closestAetheryte = nil
         local closestAetheryteDistance = math.maxinteger
         for i, aetheryte in ipairs(SelectedZone.aetheryteList) do
@@ -1100,24 +1102,27 @@ function ChangeInstance()
         return
     end
 
+    if GetDistanceToTarget() > 10 then
+        LogInfo("[FATE] Targeting aetheryte, but greater than 10 distance")
+        if not (PathfindInProgress() or PathIsRunning()) then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+        end
+        return
+    end
+
+    LogInfo("[FATE] Within 10 distance")
+    if PathfindInProgress() or PathIsRunning() then
+        yield("/vnav stop")
+        return
+    end
+
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.changeInstanceDismount
         LogInfo("[FATE] State Change: ChangeInstanceDismount")
         return
     end
 
-    if GetDistanceToTarget() > 10 then
-        if not (PathfindInProgress() or PathIsRunning()) then
-            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
-            return
-        end
-    else
-        if PathfindInProgress() or PathIsRunning() then
-            yield("/vnav stop")
-            return
-        end
-    end
-
+    LogInfo("[FATE] Transferring to next instance")
     local nextInstance = (GetZoneInstance() % 3) + 1
     yield("/li "..nextInstance) -- start instance transfer
     yield("/wait 1") -- wait for instance transfer to register
