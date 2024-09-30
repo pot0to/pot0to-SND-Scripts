@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.9 *
+*  2.12.10 *
 ***********
         
-    -> 2.12.9   Moved return for ChangeInstance and added more logging
+    -> 2.12.10  Added nil check for aetherytes in partially supported zones
+                Moved return for ChangeInstance and added more logging
                 Marks forlorns with Attack1 so RSR knows to single target
                 Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
                     check in MoveToFate, fixed bug that caused collections fates to be skipped under
@@ -1015,7 +1016,7 @@ end
 function GetClosestAetheryte(x, y, z, teleportTimePenalty)
     local closestAetheryte = nil
     local closestTravelDistance = math.maxinteger
-    for j, aetheryte in ipairs(SelectedZone.aetheryteList) do
+    for _, aetheryte in ipairs(SelectedZone.aetheryteList) do
         local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, x, y, z)
         local comparisonDistance = distanceAetheryteToFate + teleportTimePenalty
         LogInfo("[FATE] Distance via "..aetheryte.aetheryteName.." adjusted for tp penalty is "..tostring(comparisonDistance))
@@ -1034,13 +1035,14 @@ function GetClosestAetheryteToPoint(x, y, z, teleportTimePenalty)
     local directFlightDistance = GetDistanceToPoint(x, y, z)
     LogInfo("[FATE] Direct flight distance is: "..directFlightDistance)
     local closestAetheryte = GetClosestAetheryte(x, y, z, teleportTimePenalty)
-    local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) + teleportTimePenalty
+    if closestAetheryte ~= nil then
+        local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) + teleportTimePenalty
 
-    if closestAetheryteDistance < directFlightDistance then
-        return closestAetheryte
-    else
-        return nil
+        if closestAetheryteDistance < directFlightDistance then
+            return closestAetheryte
+        end
     end
+    return nil
 end
 
 function TeleportToClosestAetheryteToFate(nextFate)
@@ -1188,7 +1190,9 @@ function FlyBackToAetheryte()
     
     if not (PathfindInProgress() or PathIsRunning()) then
         local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
-        PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
+        if closestAetheryte ~= nil then
+            PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
+        end
     end
 end
 
