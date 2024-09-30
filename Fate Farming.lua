@@ -9,10 +9,13 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.6 *
+*  2.12.7 *
 ***********
         
-    -> 2.12.6   Fixed grand commpany turn in
+    -> 2.12.7   Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
+                    check in MoveToFate, fixed bug that caused collections fates to be skipped under
+                    certain conditions
+                Fixed grand commpany turn in
                 Fixed get distance to point
                 Fixed teleport penalty
                 Fix arrival logic that caused you to look for an npc, even if someone else had already
@@ -957,22 +960,20 @@ function SelectNextFate()
                     else
                         LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
                     end
-                elseif IsOtherNpcFate(tempFate.fateName) then
-                    if tempFate.startTime > 0 then -- if someone already opened this fate, then treat is as all the other fates
+                elseif (IsOtherNpcFate(tempFate.fateName) or IsCollectionsFate(tempFate.fateName)) and tempFate.startTime == 0 then
+                    if nextFate == nil then -- pick this if there's nothing else
+                        nextFate = tempFate
+                    elseif tempFate.isBonusFate then
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
-                    else -- no one has opened this fate yet
-                        if nextFate == nil then -- pick this if there's nothing else
-                            nextFate = tempFate
-                        elseif tempFate.isBonusFate then
-                            nextFate = SelectNextFateHelper(tempFate, nextFate)
-                        elseif nextFate.startTime == 0 then -- both fates are unopened npc fates
-                            nextFate = SelectNextFateHelper(tempFate, nextFate)
-                        end
+                    elseif nextFate.startTime == 0 then -- both fates are unopened npc fates
+                        nextFate = SelectNextFateHelper(tempFate, nextFate)
                     end
                 elseif tempFate.duration ~= 0 then -- else is normal fate. avoid unlisted talk to npc fates
                     nextFate = SelectNextFateHelper(tempFate, nextFate)
                 end
                 LogInfo("[FATE] Finished considering fate #"..tempFate.fateId.." "..tempFate.fateName)
+            else
+                LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to blacklist.")
             end
         end
     end
@@ -1144,29 +1145,44 @@ end
 function FlyBackToAetheryte()
     NextFate = SelectNextFate()
     if NextFate ~= nil then
+        yield("/vnav stop")
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
         return
     end
 
-    if GetCharacterCondition(CharacterCondition.flying) then
-        if not (PathfindInProgress() or PathIsRunning()) then
-            local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
-            if closestAetheryte ~= nil and GetDistanceToPoint(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) > 50 then
-                PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
+    yield("/target aetheryte")
+
+    if HasTarget() and GetTargetName() == "aetheryte" and GetDistanceToTarget() <= 20 then
+        if PathfindInProgress() or PathIsRunning() then
+            yield("/vnav stop")
+        end
+
+        if GetCharacterCondition(CharacterCondition.flying) then
+            yield("/ac dismount") -- land but don't actually dismount, to avoid running chocobo timer
+        elseif GetCharacterCondition(CharacterCondition.mounted) then
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
+        else
+            if MountToUse == "mount roulette" then
+                yield('/gaction "mount roulette"')
+            else
+                yield('/mount "' .. MountToUse)
             end
         end
-        yield("/wait 10")
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
-        yield("/gaction jump")
-    else
-        if MountToUse == "mount roulette" then
-            yield('/gaction "mount roulette"')
-        else
-            yield('/mount "' .. MountToUse)
-        end
+        return
     end
-    yield("/wait 1")
+
+    if not GetCharacterCondition(CharacterCondition.mounted) then
+        State = CharacterState.mounting
+        LogInfo("[FATE] State Change: Mounting")
+        return
+    end
+    
+    if not (PathfindInProgress() or PathIsRunning()) then
+        local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
+        PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying))
+    end
 end
 
 function Mount()
@@ -1273,7 +1289,8 @@ function MoveToNPC()
     end
 end
 
---Paths to the Fate. Assumes CurrentFate is not nil
+--Paths to the Fate. CurrentFate is set here to allow MovetoFate to change its mind,
+--so CurrentFate is possibly nil.
 function MoveToFate()
     SuccessiveInstanceChanges = 0
 
@@ -1296,7 +1313,7 @@ function MoveToFate()
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
         return
-    elseif NextFate.fateId ~= CurrentFate.fateId then
+    elseif CurrentFate == nil or NextFate.fateId ~= CurrentFate.fateId then
         yield("/vnav stop")
         CurrentFate = NextFate
         return
@@ -1836,9 +1853,14 @@ function Ready()
     elseif not LogInfo("[FATE] Ready -> ExtractMateria") and ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
-    elseif not LogInfo("[FATE] Ready -> Wait10") and NextFate == nil and (WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))) then
-        State = CharacterState.flyBackToAethertye
-        LogInfo("[FATE] State Change: FlyBackToAetheryte")
+    elseif not LogInfo("[FATE] Ready -> WaitBonusBuff") and NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
+        if not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
+            State = CharacterState.flyBackToAetheryte
+            LogInfo("[FATE] State Change: FlyBackToAetheryte")
+        else
+            yield("/wait 10")
+        end
+        return
     elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and ShouldExchangeBicolorVouchers and (BicolorGemCount >= 1400) then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
@@ -1856,9 +1878,10 @@ function Ready()
         if EnableChangeInstance and GetZoneInstance() > 0 then
             State = CharacterState.changingInstances
             LogInfo("[FATE] State Change: ChangingInstances")
-        else
-            State = CharacterState.flyBackToAethertye
+        elseif not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
+            State = CharacterState.flyBackToAetheryte
             LogInfo("[FATE] State Change: FlyBackToAetheryte")
+        else
             yield("/wait 10")
         end
         return
@@ -2170,7 +2193,7 @@ CharacterState = {
     waitForContinuation = WaitForContinuation,
     changingInstances = ChangeInstance,
     changeInstanceDismount = ChangeInstanceDismount,
-    flyBackToAethertye = FlyBackToAetheryte,
+    flyBackToAetheryte = FlyBackToAetheryte,
     extractMateria = ExtractMateria,
     repair = Repair,
     exchangingVouchers = ExchangeVouchers,
