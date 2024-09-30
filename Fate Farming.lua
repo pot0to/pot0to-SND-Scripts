@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.5 *
+*  2.12.6 *
 ***********
         
-    -> 2.12.5   Fixed get distance to point
+    -> 2.12.6   Fixed grand commpany turn in
+                Fixed get distance to point
                 Fixed teleport penalty
                 Fix arrival logic that caused you to look for an npc, even if someone else had already
                     started the fate, fixed check for finding closest aetheryte, added option to set RSR
@@ -109,8 +110,8 @@ SelfRepair = false                              --if false, will go to Limsa men
     RepairAmount = 20                              --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
 ExtractMateria = true                           --should it Extract Materia
 Retainers = true                                --should it do Retainers
-GrandCompanyTurnIn = false                      --should it to Turn ins at the GC (requires Deliveroo)
-    slots = 5                                       --how much inventory space before turning in
+ShouldGrandCompanyTurnIn = false                --should it to Turn ins at the GC (requires Deliveroo)
+    InventorySlotsLeft = 5                          --how much inventory space before turning in
 
 --Change this value for how much echos u want in chat 
 --0 no echos
@@ -184,10 +185,11 @@ if Retainers then
     if not HasPlugin("AutoRetainer") then
         yield("/echo [FATE] Please Install AutoRetainer")
     end
-    if GrandCompanyTurnIn then
-        if not HasPlugin("Deliveroo") then
-            yield("/echo [FATE] Please Install Deliveroo")
-        end
+end
+if ShouldGrandCompanyTurnIn then
+    if not HasPlugin("Deliveroo") then
+        ShouldGrandCompanyTurnIn = false
+        yield("/echo [FATE] Please Install Deliveroo")
     end
 end
 if ExtractMateria == true then
@@ -1843,7 +1845,8 @@ function Ready()
     elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForCollectionsFate == 0 and Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.processRetainers
         LogInfo("[FATE] State Change: ProcessingRetainers")
-    elseif not LogInfo("[FATE] Ready -> GC TurnIn") and GrandCompanyTurnIn and GetInventoryFreeSlotCount() < slots then
+    elseif not LogInfo("[FATE] Ready -> GC TurnIn") and ShouldGrandCompanyTurnIn and GetInventoryFreeSlotCount() < InventorySlotsLeft then
+        yield("/echo "..tostring(ShouldGrandCompanyTurnIn))
         State = CharacterState.gcTurnIn
         LogInfo("[FATE] State Change: GCTurnIn")
     elseif not LogInfo("[FATE] Ready -> TeleportBackToFarmingZone") and not IsInZone(SelectedZone.zoneId) then
@@ -2029,7 +2032,7 @@ function ProcessRetainers()
 end
 
 function GrandCompanyTurnIn()
-    if GetInventoryFreeSlotCount() <= slots then
+    if GetInventoryFreeSlotCount() <= InventorySlotsLeft then
         local playerGC = GetPlayerGC()
         local gcZoneIds = {
             129, --Limsa Lominsa
