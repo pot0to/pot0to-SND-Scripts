@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.12 *
+* 2.12.13 *
 ***********
         
-    -> 2.12.12  Added check to mark forlorn only once, added feature to fly up 10 distance if caught in
+    -> 2.12.13  Typo
+                Added check to mark forlorn only once, added feature to fly up 10 distance if caught in
                     unexpected combat while mounted
                 Added another nil check in MovetoFate
                 Added nil check for aetherytes in partially supported zones
@@ -1676,7 +1677,7 @@ function HandleUnexpectedCombat()
         end
         yield("/wait 10")
         return
-    elseif GetCharactercondition(CharacterCondition.mounted) then
+    elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
         return
     end
