@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.10 *
+* 2.12.11 *
 ***********
         
-    -> 2.12.10  Added nil check for aetherytes in partially supported zones
+    -> 2.12.11  Added another nil check in MovetoFate
+                Added nil check for aetherytes in partially supported zones
                 Moved return for ChangeInstance and added more logging
                 Marks forlorns with Attack1 so RSR knows to single target
                 Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
@@ -1310,7 +1311,7 @@ function MoveToFate()
         return
     end
 
-    if not IsFateActive(CurrentFate.fateId) then
+    if CurrentFate~=nil and not IsFateActive(CurrentFate.fateId) then
         LogInfo("[FATE] Next Fate is dead, selecting new Fate.")
         yield("/vnav stop")
         State = CharacterState.ready
