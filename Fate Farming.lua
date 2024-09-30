@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-*  2.12.7 *
+*  2.12.8 *
 ***********
         
-    -> 2.12.7   Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
+    -> 2.12.8   Marks forlorns with Attack1 so RSR knows to single target
+                Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
                     check in MoveToFate, fixed bug that caused collections fates to be skipped under
                     certain conditions
                 Fixed grand commpany turn in
@@ -89,7 +90,8 @@ MountToUse = "mount roulette"   --The mount you'd like to use when flying betwee
 CompletionToIgnoreFate = 80         --If the fate has more than this much progress already, skip it
 MinTimeLeftToIgnoreFate = 3*60      --If the fate has less than this many seconds left on the timer, skip it
 CompletionToJoinBossFate = 0        --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
-    ClassForBossFates = ""          --If you want to use a different class for boss fates, set this to the 3 letter abbreviation for the class ex: "PLD"
+    ClassForBossFates = ""              --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
+                                        --for the class. Ex: "PLD"
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
 
                                     --"Pandora"/"RSR". Use RSR if the Pandora plugin if experiencing lag issues.
@@ -1757,18 +1759,9 @@ function DoFate()
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
 
-    -- if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
-    --     if not SingleTargetForlornMode then
-    --         SingleTargetForlornMode = true
-    --         yield("/rotation manual")
-    --         yield("/rotation settings aoetype 0") -- single target
-    --     end
-    -- else
-    --     if SingleTargetForlornMode then
-    --         SingleTargetForlornMode = false
-    --         TurnOnCombatMods()
-    --     end
-    -- end
+    if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
+        yield("/enemysign attack1")
+    end
 
     -- targets whatever is trying to kill you
     if not HasTarget() then

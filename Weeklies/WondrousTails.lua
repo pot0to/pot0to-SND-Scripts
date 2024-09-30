@@ -164,9 +164,9 @@ if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() then
     end
     if IsAddonVisible("SelectString") then
         if not HasWeeklyBingoJournal() then
-            yield("/pcall SelectString true 0")
+            yield("/callback SelectString true 0")
         elseif IsWeeklyBingoExpired() then
-            yield("/pcall SelectString true 1")
+            yield("/callback SelectString true 1")
         end
         
     end
@@ -242,7 +242,7 @@ for i = 0, 12 do
        and (not StopPlacingStickersAt7 or WeeklyBingoNumPlacedStickers() < 7)
     then
         if not IsAddonVisible("WeeklyBingo") then
-            yield("/pcall WeeklyBingo true 2 "..i)
+            yield("/callback WeeklyBingo true 2 "..i)
             yield("/wait 1")
         end
     end
