@@ -9,10 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.11 *
+* 2.12.12 *
 ***********
         
-    -> 2.12.11  Added another nil check in MovetoFate
+    -> 2.12.12  Added check to mark forlorn only once, added feature to fly up 10 distance if caught in
+                    unexpected combat while mounted
+                Added another nil check in MovetoFate
                 Added nil check for aetherytes in partially supported zones
                 Moved return for ChangeInstance and added more logging
                 Marks forlorns with Attack1 so RSR knows to single target
@@ -1668,6 +1670,17 @@ function HandleUnexpectedCombat()
         return
     end
 
+    if GetCharacterCondition(CharacterCondition.flying) then
+        if not (PathfindInProgress() or PathIsRunning()) then
+            PathfindAndMoveTo(GetPlayerRawXPos(), GetPlayerRawYPos() + 20, GetPlayerRawZPos())
+        end
+        yield("/wait 10")
+        return
+    elseif GetCharactercondition(CharacterCondition.mounted) then
+        yield("/gaction jump")
+        return
+    end
+
     TurnOnCombatMods()
 
     -- targets whatever is trying to kill you
@@ -1769,8 +1782,9 @@ function DoFate()
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
 
-    if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
+    if not ForlornMarked and (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") and GetTargetHP() > 0 then
         yield("/enemysign attack1")
+        ForlornMarked = true
     end
 
     -- targets whatever is trying to kill you
@@ -1830,6 +1844,7 @@ function Ready()
     
     CombatModsOn = false -- expect RSR to turn off after every fate
     GotCollectionsFullCredit = false
+    ForlornMarked = false
 
     NextFate = SelectNextFate()
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
@@ -2266,7 +2281,7 @@ while true do
             end
         elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate
             and State ~= CharacterState.waitForContinuation and not IsInFate() and
-            GetCharacterCondition(CharacterCondition.inCombat) and not GetCharacterCondition(CharacterCondition.mounted)
+            GetCharacterCondition(CharacterCondition.inCombat)
         then
             State = CharacterState.unexpectedCombat
             LogInfo("[FATE] State Change: UnexpectedCombat")
