@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.13 *
+* 2.12.14 *
 ***********
         
-    -> 2.12.13  Typo
+    -> 2.12.14  Added potions for those want spiritbond potions. Thanks @Dede for the feature!
+                Typo
                 Added check to mark forlorn only once, added feature to fly up 10 distance if caught in
                     unexpected combat while mounted
                 Added another nil check in MovetoFate
@@ -89,6 +90,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 
 --Pre Fate Settings
 Food = ""                       --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+Potion = ""                     --Leave "" Blank if you don't want to use any potions.
 ShouldSummonChocobo = true            --Summon chocobo?
 MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates
 
@@ -1839,8 +1841,16 @@ function FoodCheck()
     end
 end
 
+function PotionCheck()
+    --pot usage
+    if not HasStatusId(49) and Potion ~= "" then
+        yield("/item " .. Potion)
+    end
+end
+
 function Ready()
     FoodCheck()
+    PotionCheck()
     SummonChocobo()
     
     CombatModsOn = false -- expect RSR to turn off after every fate
