@@ -9,10 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.14 *
+* 2.12.15 *
 ***********
         
-    -> 2.12.14  Added potions for those want spiritbond potions. Thanks @Dede for the feature!
+    -> 2.12.15  Added check for in fate to unexpected combat state, added 0.5s wait after lsync to give
+                    it a moment to register
+                Added potions for those want spiritbond potions. Thanks @Dede for the feature!
                 Typo
                 Added check to mark forlorn only once, added feature to fly up 10 distance if caught in
                     unexpected combat while mounted
@@ -30,29 +32,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                     started the fate, fixed check for finding closest aetheryte, added option to set RSR
                     auto type, updated ClassForBossFates to work with lowercase, fixed dismount options
                     for middle of fate and interacting with npc
-                Updated logic to only target mobs that are part of CurrentFate, updated random
-                    adjust coordinates to bring you within 10 distance of center of fate, to make
-                    it easier to find targets but also provide some variation in where you land,
-                    in case others in the area are using the same script
-                Changed pathing to fate: upon approaching fate, bot will target either the npc
-                    or a random fate mob and switch to pathing towards new target. Fixed wait for
-                    continuation fates, fixed pathfinding while flying
-                Added ability to summon chocobo without Pandora, updated to manually fly back
-                    to closest aetheryte if no eligible fates and not changing instances,
-                    added random waits during mounting up and teleporting to make it more humanlike
-                Changed mounted -> ready because new mount after no eligible fates breaks CurrentFate
-                    convention, fixed class parsing bug
-                Fixed flying to (0,0,0) issue, added option to switch to a different class for boss
-                    fates, changed logic to detect boss fates and cleaned up fate lists
-                Cleaned up settings section for clarity, added mount when no eligible fates left,
-                    to avoid running the chocobo timer
-                Fixed pathing closer to npcs for npc fates, reduced random adjust distance to 20
-                Added Feathery Dustup and The Pama-yawa Dilemma to Kozama'uka boss fates list
-                Fixed changing instances
-                Temporarily removed single target forlorn
-                Added a lot of debug statements
-                Waits for LifestreamIsBusy() to complete before attempting to resume farming
-                    and checks if you're waiting for a collections fate after instead of before
     -> 2.0.0    State system
 
 *********************
@@ -170,7 +149,7 @@ if UseBM then
         BMorBMR = "BM"
     else
         UseBM = false
-        yield("/echo [FATE] Neither BossMod nor BossModReborn have been detected. " +
+        yield("/echo [FATE] Neither BossMod nor BossModReborn have been detected. "..
             "Please set useBM to false or install one of these plugins to silence this warning.")
     end
 end
@@ -1271,7 +1250,7 @@ function MiddleOfFateDismount()
         Dismount()
     else
         State = CharacterState.doFate
-        LogInfo("[FATE] State Change: MoveToFate")
+        LogInfo("[FATE] State Change: DoFate")
     end
 end
 
@@ -1333,6 +1312,9 @@ function MoveToFate()
     elseif CurrentFate == nil or NextFate.fateId ~= CurrentFate.fateId then
         yield("/vnav stop")
         CurrentFate = NextFate
+        if HasPlugin("ChatCoordinates") then
+            SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
+        end
         return
     end
 
@@ -1350,11 +1332,11 @@ function MoveToFate()
 
     -- upon approaching fate, pick a target and switch to pathing towards target
     if HasTarget() then
-        yield("/vnav stop")
         if GetTargetName() == CurrentFate.npcName then
             yield("/vnav stop")
             State = CharacterState.interactWithNpc
         elseif GetTargetFateID() == CurrentFate.fateId then
+            yield("/vnav stop")
             State = CharacterState.middleOfFateDismount
             LogInfo("[FATE] State Change: MiddleOfFateDismount")
         else
@@ -1430,10 +1412,6 @@ function MoveToFate()
     local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y, CurrentFate.z
     if not (IsCollectionsFate(CurrentFate.fateName) or IsOtherNpcFate(CurrentFate.fateName)) then
         nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 10)
-    end
-
-    if HasPlugin("ChatCoordinates") then
-        SetMapFlag(SelectedZone.zoneId, nearestLandX, nearestLandY, nearestLandZ)
     end
 
     if TeleportToClosestAetheryteToFate(CurrentFate) then
@@ -1663,7 +1641,9 @@ end
 function HandleUnexpectedCombat()
     CurrentFate = nil
 
-    if not GetCharacterCondition(CharacterCondition.inCombat) then
+    if not GetCharacterCondition(CharacterCondition.inCombat) or
+        (IsInFate() and GetFateProgress(GetNearestFate()) < 100)
+    then
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
@@ -1723,6 +1703,7 @@ function DoFate()
 
     if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
         yield("/lsync")
+        yield("/wait 0.5") -- give it a second to register
     elseif IsFateActive(CurrentFate.fateId) and not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
         (GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 10) and
         not GetCharacterCondition(CharacterCondition.mounted) and not (PathIsRunning() or PathfindInProgress())
@@ -1916,6 +1897,9 @@ function Ready()
         return
     elseif not LogInfo("[FATE] Ready -> MovingToFate") then -- and ((CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil) then
         CurrentFate = NextFate
+        if HasPlugin("ChatCoordinates") then
+            SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
+        end
         State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
     end
