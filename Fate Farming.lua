@@ -9,10 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.15 *
+* 2.12.16 *
 ***********
         
-    -> 2.12.15  Added check for in fate to unexpected combat state, added 0.5s wait after lsync to give
+    -> 2.12.16  Added mount check during change instances, in case the aetheryte is within object table
+                    targetable range (but likely not targetable)
+                Added check for in fate to unexpected combat state, added 0.5s wait after lsync to give
                     it a moment to register
                 Added potions for those want spiritbond potions. Thanks @Dede for the feature!
                 Typo
@@ -1091,7 +1093,10 @@ function ChangeInstance()
 
     if GetDistanceToTarget() > 10 then
         LogInfo("[FATE] Targeting aetheryte, but greater than 10 distance")
-        if not (PathfindInProgress() or PathIsRunning()) then
+        if GetDistanceToTarget() > 20 and not GetCharacterCondition(CharacterCondition.flying) then
+            State = CharacterState.mounting
+            LogInfo("[FATE] State Change: Mounting")
+        elseif not (PathfindInProgress() or PathIsRunning()) then
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
         end
         return
@@ -1484,6 +1489,7 @@ function CollectionsFateTurnIn()
             LogInfo("[FATE] State Change: DoFate")
         else
             if GotCollectionsFullCredit then
+                TurnOffCombatMods()
                 State = CharacterState.ready
                 LogInfo("[FATE] State Change: Ready")
             end
@@ -1614,11 +1620,12 @@ end
 
 function TurnOffCombatMods()
     if CombatModsOn then
-        yield("/rotation off")
-
         LogInfo("[FATE] Turning off combat mods")
         CombatModsOn = false
-        -- no need to turn RSR off
+
+        yield("/rotation manual")
+        yield("/wait 0.5")
+        yield("/rotation off") -- rotation off doesn't always stick
 
         -- turn off BMR so you don't start following other mobs
         if UseBM and bossModAIActive then
