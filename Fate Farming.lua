@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.19 *
+* 2.12.20 *
 ***********
         
-    -> 2.12.19  Fixed unexpected combat fly up, added checks to accept or decline party member teleport
+    -> 2.12.20  Added type check for teleport message for when it doesn't work
+                Fixed unexpected combat fly up, added checks to accept or decline party member teleport
                     offers, added extra /vnav stop upon middle of fate dismount
                 Added nil checks to chocobo level up
                 Added option to use Thavnairian Onions on chocobos ready to level up, added check for
@@ -1056,21 +1057,22 @@ function AcceptTeleportOfferLocation(destinationAetheryte)
 
     if IsAddonVisible("SelectYesno") then
         local teleportOfferMessage = GetNodeText("SelectYesno", 15)
-        local teleportOfferLocation = teleportOfferMessage:match("Accept Teleport to (.+)%?")
-        if string.lower(teleportOfferLocation) == string.lower(destinationAetheryte) then
-            yield("/callback SelectYesno true 0") -- accept teleport
-        else
-            LogInfo("Offer for "..teleportOfferLocation.." and destination "..destinationAetheryte.." are not the same. Declining teleport.")
-            yield("/callback SelectYesno true 2") -- decline teleport
+        if type(teleportOfferMessage) == "string" then
+            local teleportOfferLocation = teleportOfferMessage:match("Accept Teleport to (.+)%?")
+            if string.lower(teleportOfferLocation) == string.lower(destinationAetheryte) then
+                yield("/callback SelectYesno true 0") -- accept teleport
+            else
+                LogInfo("Offer for "..teleportOfferLocation.." and destination "..destinationAetheryte.." are not the same. Declining teleport.")
+                yield("/callback SelectYesno true 2") -- decline teleport
+            end
         end
     end
-    return nil
 end
 
 function DeclineTeleportOffer()
     if IsAddonVisible("SelectYesno") then
         local teleportOfferMessage = GetNodeText("SelectYesno", 15)
-        if teleportOfferMessage:find("Accept Teleport") then
+        if type(teleportOfferMessage) == "string" and teleportOfferMessage:find("Accept Teleport") then
             yield("/callback SelectYesno true 2") -- decline teleport
         end
     end
@@ -2381,8 +2383,8 @@ while true do
             if TargetingSystem == "Pandora" then
                 PandoraSetFeatureState("FATE Targeting Mode", false)
             end
-        elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate
-            and State ~= CharacterState.waitForContinuation and not IsInFate() and
+        elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate and State ~= CharacterState.waitForContinuation and
+            (not IsInFate() or (IsInFate() and IsCollectionsFate(GetFateName(GetNearestFate())) and GetFateProgress(GetNearestFate()) == 100)) and
             GetCharacterCondition(CharacterCondition.inCombat)
         then
             State = CharacterState.unexpectedCombat
