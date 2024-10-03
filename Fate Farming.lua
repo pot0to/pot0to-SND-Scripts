@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.17 *
+* 2.12.18 *
 ***********
         
-    -> 2.12.17  Added option to use Thavnairian Onions on chocobos ready to level up, added check for
+    -> 2.12.18  Added nil checks to chocobo level up
+                Added option to use Thavnairian Onions on chocobos ready to level up, added check for
                     collections fates that despawn during turn ins
                 Added mount check during change instances, in case the aetheryte is within object table
                     targetable range (but likely not targetable)
@@ -1249,7 +1250,9 @@ function MiddleOfFateDismount()
         return
     end
 
-    if HasTarget() and GetDistanceToTarget() > RangedDist and not (PathfindInProgress() or PathIsRunning()) then
+    if HasTarget() and not (PathfindInProgress() or PathIsRunning()) and
+        DistanceBetween(GetPlayerRawXPos(), 0, GetPlayerRawZPos(), GetTargetRawXPos(), 0, GetTargetRawZPos()) > (RangedDist + GetTargetHitboxRadius())
+    then
         PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
         return
     end
@@ -1743,7 +1746,7 @@ function DoFate()
             TurnOffCombatMods()
             if UseThavnairianOnions then
                 State = CharacterState.checkChocoboLevelUp
-                LogInfo("[FATE] StateChange: CheckChocoboExp")
+                LogInfo("[FATE] State Change: CheckChocoboExp")
             else
                 State = CharacterState.ready
                 LogInfo("[FATE] State Change: Ready")
@@ -1854,10 +1857,12 @@ end
 function CheckChocoboLevelUp()
     if not IsAddonVisible("Buddy") then
         yield("/companion")
+        yield("/wait 0.5")
         return
     end
 
-    if tonumber(GetNodeText("Buddy", 26)) < 20 then
+    local chocoboLevel = tonumber(GetNodeText("Buddy", 26))
+    if chocoboLevel ~= nil and chocoboLevel < 20 then
         local exp = GetNodeText("Buddy", 13)
 
         -- Use string.match to extract the numerator and denominator
@@ -1867,10 +1872,25 @@ function CheckChocoboLevelUp()
         numerator = tonumber(numerator)
         denominator = tonumber(denominator)
 
-        if numerator >= denominator and GetItemCount(8166) > 0 then
-            yield("/item Thavnairian Onion")
+        if numerator ~= nil and denominator ~= nil then
+            if numerator >= denominator then
+                if GetItemCount(8166) > 0 then
+                    yield("/item Thavnairian Onion")
+                else
+                    yield("/echo [FATE] Out of Thavnairian Onions!")
+                    LogInfo("[FATE] Out of Thavnairian Onions!")
+                end
+            else
+                LogInfo("[FATE] Chocobo not ready to level up yet.")
+                State = CharacterState.ready
+                LogInfo("[FATE] State Change: Ready")
+            end
+        else
+            LogInfo("[FATE] Could not parse chocobo XP values.")
         end
     else
+        yield("/echo [FATE] Chocobo companion is max level! Please turn off UseThavnairianOnions to silence this warning.")
+        LogInfo("[FATE] Chocobo companion is max level! Please turn off UseThavnairianOnions to silence this warning.")
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
     end
