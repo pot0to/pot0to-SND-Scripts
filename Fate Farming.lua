@@ -9,10 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.18 *
+* 2.12.19 *
 ***********
         
-    -> 2.12.18  Added nil checks to chocobo level up
+    -> 2.12.19  Fixed unexpected combat fly up, added checks to accept or decline party member teleport
+                    offers, added extra /vnav stop upon middle of fate dismount
+                Added nil checks to chocobo level up
                 Added option to use Thavnairian Onions on chocobos ready to level up, added check for
                     collections fates that despawn during turn ins
                 Added mount check during change instances, in case the aetheryte is within object table
@@ -1045,7 +1047,38 @@ function TeleportToClosestAetheryteToFate(nextFate)
     return false
 end
 
+function AcceptTeleportOfferLocation(destinationAetheryte)
+    if IsAddonVisible("_NotificationTelepo") then
+        local location = GetNodeText("_NotificationTelepo", 3, 4)
+        yield("/callback _Notification true 0 16 "..location)
+        yield("/wait 1")
+    end
+
+    if IsAddonVisible("SelectYesno") then
+        local teleportOfferMessage = GetNodeText("SelectYesno", 15)
+        local teleportOfferLocation = teleportOfferMessage:match("Accept Teleport to (.+)%?")
+        if string.lower(teleportOfferLocation) == string.lower(destinationAetheryte) then
+            yield("/callback SelectYesno true 0") -- accept teleport
+        else
+            LogInfo("Offer for "..teleportOfferLocation.." and destination "..destinationAetheryte.." are not the same. Declining teleport.")
+            yield("/callback SelectYesno true 2") -- decline teleport
+        end
+    end
+    return nil
+end
+
+function DeclineTeleportOffer()
+    if IsAddonVisible("SelectYesno") then
+        local teleportOfferMessage = GetNodeText("SelectYesno", 15)
+        if teleportOfferMessage:find("Accept Teleport") then
+            yield("/callback SelectYesno true 2") -- decline teleport
+        end
+    end
+end
+
 function TeleportTo(aetheryteName)
+    AcceptTeleportOfferLocation(aetheryteName)
+
     while EorzeaTimeToUnixTime(GetCurrentEorzeaTimestamp()) - LastTeleportTimeStamp < 5 do
         LogInfo("[FATE] Too soon since last teleport. Waiting...")
         yield("/wait 5")
@@ -1255,6 +1288,8 @@ function MiddleOfFateDismount()
     then
         PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
         return
+    else
+        yield("/vnav stop")
     end
 
     if GetCharacterCondition(CharacterCondition.mounted) then
@@ -1433,6 +1468,8 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
+    DeclineTeleportOffer()
+
     if IsInFate() or GetFateStartTimeEpoch(CurrentFate.fateId) > 0 then
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
@@ -1472,6 +1509,8 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
+    DeclineTeleportOffer()
+
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
         CurrentFate = nil
         State = CharacterState.ready
@@ -1675,7 +1714,7 @@ function HandleUnexpectedCombat()
 
     if GetCharacterCondition(CharacterCondition.flying) then
         if not (PathfindInProgress() or PathIsRunning()) then
-            PathfindAndMoveTo(GetPlayerRawXPos(), GetPlayerRawYPos() + 20, GetPlayerRawZPos())
+            PathfindAndMoveTo(GetPlayerRawXPos(), GetPlayerRawYPos() + 10, GetPlayerRawZPos(), true)
         end
         yield("/wait 10")
         return
