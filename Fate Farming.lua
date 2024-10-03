@@ -9,10 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.16 *
+* 2.12.17 *
 ***********
         
-    -> 2.12.16  Added mount check during change instances, in case the aetheryte is within object table
+    -> 2.12.17  Added option to use Thavnairian Onions on chocobos ready to level up, added check for
+                    collections fates that despawn during turn ins
+                Added mount check during change instances, in case the aetheryte is within object table
                     targetable range (but likely not targetable)
                 Added check for in fate to unexpected combat state, added 0.5s wait after lsync to give
                     it a moment to register
@@ -70,10 +72,11 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --#region Settings
 
 --Pre Fate Settings
-Food = ""                       --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
-Potion = ""                     --Leave "" Blank if you don't want to use any potions.
-ShouldSummonChocobo = true            --Summon chocobo?
-MountToUse = "mount roulette"   --The mount you'd like to use when flying between fates
+Food = ""                           --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+Potion = ""                         --Leave "" Blank if you don't want to use any potions.
+ShouldSummonChocobo = true          --Summon chocobo?
+    UseThavnairianOnions = false        --Use thavnairian onions once the chocobo is ready to level up
+MountToUse = "mount roulette"       --The mount you'd like to use when flying between fates
 
 --Fate Combat Settings
 CompletionToIgnoreFate = 80         --If the fate has more than this much progress already, skip it
@@ -1466,6 +1469,13 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
+    if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
+        CurrentFate = nil
+        State = CharacterState.ready
+        LogInfo("[FATE] State Change: Ready")
+        return
+    end
+
     if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
         yield("/target "..CurrentFate.npcName)
         return
@@ -1731,9 +1741,14 @@ function DoFate()
             LogInfo("[FATE] State Change: WaitForContinuation")
         else
             TurnOffCombatMods()
-            State = CharacterState.ready
-            LogInfo("[FATE] State Change: Ready")
-            yield("/wait "..math.random()*3)
+            if UseThavnairianOnions then
+                State = CharacterState.checkChocoboLevelUp
+                LogInfo("[FATE] StateChange: CheckChocoboExp")
+            else
+                State = CharacterState.ready
+                LogInfo("[FATE] State Change: Ready")
+                yield("/wait "..math.random()*3)
+            end
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
@@ -1833,6 +1848,31 @@ function PotionCheck()
     --pot usage
     if not HasStatusId(49) and Potion ~= "" then
         yield("/item " .. Potion)
+    end
+end
+
+function CheckChocoboLevelUp()
+    if not IsAddonVisible("Buddy") then
+        yield("/companion")
+        return
+    end
+
+    if tonumber(GetNodeText("Buddy", 26)) < 20 then
+        local exp = GetNodeText("Buddy", 13)
+
+        -- Use string.match to extract the numerator and denominator
+        local numerator, denominator = exp:match("(%d+)%/(%d+)")
+
+        -- Convert to numbers
+        numerator = tonumber(numerator)
+        denominator = tonumber(denominator)
+
+        if numerator >= denominator and GetItemCount(8166) > 0 then
+            yield("/item Thavnairian Onion")
+        end
+    else
+        State = CharacterState.ready
+        LogInfo("[FATE] State Change: Ready")
     end
 end
 
@@ -2219,6 +2259,7 @@ CharacterState = {
     exchangingVouchers = ExchangeVouchers,
     processRetainers = ProcessRetainers,
     gcTurnIn = GrandCompanyTurnIn,
+    checkChocoboLevelUp=CheckChocoboLevelUp
 }
 
 --#endregion State Transition Functions
