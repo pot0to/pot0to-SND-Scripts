@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.12.20 *
+* 2.13.0 *
 ***********
         
-    -> 2.12.20  Added type check for teleport message for when it doesn't work
+    -> 2.13.0   Overdue for a version update, updating Thavnairian Onion level up conditions
+                Added type check for teleport message for when it doesn't work
                 Fixed unexpected combat fly up, added checks to accept or decline party member teleport
                     offers, added extra /vnav stop upon middle of fate dismount
                 Added nil checks to chocobo level up
@@ -1069,11 +1070,13 @@ function AcceptTeleportOfferLocation(destinationAetheryte)
     end
 end
 
-function DeclineTeleportOffer()
+function AcceptNPCFate()
     if IsAddonVisible("SelectYesno") then
-        local teleportOfferMessage = GetNodeText("SelectYesno", 15)
-        if type(teleportOfferMessage) == "string" and teleportOfferMessage:find("Accept Teleport") then
-            yield("/callback SelectYesno true 2") -- decline teleport
+        local dialogBox = GetNodeText("SelectYesno", 15)
+        if type(dialogBox) == "string" and dialogBox:find("The recommended level for this FATE is") then
+            yield("/callback SelectYesno true 0") --accept fate
+        else
+            yield("/callback SelectYesno true 1") --decline all other boxes
         end
     end
 end
@@ -1470,7 +1473,7 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-    DeclineTeleportOffer()
+    
 
     if IsInFate() or GetFateStartTimeEpoch(CurrentFate.fateId) > 0 then
         State = CharacterState.doFate
@@ -1503,7 +1506,7 @@ function InteractWithFateNpc()
         end
 
         if IsAddonVisible("SelectYesno") then
-            yield("/callback SelectYesno true 0")
+            AcceptNPCFate()
         elseif not GetCharacterCondition(CharacterCondition.occupied) then
             yield("/interact")
         end
@@ -1511,7 +1514,7 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    DeclineTeleportOffer()
+    AcceptNPCFate()
 
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
         CurrentFate = nil
@@ -1543,9 +1546,8 @@ function CollectionsFateTurnIn()
             LogInfo("[FATE] State Change: DoFate")
         else
             if GotCollectionsFullCredit then
-                TurnOffCombatMods()
-                State = CharacterState.ready
-                LogInfo("[FATE] State Change: Ready")
+                State = CharacterState.unexpectedCombat
+                LogInfo("[FATE] State Change: UnexpectedCombat")
             end
         end
 
@@ -1634,11 +1636,11 @@ function SetMaxDistance()
     end
 end
 
-function TurnOnCombatMods()
+function TurnOnCombatMods(rotationMode)
     if not CombatModsOn then
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
-        if TargetingSystem == "Pandora" then
+        if TargetingSystem == "Pandora" or rotationMode == "manual" then
             yield("/rotation manual")
         else
             yield("/rotation auto on")
@@ -1678,8 +1680,8 @@ function TurnOffCombatMods()
         CombatModsOn = false
 
         yield("/rotation manual")
-        yield("/wait 0.5")
-        yield("/rotation off") -- rotation off doesn't always stick
+        -- yield("/wait 0.5")
+        -- yield("/rotation off") -- rotation off doesn't always stick
 
         -- turn off BMR so you don't start following other mobs
         if UseBM and bossModAIActive then
@@ -1701,6 +1703,8 @@ end
 
 function HandleUnexpectedCombat()
     CurrentFate = nil
+
+    TurnOnCombatMods("manual")
 
     if not GetCharacterCondition(CharacterCondition.inCombat) or
         (IsInFate() and GetFateProgress(GetNearestFate()) < 100)
@@ -1724,8 +1728,6 @@ function HandleUnexpectedCombat()
         yield("/gaction jump")
         return
     end
-
-    TurnOnCombatMods()
 
     -- targets whatever is trying to kill you
     if not HasTarget() then
@@ -1824,7 +1826,7 @@ function DoFate()
         yield("/wait 1")
     end
 
-    TurnOnCombatMods()
+    TurnOnCombatMods("auto")
 
     GemAnnouncementLock = false
 
@@ -1902,36 +1904,24 @@ function CheckChocoboLevelUp()
         return
     end
 
-    local chocoboLevel = tonumber(GetNodeText("Buddy", 26))
-    if chocoboLevel ~= nil and chocoboLevel < 20 then
-        local exp = GetNodeText("Buddy", 13)
+    local exp = GetNodeText("Buddy", 13)
 
-        -- Use string.match to extract the numerator and denominator
-        local numerator, denominator = exp:match("(%d+)%/(%d+)")
+    -- Use string.match to extract the numerator and denominator
+    local numerator, denominator = exp:match("(%d+)%/(%d+)")
 
-        -- Convert to numbers
-        numerator = tonumber(numerator)
-        denominator = tonumber(denominator)
+    -- Convert to numbers
+    numerator = tonumber(numerator)
+    -- denominator = tonumber(denominator)
 
-        if numerator ~= nil and denominator ~= nil then
-            if numerator >= denominator then
-                if GetItemCount(8166) > 0 then
-                    yield("/item Thavnairian Onion")
-                else
-                    yield("/echo [FATE] Out of Thavnairian Onions!")
-                    LogInfo("[FATE] Out of Thavnairian Onions!")
-                end
-            else
-                LogInfo("[FATE] Chocobo not ready to level up yet.")
-                State = CharacterState.ready
-                LogInfo("[FATE] State Change: Ready")
-            end
+    if numerator ~= nil and numerator == 0 then
+        if GetItemCount(8166) > 0 then
+            yield("/item Thavnairian Onion")
         else
-            LogInfo("[FATE] Could not parse chocobo XP values.")
+            yield("/echo [FATE] Out of Thavnairian Onions!")
+            LogInfo("[FATE] Out of Thavnairian Onions!")
         end
     else
-        yield("/echo [FATE] Chocobo companion is max level! Please turn off UseThavnairianOnions to silence this warning.")
-        LogInfo("[FATE] Chocobo companion is max level! Please turn off UseThavnairianOnions to silence this warning.")
+        LogInfo("[FATE] Chocobo not ready to level up yet.")
         State = CharacterState.ready
         LogInfo("[FATE] State Change: Ready")
     end
