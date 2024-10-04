@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.13.1 *
+* 2.13.2 *
 ***********
         
-    -> 2.13.1   Fixed continaution fates
+    -> 2.13.2   Added Dawntrail special fates to blacklist
+                Fixed continaution fates
                 Overdue for a version update, updating Thavnairian Onion level up conditions
                 Added type check for teleport message for when it doesn't work
                 Fixed unexpected combat fly up, added checks to accept or decline party member teleport
@@ -704,7 +705,9 @@ FatesData = {
                 { fateName="That's Me and the Porter", npcName="Pelupelu Peddler" },
             },
             fatesWithContinuations = {},
-            blacklistedFates= {}
+            blacklistedFates= {
+                "Sandnest Deathmatch" -- big snake fate
+            }
         }
     },
     {
@@ -759,7 +762,9 @@ FatesData = {
                 "Plumbers Don't Fear Slimes",
                 "Mascot March"
             },
-            blacklistedFates= {}
+            blacklistedFates= {
+                "Mascot Murder"
+            }
         }
     }
 }
