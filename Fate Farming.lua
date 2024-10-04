@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.13.2 *
+* 2.13.3 *
 ***********
         
-    -> 2.13.2   Added Dawntrail special fates to blacklist
+    -> 2.13.3   Turn off aoes for forlorn
+                Added Dawntrail special fates to blacklist
                 Fixed continaution fates
                 Overdue for a version update, updating Thavnairian Onion level up conditions
                 Added type check for teleport message for when it doesn't work
@@ -1834,9 +1835,18 @@ function DoFate()
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
 
-    if not ForlornMarked and (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") and GetTargetHP() > 0 then
-        yield("/enemysign attack1")
-        ForlornMarked = true
+    if not ForlornMarked and (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
+        if GetTargetHP() > 0 then
+            yield("/enemysign attack1")
+            yield("/rotation settings aoetype 0") -- off
+            ForlornMarked = true
+        else
+            if class.isTank or class.className == "White Mage" then -- white mage holy OP, or tank classes
+                yield("/rotation settings aoetype 2") -- aoe
+            else
+                yield("/rotation settings aoetype 1") -- cleave
+            end
+        end
     end
 
     -- targets whatever is trying to kill you
