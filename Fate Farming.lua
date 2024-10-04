@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.13.0 *
+* 2.13.1 *
 ***********
         
-    -> 2.13.0   Overdue for a version update, updating Thavnairian Onion level up conditions
+    -> 2.13.1   Fixed continaution fates
+                Overdue for a version update, updating Thavnairian Onion level up conditions
                 Added type check for teleport message for when it doesn't work
                 Fixed unexpected combat fly up, added checks to accept or decline party member teleport
                     offers, added extra /vnav stop upon middle of fate dismount
@@ -34,13 +35,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
                     check in MoveToFate, fixed bug that caused collections fates to be skipped under
                     certain conditions
-                Fixed grand commpany turn in
-                Fixed get distance to point
-                Fixed teleport penalty
-                Fix arrival logic that caused you to look for an npc, even if someone else had already
-                    started the fate, fixed check for finding closest aetheryte, added option to set RSR
-                    auto type, updated ClassForBossFates to work with lowercase, fixed dismount options
-                    for middle of fate and interacting with npc
     -> 2.0.0    State system
 
 *********************
@@ -166,7 +160,6 @@ end
 
 if HasPlugin("RotationSolver") then
     if TargetingSystem ~= "Pandora" then
-        yield("/echo changing rsr")
         yield("/rotation Settings TargetingTypes removeall")
         yield("/rotation Settings TargetingTypes add "..RSRAutoType)
     end
@@ -804,8 +797,8 @@ function IsOtherNpcFate(fateName)
 end
 
 function HasContinuation(fateName)
-    for i, continuationFates in ipairs(SelectedZone.fatesList.fatesWithContinuations) do
-        if continuationFates.fateName == fateName then
+    for i, continuationFate in ipairs(SelectedZone.fatesList.fatesWithContinuations) do
+        if continuationFate == fateName then
             return true
         end
     end
@@ -1060,12 +1053,16 @@ function AcceptTeleportOfferLocation(destinationAetheryte)
         local teleportOfferMessage = GetNodeText("SelectYesno", 15)
         if type(teleportOfferMessage) == "string" then
             local teleportOfferLocation = teleportOfferMessage:match("Accept Teleport to (.+)%?")
-            if string.lower(teleportOfferLocation) == string.lower(destinationAetheryte) then
-                yield("/callback SelectYesno true 0") -- accept teleport
-            else
-                LogInfo("Offer for "..teleportOfferLocation.." and destination "..destinationAetheryte.." are not the same. Declining teleport.")
-                yield("/callback SelectYesno true 2") -- decline teleport
+            if teleportOfferLocation ~= nil then
+                if string.lower(teleportOfferLocation) == string.lower(destinationAetheryte) then
+                    yield("/callback SelectYesno true 0") -- accept teleport
+                    return
+                else
+                    LogInfo("Offer for "..teleportOfferLocation.." and destination "..destinationAetheryte.." are not the same. Declining teleport.")
+                end
             end
+            yield("/callback SelectYesno true 2") -- decline teleport
+            return
         end
     end
 end
@@ -1288,20 +1285,19 @@ function MiddleOfFateDismount()
         return
     end
 
-    if HasTarget() and not (PathfindInProgress() or PathIsRunning()) and
-        DistanceBetween(GetPlayerRawXPos(), 0, GetPlayerRawZPos(), GetTargetRawXPos(), 0, GetTargetRawZPos()) > (RangedDist + GetTargetHitboxRadius())
-    then
-        PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
-        return
+    if HasTarget() then
+        if DistanceBetween(GetPlayerRawXPos(), 0, GetPlayerRawZPos(), GetTargetRawXPos(), 0, GetTargetRawZPos()) > (RangedDist + GetTargetHitboxRadius()) then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+        else
+            if GetCharacterCondition(CharacterCondition.mounted) then
+                Dismount()
+            else
+                State = CharacterState.doFate
+                LogInfo("[FATE] State Change: DoFate")
+            end
+        end
     else
-        yield("/vnav stop")
-    end
-
-    if GetCharacterCondition(CharacterCondition.mounted) then
-        Dismount()
-    else
-        State = CharacterState.doFate
-        LogInfo("[FATE] State Change: DoFate")
+        TargetClosestFateEnemy()
     end
 end
 
@@ -1702,8 +1698,6 @@ function TurnOffCombatMods()
 end
 
 function HandleUnexpectedCombat()
-    CurrentFate = nil
-
     TurnOnCombatMods("manual")
 
     if not GetCharacterCondition(CharacterCondition.inCombat) or
@@ -1781,11 +1775,12 @@ function DoFate()
         if TargetingSystem == "Pandora" then
             PandoraSetFeatureState("FATE Targeting Mode", false)
         end
-        if HasContinuation(CurrentFate.fateName) then
+        if not LogInfo("[FATE] HasContintuation check") and HasContinuation(CurrentFate.fateName) then
             LastFateEndTime = os.clock()
             State = CharacterState.waitForContinuation
             LogInfo("[FATE] State Change: WaitForContinuation")
         else
+            LogInfo("[FATE] No continuation for "..CurrentFate.fateName)
             TurnOffCombatMods()
             if UseThavnairianOnions then
                 State = CharacterState.checkChocoboLevelUp
