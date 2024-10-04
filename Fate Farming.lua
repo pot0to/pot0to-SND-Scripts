@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.13.3 *
+* 2.13.4 *
 ***********
         
-    -> 2.13.3   Turn off aoes for forlorn
+    -> 2.13.4   Fixed fate name for The Serpentlord Seethes
+                Turn off aoes for forlorn
                 Added Dawntrail special fates to blacklist
                 Fixed continaution fates
                 Overdue for a version update, updating Thavnairian Onion level up conditions
@@ -707,7 +708,7 @@ FatesData = {
             },
             fatesWithContinuations = {},
             blacklistedFates= {
-                "Sandnest Deathmatch" -- big snake fate
+                "The Serpentlord Seethes" -- big snake fate
             }
         }
     },
