@@ -9,35 +9,16 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.13.4 *
+* 2.13.6 *
 ***********
         
-    -> 2.13.4   Fixed fate name for The Serpentlord Seethes
+    -> 2.13.6   Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
+                    for special fates, updated RSR recommendations
+                Removed feature to use Thavnairian Onions when chocobo is ready for level up
+                Fixed fate name for The Serpentlord Seethes
                 Turn off aoes for forlorn
                 Added Dawntrail special fates to blacklist
                 Fixed continaution fates
-                Overdue for a version update, updating Thavnairian Onion level up conditions
-                Added type check for teleport message for when it doesn't work
-                Fixed unexpected combat fly up, added checks to accept or decline party member teleport
-                    offers, added extra /vnav stop upon middle of fate dismount
-                Added nil checks to chocobo level up
-                Added option to use Thavnairian Onions on chocobos ready to level up, added check for
-                    collections fates that despawn during turn ins
-                Added mount check during change instances, in case the aetheryte is within object table
-                    targetable range (but likely not targetable)
-                Added check for in fate to unexpected combat state, added 0.5s wait after lsync to give
-                    it a moment to register
-                Added potions for those want spiritbond potions. Thanks @Dede for the feature!
-                Typo
-                Added check to mark forlorn only once, added feature to fly up 10 distance if caught in
-                    unexpected combat while mounted
-                Added another nil check in MovetoFate
-                Added nil check for aetherytes in partially supported zones
-                Moved return for ChangeInstance and added more logging
-                Marks forlorns with Attack1 so RSR knows to single target
-                Fixed FlyBackToAetheryte so it no longer flies into the aetheryte, added CurrentFate nil
-                    check in MoveToFate, fixed bug that caused collections fates to be skipped under
-                    certain conditions
     -> 2.0.0    State system
 
 *********************
@@ -47,11 +28,13 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Plugins that are needed for it to work:
 
     -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat   
-    -> VNavmesh :   (for Pathing/Moving)    https://puni.sh/api/repository/veyn       
+    -> VNavmesh :   (for Pathing/Moving)    https://puni.sh/api/repository/veyn
     -> Pandora :    (for Fate targeting and auto sync [ChocoboS])   https://love.puni.sh/ment.json             
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
-        -> Target -> activate "Select only Fate targets in Fate" and "Target Fate priority"
+        -> Target -> Check "Select only Fate targets in Fate" and DESELECT "Target Fate priority" (or else it will mess up Forlorn targeting)
         -> Target -> "Engage settings" set to "All targets that are in range for any abilities (Tanks/Autoduty)" regardless of whether you are tank
+        -> List -> Map Specific Settings -> Add "Forlorn Maiden" and "The Forlorn" to Prio Targets
+        -> Recommended for melees: Target -> Configuration -> gapcloser distance = 20y
     -> TextAdvance: (for interacting with Fate NPCs)
     -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
     -> Lifestream :  (for changing Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
@@ -77,22 +60,19 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 Food = ""                           --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                         --Leave "" Blank if you don't want to use any potions.
 ShouldSummonChocobo = true          --Summon chocobo?
-    UseThavnairianOnions = false        --Use thavnairian onions once the chocobo is ready to level up
 MountToUse = "mount roulette"       --The mount you'd like to use when flying between fates
 
 --Fate Combat Settings
 CompletionToIgnoreFate = 80         --If the fate has more than this much progress already, skip it
 MinTimeLeftToIgnoreFate = 3*60      --If the fate has less than this many seconds left on the timer, skip it
 CompletionToJoinBossFate = 0        --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
+    CompletionToJoinSpecialBossFates = 20   --For the Special Fates like the Serpentlord Seethes or Mascot Murder
     ClassForBossFates = ""              --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                         --for the class. Ex: "PLD"
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
-
-                                    --"Pandora"/"RSR". Use RSR if the Pandora plugin if experiencing lag issues.
-TargetingSystem = "Pandora"         --Using also makes you pull more mobs (good or bad depending on whether you're a tank).
-    RSRAutoType = "LowHP"               --Only used if TargetingSystem = "RSR"
-                                        --Recommended for all classes using RSR targeting: List > Map Specific Settings > "Prio Target", add Forlorn Maiden and The Forlorn
-                                        --Additionally recommended for tanks: HighHP, Target > Configuration > gapcloser distance = 20y
+RSRAoeType = "Cleave"               --Options: Cleave/Full/Off
+TargetingSystem = "RSR"             --Options: Pandora/RSR. Use RSR if the Pandora plugin if experiencing lag issues. Using also makes you pull more mobs (good or bad depending on whether you're a tank).
+    RSRAutoType = "LowHP"               --Options: LowHP/HighHP/Big/Small/HighMaxHP/LowMaxHP/Nearest/Farthest. Only used if TargetingSystem = "RSR"
                                     
 UseBM = true                        --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
@@ -707,9 +687,10 @@ FatesData = {
                 { fateName="That's Me and the Porter", npcName="Pelupelu Peddler" },
             },
             fatesWithContinuations = {},
-            blacklistedFates= {
+            specialFates = {
                 "The Serpentlord Seethes" -- big snake fate
-            }
+            },
+            blacklistedFates= {}
         }
     },
     {
@@ -764,8 +745,11 @@ FatesData = {
                 "Plumbers Don't Fear Slimes",
                 "Mascot March"
             },
-            blacklistedFates= {
+            specialFates =
+            {
                 "Mascot Murder"
+            },
+            blacklistedFates= {
             }
         }
     }
@@ -810,6 +794,17 @@ function HasContinuation(fateName)
         end
     end
     return false
+end
+
+function IsSpecialFate(fateName)
+    if SelectedZone.fatesList.specialFates == nil then
+        return false
+    end
+    for i, specialFate in ipairs(SelectedZone.fatesList.specialFates) do
+        if specialFate == fateName then
+            return true
+        end
+    end
 end
 
 function IsBlacklistedFate(fateName)
@@ -954,7 +949,8 @@ function SelectNextFate()
         if not (tempFate.x == 0 and tempFate.z == 0) then -- sometimes game doesn't send the correct coords
             if not IsBlacklistedFate(tempFate.fateName) then -- check fate is not blacklisted for any reason
                 if IsBossFate(tempFate.fateId) then
-                    if tempFate.progress >= CompletionToJoinBossFate then
+                    if (IsSpecialFate(tempFate.fateName) and tempFate.progress >= CompletionToJoinSpecialBossFates) or
+                        (not IsSpecialFate(tempFate.fateName) and tempFate.progress >= CompletionToJoinBossFate) then
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else
                         LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
@@ -1630,6 +1626,24 @@ end
 --     end
 -- end
 
+function TurnOnAoes()
+    if not AoesOn then
+        if RSRAoeType == "Cleave" then
+            yield("/rotation settings aoetype 1")
+        elseif RSRAoeType == "Full" then
+            yield("/rotation settings aoetype 2")
+        end
+        AoesOn = true
+    end
+end
+
+function TurnOffAoes()
+    if AoesOn then
+        yield("/rotation settings aoetype 0")
+        AoesOn = false
+    end
+end
+
 function SetMaxDistance()
     MaxDistance = MeleeDist --default to melee distance
     --ranged and casters have a further max distance so not always running all way up to target
@@ -1650,13 +1664,9 @@ function TurnOnCombatMods(rotationMode)
         end
 
         local class = GetClassJobTableFromId(GetClassJobId())
-        
-        if class.isTank or class.className == "White Mage" then -- white mage holy OP, or tank classes
-            yield("/rotation settings aoetype 2") -- aoe
-        else
-            yield("/rotation settings aoetype 1") -- cleave
-        end
 
+        TurnOnAoes()
+        
         if not bossModAIActive and UseBM then
             SetMaxDistance()
             
@@ -1708,7 +1718,8 @@ function HandleUnexpectedCombat()
     TurnOnCombatMods("manual")
 
     if not GetCharacterCondition(CharacterCondition.inCombat) or
-        (IsInFate() and GetFateProgress(GetNearestFate()) < 100)
+        (IsInFate() and GetFateProgress(GetNearestFate()) < 100) or
+        (CurrentFate ~= nil and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 50)
     then
         yield("/vnav stop")
         ClearTarget()
@@ -1789,14 +1800,9 @@ function DoFate()
         else
             LogInfo("[FATE] No continuation for "..CurrentFate.fateName)
             TurnOffCombatMods()
-            if UseThavnairianOnions then
-                State = CharacterState.checkChocoboLevelUp
-                LogInfo("[FATE] State Change: CheckChocoboExp")
-            else
-                State = CharacterState.ready
-                LogInfo("[FATE] State Change: Ready")
-                yield("/wait "..math.random()*3)
-            end
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
+            yield("/wait "..math.random()*3)
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
@@ -1839,14 +1845,11 @@ function DoFate()
     if not ForlornMarked and (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
         if GetTargetHP() > 0 then
             yield("/enemysign attack1")
-            yield("/rotation settings aoetype 0") -- off
+            yield("/echo Found Forlorn! <se.3>")
+            TurnOffAoes()
             ForlornMarked = true
         else
-            if class.isTank or class.className == "White Mage" then -- white mage holy OP, or tank classes
-                yield("/rotation settings aoetype 2") -- aoe
-            else
-                yield("/rotation settings aoetype 1") -- cleave
-            end
+            TurnOnAoes()
         end
     end
 
@@ -1905,36 +1908,6 @@ function PotionCheck()
     --pot usage
     if not HasStatusId(49) and Potion ~= "" then
         yield("/item " .. Potion)
-    end
-end
-
-function CheckChocoboLevelUp()
-    if not IsAddonVisible("Buddy") then
-        yield("/companion")
-        yield("/wait 0.5")
-        return
-    end
-
-    local exp = GetNodeText("Buddy", 13)
-
-    -- Use string.match to extract the numerator and denominator
-    local numerator, denominator = exp:match("(%d+)%/(%d+)")
-
-    -- Convert to numbers
-    numerator = tonumber(numerator)
-    -- denominator = tonumber(denominator)
-
-    if numerator ~= nil and numerator == 0 then
-        if GetItemCount(8166) > 0 then
-            yield("/item Thavnairian Onion")
-        else
-            yield("/echo [FATE] Out of Thavnairian Onions!")
-            LogInfo("[FATE] Out of Thavnairian Onions!")
-        end
-    else
-        LogInfo("[FATE] Chocobo not ready to level up yet.")
-        State = CharacterState.ready
-        LogInfo("[FATE] State Change: Ready")
     end
 end
 
@@ -2321,7 +2294,6 @@ CharacterState = {
     exchangingVouchers = ExchangeVouchers,
     processRetainers = ProcessRetainers,
     gcTurnIn = GrandCompanyTurnIn,
-    checkChocoboLevelUp=CheckChocoboLevelUp
 }
 
 --#endregion State Transition Functions
@@ -2384,7 +2356,8 @@ while true do
             if TargetingSystem == "Pandora" then
                 PandoraSetFeatureState("FATE Targeting Mode", false)
             end
-        elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate and State ~= CharacterState.waitForContinuation and
+        elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate and
+            State ~= CharacterState.waitForContinuation and State ~= CharacterState.collectionsFateTurnIn and
             (not IsInFate() or (IsInFate() and IsCollectionsFate(GetFateName(GetNearestFate())) and GetFateProgress(GetNearestFate()) == 100)) and
             GetCharacterCondition(CharacterCondition.inCombat)
         then
