@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.14.0 *
+* 2.14.1 *
 ***********
         
-    -> 2.14.0   Added pretty README
+    -> 2.14.1   Added missing Kozama'uka npc fates, fixed aoe settings after forlorn dies
+                Added pretty README
                 Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
                     for special fates, updated RSR recommendations
                 Removed feature to use Thavnairian Onions when chocobo is ready for level up
@@ -633,9 +634,15 @@ FatesData = {
             collectionsFates={
                 { fateName="Borne on the Backs of Burrowers", npcName="Moblin Forager" },
                 { fateName="Combing the Area", npcName="Hanuhanu Combmaker" },
-                { fateName="There's Always a Bigger Beast", npcName="Hanuhanu Angler" }
+                
             },
-            otherNpcFates= {},
+            otherNpcFates= {
+                { fateName="There's Always a Bigger Beast", npcName="Hanuhanu Angler" },
+                { fateName="Toucalibri at That Game", npcName="Hanuhanu Windscryer" },
+                { fateName="Putting the Fun in Fungicide", npcName="Bagnobrok Craftythoughts" },
+                { fateName="Tax Dodging", npcName="Pelupelu Peddler" },
+
+            },
             fatesWithContinuations = {},
             blacklistedFates= {
                 "Mole Patrol"
@@ -1850,15 +1857,15 @@ function DoFate()
     yield("/target Forlorn Maiden")
     yield("/target The Forlorn")
 
-    if not ForlornMarked and (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
-        if GetTargetHP() > 0 then
+    if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
+        if not ForlornMarked and GetTargetHP() > 0 then
             yield("/enemysign attack1")
             yield("/echo Found Forlorn! <se.3>")
             TurnOffAoes()
             ForlornMarked = true
-        else
-            TurnOnAoes()
         end
+    else
+        TurnOnAoes()
     end
 
     -- targets whatever is trying to kill you
