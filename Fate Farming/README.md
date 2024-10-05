@@ -1,7 +1,7 @@
 # Fate Farming
 Fate farming script with the following features:
 - Can purchase Bicolor Gemstone Vouchers (both old and new) when your gemstones are almost capped
-- Priority system for Fate selection: is bonus fate > most progress > least time left > distance
+- Priority system for Fate selection:  most progress > is bonus fate > least time left > distance
 - Can prioritize Forlorns when they show up during Fate
 - Can do all fates, including NPC collection fates
 - Revives upon death and gets back to fate farming
@@ -35,11 +35,10 @@ Fate farming script with the following features:
 The script contains several settings you can mess around with to minmax gem income. This section is constantly changing, so check back whenever you update!
 ![Script Settings](img/ScriptSettings.png)
 
-### Recommended RSR Settings
+### RSR Settings
 | | |
 |--|--|
 | ![RSR Engage Settings](img/RSREngageSettings.png) | Select "All Targets that are in range for any abilities (Tanks/Autoduty)" regardless of whether you're a tank |
-| ![RSR Fate Priorities](img/RSRFatePriorities.png) | Check "Select only Fate targets in Fate" and UNCHECK "Target Fate priority" or else it will mess with Forlorn targeting |
 | ![RSR Map Specific Priorities](img/RSRMapSpecificPriorities.png) | Add "Forlorn Maiden" and "The Forlorn" to Prio Targets |
 | ![RSR Gap Closer Distance](img/RSRGapCloserDistance.png) | Recommended for melees: gapcloser distance = 20y |
 

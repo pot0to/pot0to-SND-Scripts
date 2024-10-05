@@ -641,6 +641,7 @@ FatesData = {
                 { fateName="There's Always a Bigger Beast", npcName="Hanuhanu Angler" },
                 { fateName="Toucalibri at That Game", npcName="Hanuhanu Windscryer" },
                 { fateName="Putting the Fun in Fungicide", npcName="Bagnobrok Craftythoughts" },
+                { fateName="Reeds in Need", npcName="Hanuhanu Farmer" },
                 { fateName="Tax Dodging", npcName="Pelupelu Peddler" },
 
             },
@@ -2071,15 +2072,20 @@ function ExchangeNewVouchers()
     local beryl = { x=-198.47, y=0.92, z=-6.95 }
     local nexusArcade = { x=-157.74, y=0.29, z=17.43 }
     if GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > (DistanceBetween(nexusArcade.x, nexusArcade.y, nexusArcade.z, beryl.x, beryl.y, beryl.z) + 10) then
+        LogInfo("Distance to Beryl is too far. Using mini aetheryte.")
         yield("/li nexus arcade")
         return
     elseif GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > 5 then
+        LogInfo("Distance to Beryl is too far. Walking there.")
         if IsAddonVisible("TelepotTown") then
+            LogInfo("TelepotTown open")
             yield("/callback TelepotTown false -1")
         elseif not (PathfindInProgress() or PathIsRunning()) then
+            LogInfo("Path not running")
             PathfindAndMoveTo(beryl.x, beryl.y, beryl.z)
         end
     else
+        LogInfo("Arrived at Beryl")
         if not HasTarget() or GetTargetName() ~= "Beryl" then
             yield("/target Beryl")
         elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
