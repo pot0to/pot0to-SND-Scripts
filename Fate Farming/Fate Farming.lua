@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.13.6 *
+* 2.14.0 *
 ***********
         
-    -> 2.13.6   Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
+    -> 2.14.0   Added pretty README
+                Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
                     for special fates, updated RSR recommendations
                 Removed feature to use Thavnairian Onions when chocobo is ready for level up
                 Fixed fate name for The Serpentlord Seethes
@@ -532,8 +533,8 @@ FatesData = {
         zoneName = "Mare Lamentorum",
         zoneId = 959,
         aetheryteList = {
-            --{ aetheryteName="Sinus Lacrimarum", x=-566, y=134, z=650 },
-            { aetheryteName="Sinus Lacrimarum",  x=-0.10, y=116.80, z=311.89938 },
+            { aetheryteName="Sinus Lacrimarum", x=-566, y=134, z=650 },
+            -- { aetheryteName="Sinus Lacrimarum",  x=-0.10, y=116.80, z=311.89938 },
             { aetheryteName="Bestways Burrow", x=0, y=-128, z=-512 },
         },
         fatesList= {
