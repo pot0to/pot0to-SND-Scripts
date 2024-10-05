@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.14.1 *
+* 2.14.2 *
 ***********
         
-    -> 2.14.1   Added missing Kozama'uka npc fates, fixed aoe settings after forlorn dies
+    -> 2.14.2   Fixing fate selection bug
+                Added missing Kozama'uka npc fates, fixed aoe settings after forlorn dies
                 Added pretty README
                 Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
                     for special fates, updated RSR recommendations
@@ -645,7 +646,8 @@ FatesData = {
             },
             fatesWithContinuations = {},
             blacklistedFates= {
-                "Mole Patrol"
+                "Mole Patrol",
+                "Tax Dodging" -- multiple Pelupelu Peddlers
             }
         }
     },
@@ -873,6 +875,8 @@ function SelectNextFateHelper(tempFate, nextFate)
         --     return tempFate
         -- elseif tempFate.startTime == 0 and nextFate.startTime > 0 then -- tempFate is an unopened npc fate
         --     return nextFate
+        elseif nextFate.timeLeft < MinTimeLeftToIgnoreFate or nextFate.progress > CompletionToIgnoreFate then
+            return tempFate
         else -- select based on progress
             if tempFate.progress > nextFate.progress then
                 LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has less progress.")
@@ -881,7 +885,7 @@ function SelectNextFateHelper(tempFate, nextFate)
                 LogInfo("[FATE] Selecting #"..nextFate.fateId.." because other fate #"..tempFate.fateId.." has less progress.")
                 return nextFate
             else
-                if nextFate.isBonusFate and tempFate.isBonusFate then
+                if (nextFate.isBonusFate and tempFate.isBonusFate) or (not nextFate.isBonusFate and not tempFate.isBonusFate) then
                     if tempFate.timeLeft < nextFate.timeLeft then -- select based on time left
                         LogInfo("[FATE] Selecting #"..tempFate.fateId.." because other fate #"..nextFate.fateId.." has more time left.")
                         return tempFate
