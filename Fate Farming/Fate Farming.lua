@@ -9,10 +9,12 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.14.2 *
+* 2.15.0 *
 ***********
         
-    -> 2.14.2   Fixing fate selection bug
+    -> 2.15.0   Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
+                    turned off BMR when turning in collections fates, fixed S9 waits
+                Fixing fate selection bug
                 Added missing Kozama'uka npc fates, fixed aoe settings after forlorn dies
                 Added pretty README
                 Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
@@ -31,8 +33,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Plugins that are needed for it to work:
 
     -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat   
-    -> VNavmesh :   (for Pathing/Moving)    https://puni.sh/api/repository/veyn
-    -> Pandora :    (for Fate targeting and auto sync [ChocoboS])   https://love.puni.sh/ment.json             
+    -> VNavmesh :   (for Pathing/Moving)    https://puni.sh/api/repository/veyn       
     -> RotationSolver Reborn :  (for Attacking enemys)  https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json       
         -> Target -> Check "Select only Fate targets in Fate" and DESELECT "Target Fate priority" (or else it will mess up Forlorn targeting)
         -> Target -> "Engage settings" set to "All targets that are in range for any abilities (Tanks/Autoduty)" regardless of whether you are tank
@@ -63,6 +64,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 Food = ""                           --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                         --Leave "" Blank if you don't want to use any potions.
 ShouldSummonChocobo = true          --Summon chocobo?
+    ShouldAutoBuyGysahlGreens = true    --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
 MountToUse = "mount roulette"       --The mount you'd like to use when flying between fates
 
 --Fate Combat Settings
@@ -74,8 +76,7 @@ CompletionToJoinBossFate = 0        --If the boss fate has less than this much p
                                         --for the class. Ex: "PLD"
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
 RSRAoeType = "Cleave"               --Options: Cleave/Full/Off
-TargetingSystem = "RSR"             --Options: Pandora/RSR. Use RSR if the Pandora plugin if experiencing lag issues. Using also makes you pull more mobs (good or bad depending on whether you're a tank).
-    RSRAutoType = "LowHP"               --Options: LowHP/HighHP/Big/Small/HighMaxHP/LowMaxHP/Nearest/Farthest. Only used if TargetingSystem = "RSR"
+RSRAutoType = "LowHP"               --Options: LowHP/HighHP/Big/Small/HighMaxHP/LowMaxHP/Nearest/Farthest.
                                     
 UseBM = true                        --if you want to use the BossMod dodge/follow mode
     BMorBMR = "BMR"
@@ -89,7 +90,8 @@ EnableChangeInstance = true                     --should it Change Instance when
 ShouldExchangeBicolorVouchers = true            --Should it exchange Bicolor Gemstone Vouchers?
     VoucherType = "Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
 SelfRepair = false                              --if false, will go to Limsa mender
-    RepairAmount = 20                              --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+    RepairAmount = 20                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+    ShouldAutoBuyDarkMatter = true                  --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
 ExtractMateria = true                           --should it Extract Materia
 Retainers = true                                --should it do Retainers
 ShouldGrandCompanyTurnIn = false                --should it to Turn ins at the GC (requires Deliveroo)
@@ -112,26 +114,6 @@ if not HasPlugin("vnavmesh") then
     yield("/echo [FATE] Please Install vnavmesh")
 end
 
-if TargetingSystem == "Pandora" then
-    if HasPlugin("PandorasBox") then
-        if ShouldSummonChocobo then
-            PandoraSetFeatureState("Auto-Summon Chocobo", true)
-            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", true)
-        else
-            PandoraSetFeatureState("Auto-Summon Chocobo", false)
-            PandoraSetFeatureConfigState("Auto-Summon Chocobo", "UseInCombat", false)
-        end
-        
-        --Fate settings
-        PandoraSetFeatureState("Auto-Sync FATEs", false)
-        PandoraSetFeatureState("FATE Targeting Mode", false)
-        PandoraSetFeatureState("Action Combat Targeting", false)
-    else
-        TargetingSystem = "RSR"
-        yield("/echo [FATE] Please install Pandora's box or turn off the UsePandora setting to silence this warning message.")
-    end
-end
-
 if UseBM then
     if HasPlugin("BossModReborn") then
         BMorBMR = "BMR"
@@ -145,10 +127,8 @@ if UseBM then
 end
 
 if HasPlugin("RotationSolver") then
-    if TargetingSystem ~= "Pandora" then
-        yield("/rotation Settings TargetingTypes removeall")
-        yield("/rotation Settings TargetingTypes add "..RSRAutoType)
-    end
+    yield("/rotation Settings TargetingTypes removeall")
+    yield("/rotation Settings TargetingTypes add "..RSRAutoType)
 else
     yield("/echo [FATE] Please Install Rotation Solver Reborn")
 end
@@ -372,8 +352,13 @@ FatesData = {
             collectionsFates= {
                 { fateName="Pick-up Sticks", npcName="Crystarium Botanist" }
             },
-            otherNpcFates= {},
-            fatesWithContinuations = {},
+            otherNpcFates= {
+                { fateName="Subtle Nightshade", npcName="Artless Dodger" },
+                { fateName="Economic Peril", npcName="Jobb Guard" }
+            },
+            fatesWithContinuations = {
+                "Behind Anemone Lines"
+            },
             blacklistedFates= {}
         }
     },
@@ -1083,7 +1068,7 @@ function AcceptTeleportOfferLocation(destinationAetheryte)
     end
 end
 
-function AcceptNPCFate()
+function AcceptNPCFateOrRejectOtherYesno()
     if IsAddonVisible("SelectYesno") then
         local dialogBox = GetNodeText("SelectYesno", 15)
         if type(dialogBox) == "string" and dialogBox:find("The recommended level for this FATE is") then
@@ -1525,7 +1510,7 @@ function InteractWithFateNpc()
         end
 
         if IsAddonVisible("SelectYesno") then
-            AcceptNPCFate()
+            AcceptNPCFateOrRejectOtherYesno()
         elseif not GetCharacterCondition(CharacterCondition.occupied) then
             yield("/interact")
         end
@@ -1533,7 +1518,7 @@ function InteractWithFateNpc()
 end
 
 function CollectionsFateTurnIn()
-    AcceptNPCFate()
+    AcceptNPCFateOrRejectOtherYesno()
 
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
         CurrentFate = nil
@@ -1543,6 +1528,7 @@ function CollectionsFateTurnIn()
     end
 
     if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
+        TurnOffCombatMods()
         yield("/target "..CurrentFate.npcName)
         return
     end
@@ -1561,6 +1547,7 @@ function CollectionsFateTurnIn()
         yield("/wait 3")
 
         if GetFateProgress(CurrentFate.fateId) < 100 then
+            TurnOnCombatMods()
             State = CharacterState.doFate
             LogInfo("[FATE] State Change: DoFate")
         else
@@ -1611,8 +1598,62 @@ function GetClassJobTableFromAbbrev(classString)
 end
 
 function SummonChocobo()
-    if ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 and GetItemCount(4868) > 0 then
-        yield("/item Gysahl Greens")
+    if ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
+        if GetItemCount(4868) > 0 then
+            yield("/item Gysahl Greens")
+        elseif AutoBuyGysahlGreens then
+            State = CharacterState.autoBuyGysahlGreens
+            LogInfo("[State] State Change: AutoBuyGysahlGreens")
+            return
+        end
+    end
+    State = CharacterState.ready
+    LogInfo("[State] State Change: Ready")
+end
+
+function AutoBuyGysahlGreens()
+    if GetItemCount(4868) > 0 then -- don't need to buy
+        if IsAddonVisible("Shop") then
+            yield("/callback Shop true -1")
+            State = CharacterState.ready
+            LogInfo("State Change: ready")
+            return
+        elseif IsInZone(SelectedZone.zoneId) then
+            yield("/item Gysahl Greens")
+        end
+        return
+    else
+        if not IsInZone(129) then
+            yield("/vnav stop")
+            TeleportTo("Limsa Lominsa Lower Decks")
+            return
+        else
+            local gysahlGreensVendor = { x=-62.1, y=18.0, z=9.4, npcName="Bango Zango" }
+            if GetDistanceToPoint(gysahlGreensVendor.x, gysahlGreensVendor.y, gysahlGreensVendor.z) > 5 then
+                if not (PathIsRunning() or PathfindInProgress()) then
+                    PathfindAndMoveTo(gysahlGreensVendor.x, gysahlGreensVendor.y, gysahlGreensVendor.z)
+                end
+            elseif HasTarget() and GetTargetName() == gysahlGreensVendor.npcName then
+                yield("/vnav stop")
+                yield("/echo has target")
+                if IsAddonVisible("SelectYesno") then
+                    yield("/callback SelectYesno true 0")
+                elseif IsAddonVisible("SelectIconString") then
+                    yield("/callback SelectIconString true 0")
+                    return
+                elseif IsAddonVisible("Shop") then
+                    yield("/callback Shop true 0 2 99")
+                    return
+                elseif not GetCharacterCondition(CharacterCondition.occupied) then
+                    yield("/interact")
+                    yield("/wait 1")
+                    return
+                end
+            else
+                yield("/vnav stop")
+                yield("/target "..gysahlGreensVendor.npcName)
+            end
+        end
     end
 end
 
@@ -1677,7 +1718,7 @@ function TurnOnCombatMods(rotationMode)
     if not CombatModsOn then
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
-        if TargetingSystem == "Pandora" or rotationMode == "manual" then
+        if rotationMode == "manual" then
             yield("/rotation manual")
         else
             yield("/rotation auto on")
@@ -1790,12 +1831,7 @@ function HandleUnexpectedCombat()
     yield("/wait 1")
 end
 
--- Pandora FATE Targeting Mode should only be turned on during DoFate
 function DoFate()
-    if TargetingSystem == "Pandora" then
-        PandoraSetFeatureState("FATE Targeting Mode", true)
-    end
-
     if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
         yield("/lsync")
         yield("/wait 0.5") -- give it a second to register
@@ -1810,9 +1846,6 @@ function DoFate()
     elseif not IsFateActive(CurrentFate.fateId) then
         yield("/vnav stop")
         ClearTarget()
-        if TargetingSystem == "Pandora" then
-            PandoraSetFeatureState("FATE Targeting Mode", false)
-        end
         if not LogInfo("[FATE] HasContintuation check") and HasContinuation(CurrentFate.fateName) then
             LastFateEndTime = os.clock()
             State = CharacterState.waitForContinuation
@@ -1828,9 +1861,6 @@ function DoFate()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.middleOfFateDismount
         LogInfo("[FATE] State Change: MiddleOfFateDismount")
-        if TargetingSystem == "Pandora" then
-            PandoraSetFeatureState("FATE Targeting Mode", false)
-        end
         return
     elseif IsCollectionsFate(CurrentFate.fateName) then
         WaitingForCollectionsFate = CurrentFate.fateId
@@ -1839,9 +1869,6 @@ function DoFate()
             yield("/vnav stop")
             State = CharacterState.collectionsFateTurnIn
             LogInfo("[FATE] State Change: CollectionsFatesTurnIn")
-            if TargetingSystem == "Pandora" then
-                PandoraSetFeatureState("FATE Targeting Mode", false)
-            end
         end
     end
 
@@ -1934,7 +1961,6 @@ end
 function Ready()
     FoodCheck()
     PotionCheck()
-    SummonChocobo()
     
     CombatModsOn = false -- expect RSR to turn off after every fate
     GotCollectionsFullCredit = false
@@ -1959,6 +1985,8 @@ function Ready()
 
     if not LogInfo("[FATE] Ready -> IsPlayerAvailable()") and not IsPlayerAvailable() then
         return
+    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
+        State = CharacterState.summonChocobo
     elseif not LogInfo("[FATE] Ready -> Repair") and RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("[FATE] State Change: Repair")
@@ -2016,7 +2044,7 @@ function Ready()
     end
 end
 
-DeathAnnouncementLock = false
+
 function HandleDeath()
     CurrentFate = nil
 
@@ -2075,12 +2103,12 @@ function ExchangeNewVouchers()
         LogInfo("Distance to Beryl is too far. Using mini aetheryte.")
         yield("/li nexus arcade")
         return
-    elseif GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > 5 then
-        LogInfo("Distance to Beryl is too far. Walking there.")
-        if IsAddonVisible("TelepotTown") then
+    elseif IsAddonVisible("TelepotTown") then
             LogInfo("TelepotTown open")
             yield("/callback TelepotTown false -1")
-        elseif not (PathfindInProgress() or PathIsRunning()) then
+    elseif GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > 5 then
+        LogInfo("Distance to Beryl is too far. Walking there.")
+        if not (PathfindInProgress() or PathIsRunning()) then
             LogInfo("Path not running")
             PathfindAndMoveTo(beryl.x, beryl.y, beryl.z)
         end
@@ -2218,21 +2246,64 @@ function Repair()
         return
     end
 
+    local hawkersAlleyAethernetShard = { x=-213.95, y=15.99, z=49.35 }
     if SelfRepair then
-        if GetCharacterCondition(CharacterCondition.mounted) then
-            Dismount()
-            LogInfo("[FATE] State Change: Dismounting")
-            return
-        end
+        if GetItemCount(33916) > 0 then
+            if IsAddonVisible("Shop") then
+                yield("/callback Shop true -1")
+                return
+            end
 
-        if NeedsRepair(RepairAmount) then
-            if not IsAddonVisible("Repair") then
-                LogInfo("[FATE] Opening repair menu...")
-                yield("/generalaction repair")
+            if not IsInZone(SelectedZone.zoneId) then
+                TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+                return
+            end
+
+            if GetCharacterCondition(CharacterCondition.mounted) then
+                Dismount()
+                LogInfo("[FATE] State Change: Dismounting")
+                return
+            end
+
+            if NeedsRepair(RepairAmount) then
+                if not IsAddonVisible("Repair") then
+                    LogInfo("[FATE] Opening repair menu...")
+                    yield("/generalaction repair")
+                end
+            else
+                State = CharacterState.ready
+                LogInfo("[FATE] State Change: Ready")
+            end
+        elseif ShouldAutoBuyDarkMatter then
+            if not IsInZone(129) then
+                yield("/echo Out of Dark Matter! Purchasing more from Limsa Lominsa.")
+                TeleportTo("Limsa Lominsa Lower Decks")
+                return
+            end
+
+            local darkMatterVendor = { npcName="Unsynrael", x=-257.71, y=16.19, z=50.11, wait=0.08 }
+            if GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z,darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) + 10) then
+                yield("/li Hawkers' Alley")
+            elseif IsAddonVisible("TelepotTown") then
+                yield("/callback TelepotTown false -1")
+            elseif GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > 5 then
+                if not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z)
+                end
+            else
+                if not HasTarget() or GetTargetName() ~= darkMatterVendor.npcName then
+                    yield("/target "..darkMatterVendor.npcName)
+                elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
+                    yield("/interact")
+                elseif IsAddonVisible("SelectYesno") then
+                    yield("/callback SelectYesno true 0")
+                elseif IsAddonVisible("Shop") then
+                    yield("/callback Shop true 0 40 99")
+                end
             end
         else
-            State = CharacterState.ready
-            LogInfo("[FATE] State Change: Ready")
+            yield("/echo Out of Dark Matter and ShouldAutoBuyDarkMatter is false. Switching to Limsa mender.")
+            SelfRepair = false
         end
     else
         if NeedsRepair(RepairAmount) then
@@ -2240,15 +2311,14 @@ function Repair()
                 TeleportTo("Limsa Lominsa Lower Decks")
                 return
             end
-
+            
             local mender = { npcName="Alistair", x=-246.87, y=16.19, z=49.83 }
-            local aethernetshard = { x=-213.95, y=15.99, z=49.35 }
-            if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(aethernetshard.x, aethernetshard.y, aethernetshard.z, mender.x, mender.y, mender.z) + 10) then
+            if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z, mender.x, mender.y, mender.z) + 10) then
                 yield("/li Hawkers' Alley")
+            elseif IsAddonVisible("TelepotTown") then
+                yield("/callback TelepotTown false -1")
             elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then
-                if IsAddonVisible("TelepotTown") then
-                    yield("/callback TelepotTown false -1")
-                elseif not (PathfindInProgress() or PathIsRunning()) then
+                if not (PathfindInProgress() or PathIsRunning()) then
                     PathfindAndMoveTo(mender.x, mender.y, mender.z)
                 end
             else
@@ -2319,6 +2389,8 @@ CharacterState = {
     exchangingVouchers = ExchangeVouchers,
     processRetainers = ProcessRetainers,
     gcTurnIn = GrandCompanyTurnIn,
+    summonChocobo = SummonChocobo,
+    autoBuyGysahlGreens = AutoBuyGysahlGreens
 }
 
 --#endregion State Transition Functions
@@ -2326,9 +2398,13 @@ CharacterState = {
 --#region Main
 
 GemAnnouncementLock = false
-AvailableFateCount = 0
+DeathAnnouncementLock = false
 SuccessiveInstanceChanges = 0
 LastInstanceChangeTimestamp = 0
+LastTeleportTimeStamp = 0
+GotCollectionsFullCredit = false -- needs 7 items for  full credit
+LastStuckCheckTime = os.clock()
+LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
 MainClass = GetClassJobTableFromId(GetClassJobId())
 BossFatesClass = nil
 if ClassForBossFates ~= "" then
@@ -2357,17 +2433,13 @@ if SelectedZone == nil then
     }
 end
 
-LastTeleportTimeStamp = 0
-GotCollectionsFullCredit = false -- needs 7 items for  full credit
-LastStuckCheckTime = os.clock()
-LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
+
 -- variable to track collections fates that you have completed but are still active.
 -- will not leave area or change instance if value ~= 0
 WaitingForCollectionsFate = 0
 LastFateEndTime = os.clock()
 State = CharacterState.ready
 CurrentFate = nil
-SingleTargetForlornMode = false
 if IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
     CurrentFate = BuildFateTable(GetNearestFate())
 end
@@ -2378,9 +2450,6 @@ while true do
         if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
-            if TargetingSystem == "Pandora" then
-                PandoraSetFeatureState("FATE Targeting Mode", false)
-            end
         elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate and
             State ~= CharacterState.waitForContinuation and State ~= CharacterState.collectionsFateTurnIn and
             (not IsInFate() or (IsInFate() and IsCollectionsFate(GetFateName(GetNearestFate())) and GetFateProgress(GetNearestFate()) == 100)) and
