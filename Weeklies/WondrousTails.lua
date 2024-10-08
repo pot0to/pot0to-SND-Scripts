@@ -41,23 +41,23 @@ WonderousTailsDuties = {
         { instanceId=20092, dutyId=1169, dutyName="The Abyssal Fracture (Extreme)", minLevel=90 }
     },
     { -- type 1: expansion cap dungeons
-        { dutyName="Dungeons (Lv. 50)", dutyId=188 },
-        { dutyName="Dungeons (Lv. 60)", dutyId=1110 },
-        { dutyName="Dungeons (Lv. 70)", dutyId=1146 },
-        { dutyName="Dungeons (Lv. 80)", dutyId=838 },
-        { dutyName="Dungeons (Lv. 90)", dutyId=973 },
-        { dutyName="Dungeons (Lv. 100)", dutyId=1199 }
+        { dutyName="Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
+        { dutyName="Dungeons (Lv. 60)", dutyId=1126 }, --The Aetherfont
+        { dutyName="Dungeons (Lv. 70)", dutyId=1146 }, --Ala Mhigo
+        { dutyName="Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
+        { dutyName="Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
+        { dutyName="Dungeons (Lv. 100)", dutyId=1199 } --Alexandria
     },
     { -- type 2: leveling dungeons
-        { dutyName="Dungeons (Lv. 1-49)", dutyId=1036 },
-        { dutyName="Dungeons (Lv. 51-59)", dutyId=434 },
-        { dutyName="Dungeons (Lv. 61-69)", dutyId=1142 },
-        { dutyName="Dungeons (Lv. 71-79)", dutyId=837 },
-        { dutyName="Dungeons (Lv. 81-89)", dutyId=952 },
-        { dutyName="Dungeons (Lv. 91-99)", dutyId=1167 }
+        { dutyName="Dungeons (Lv. 1-49)", dutyId=172 }, --The Aurum Vale
+        { dutyName="Dungeons (Lv. 51-59)", dutyId=434 }, --The Dusk Vigil
+        { dutyName="Dungeons (Lv. 61-69)", dutyId=1142 }, --The Sirensong Sea
+        { dutyName="Dungeons (Lv. 71-79)", dutyId=837 }, --Holminster Switch
+        { dutyName="Dungeons (Lv. 81-89)", dutyId=952 }, --The Tower of Zot
+        { dutyName="Dungeons (Lv. 91-99)", dutyId=1167 } --Ihuykatumu
     },
     { -- type 3: special content
-        { dutyName="Deep Dungeons" }
+        -- { dutyName="Deep Dungeons" }
     },
     { -- type 4: raids
         { dutyName="Binding Coil of Bahamut", dutyId=241, minLevel=50 },
@@ -71,7 +71,7 @@ WonderousTailsDuties = {
         { dutyName="Omega: Alphascape", dutyId=798, minLevel=70 },
         { dutyName="Eden's Gate", dutyId=849, minLevel=80 },
         { dutyName="Eden's Verse", dutyId=903, minLevel=80 },
-        { dutyName="Eden's Promise", dutyId=942, minLevel=80 }
+        { dutyName="Eden's Promise", dutyId=942, minLevel=80 },
     },
     Blacklisted= {
         {
@@ -212,7 +212,7 @@ for i = 0, 12 do
             end
 
             if duty.dutyId ~= nil then
-                yield("/echo Queuing duty TerritoryId#"..duty.dutyId.." for Wonderous Tails #"..i)
+                yield("/echo Queuing duty TerritoryId#"..duty.dutyId.." for Wonderous Tails #"..(i+1))
                 yield("/autoduty run "..dutyMode.." "..duty.dutyId.." 1 true")
                 yield("/bmrai on")
                 yield("/rotation auto")
