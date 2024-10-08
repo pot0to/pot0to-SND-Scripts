@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.15.0 *
+* 2.15.1 *
 ***********
         
-    -> 2.15.0   Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
+    -> 2.15.1   Fix for chocobo summoning
+                Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
                     turned off BMR when turning in collections fates, fixed S9 waits
                 Fixing fate selection bug
                 Added missing Kozama'uka npc fates, fixed aoe settings after forlorn dies
@@ -318,7 +319,7 @@ FatesData = {
         zoneId=399,
         tpZoneId = 478,
         aetheryteList = {
-            { aetheryteName="Idyllshire", x=71.94617, y=211.26111, z=-18.905945 }
+            -- { aetheryteName="Idyllshire", x=71.94617, y=211.26111, z=-18.905945 }
         },
         fatesList= {
             collectionsFates= {},
@@ -1985,8 +1986,6 @@ function Ready()
 
     if not LogInfo("[FATE] Ready -> IsPlayerAvailable()") and not IsPlayerAvailable() then
         return
-    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
-        State = CharacterState.summonChocobo
     elseif not LogInfo("[FATE] Ready -> Repair") and RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("[FATE] State Change: Repair")
@@ -2014,6 +2013,8 @@ function Ready()
     elseif not LogInfo("[FATE] Ready -> TeleportBackToFarmingZone") and not IsInZone(SelectedZone.zoneId) then
         TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         return
+    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
+        State = CharacterState.summonChocobo
     elseif not LogInfo("[FATE] Ready -> ChangingInstances") and NextFate == nil then
         if EnableChangeInstance and GetZoneInstance() > 0 then
             State = CharacterState.changingInstances
@@ -2102,10 +2103,11 @@ function ExchangeNewVouchers()
     if GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > (DistanceBetween(nexusArcade.x, nexusArcade.y, nexusArcade.z, beryl.x, beryl.y, beryl.z) + 10) then
         LogInfo("Distance to Beryl is too far. Using mini aetheryte.")
         yield("/li nexus arcade")
+        yield("/wait 1") -- give it a moment to register
         return
     elseif IsAddonVisible("TelepotTown") then
-            LogInfo("TelepotTown open")
-            yield("/callback TelepotTown false -1")
+        LogInfo("TelepotTown open")
+        yield("/callback TelepotTown false -1")
     elseif GetDistanceToPoint(beryl.x, beryl.y, beryl.z) > 5 then
         LogInfo("Distance to Beryl is too far. Walking there.")
         if not (PathfindInProgress() or PathIsRunning()) then
@@ -2284,6 +2286,7 @@ function Repair()
             local darkMatterVendor = { npcName="Unsynrael", x=-257.71, y=16.19, z=50.11, wait=0.08 }
             if GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z,darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) + 10) then
                 yield("/li Hawkers' Alley")
+                yield("/wait 1") -- give it a moment to register
             elseif IsAddonVisible("TelepotTown") then
                 yield("/callback TelepotTown false -1")
             elseif GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > 5 then
@@ -2315,6 +2318,7 @@ function Repair()
             local mender = { npcName="Alistair", x=-246.87, y=16.19, z=49.83 }
             if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z, mender.x, mender.y, mender.z) + 10) then
                 yield("/li Hawkers' Alley")
+                yield("/wait 1") -- give it a moment to register
             elseif IsAddonVisible("TelepotTown") then
                 yield("/callback TelepotTown false -1")
             elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then

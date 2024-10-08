@@ -7,6 +7,7 @@ Fate farming script with the following features:
 - Revives upon death and gets back to fate farming
 - Attempts to change instances when there are no fates left in the zone
 - Can process your retainers and Grand Company turn ins, then get back to fate farming
+- Autobuys gysahl greens and grade 8 dark matter when you run out
 
 ## New to Something Need Doing (SND)
 ![SND Basics](img/SNDBasics.png)

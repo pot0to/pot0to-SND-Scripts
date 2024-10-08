@@ -35,6 +35,7 @@ yield("/callback SelectIconString true 0")
 
 -- fast forward through dialog
 if not HasPlugin("TextAdvance") then
+    yield("/at y")
     repeat
         yield("/wait 0.1")
     until IsAddonVisible("Talk")
