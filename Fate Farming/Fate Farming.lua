@@ -1693,7 +1693,12 @@ end
 
 function TurnOnAoes()
     if not AoesOn then
-        yield("/rotation auto on")
+        if rotationMode == "manual" then
+            yield("/rotation manual")
+        else
+            yield("/rotation auto on")
+        end
+        
         if RSRAoeType == "Cleave" then
             yield("/rotation settings aoetype 1")
         elseif RSRAoeType == "Full" then
