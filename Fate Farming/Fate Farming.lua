@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.15.3 *
+* 2.15.4 *
 ***********
         
-    -> 2.15.3   Added a dismount check before summoning chocobo
+    -> 2.15.4   Switch to /rsr manual for forlorns and switch back after
+                Added a dismount check before summoning chocobo
                 Fixed name of Fate La Selva se lo Llevó in Yak T'el
                 Fix for chocobo summoning
                 Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
