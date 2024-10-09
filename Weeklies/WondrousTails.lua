@@ -1,3 +1,38 @@
+--[[
+
+****************************************
+*         Wondrous Tails Doer          * 
+****************************************
+
+Created by: pot0to (https://ko-fi.com/pot0to)
+
+Description: Picks up a Wondrous Tails journal from Khloe, then attempts each duty
+
+For dungeons:
+- Attempts dungeon Unsynced if duty is at least 20 levels below you
+- Attempts dungeon with Duty Support if duty is within 20 levels of you and Duty Support is available
+
+For EX Trials:
+- Attempts any duty unsynced if it is 20 levels below you
+- Note: Not all EX trials have BossMod support, but this script will attempt each one once anyways
+- Some EX trials are blacklisted due to mechanics that cannot be done solo (Byakko tank buster, Tsukuyomi meteors, etc.)
+
+Alliance Raids/PVP/Treasure Maps/Palace of the Dead
+- Skips them all
+
+***********
+* Version *
+*  0.0.0  *
+***********
+
+*********************
+*  Required Plugins *
+*********************
+1. Autoduty
+2. Rotation Solver Reborn
+3. BossModReborn (BMR) or Veyn's BossMod (VBM)
+]]
+
 StopPlacingStickersAt7 = true
 
 -- Region: Data ---------------------------------------------------------------------------------
@@ -76,7 +111,8 @@ WonderousTailsDuties = {
     Blacklisted= {
         {
             { instanceId=20052, dutyId=758, dutyName="The Jade Stoa (Extreme)", minLevel=70 }, -- cannot solo double tankbuster vuln
-            { instanceId=20047, dutyId=677, dutyName="The Pool of Tribute (Extreme)", minLevel=70 } -- cannot solo active time maneuver
+            { instanceId=20047, dutyId=677, dutyName="The Pool of Tribute (Extreme)", minLevel=70 }, -- cannot solo active time maneuver
+            { instanceId=20056, dutyId=779, dutyName="The Minstrel's Ballad: Tsukuyomi's Pain", minLevel=70 } -- cannot solo meteors
         },
         {},
         {},
@@ -180,7 +216,7 @@ end
 -- skip 13: Shadowbringers raids (not doable solo unsynced)
 -- skip 14: Endwalker raids (not doable solo unsynced)
 -- skip 15: PVP
-for i = 0, 12 doq
+for i = 0, 12 do
     if GetWeeklyBingoTaskStatus(i) == 0 then
         local key = GetWeeklyBingoOrderDataKey(i)
         local type = GetWeeklyBingoOrderDataType(key)

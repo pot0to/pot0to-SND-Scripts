@@ -1692,6 +1692,7 @@ end
 
 function TurnOnAoes()
     if not AoesOn then
+        yield("/rotation auto on")
         if RSRAoeType == "Cleave" then
             yield("/rotation settings aoetype 1")
         elseif RSRAoeType == "Full" then
@@ -1704,6 +1705,7 @@ end
 function TurnOffAoes()
     if AoesOn then
         yield("/rotation settings aoetype 0")
+        yield("/rotation manual")
         AoesOn = false
     end
 end
@@ -1889,15 +1891,22 @@ function DoFate()
     GemAnnouncementLock = false
 
     -- switches to targeting forlorns for bonus (if present)
-    yield("/target Forlorn Maiden")
-    yield("/target The Forlorn")
+    if not ForlornMarked then
+        yield("/target Forlorn Maiden")
+        yield("/target The Forlorn")
+    end
 
     if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
-        if not ForlornMarked and GetTargetHP() > 0 then
-            yield("/enemysign attack1")
-            yield("/echo Found Forlorn! <se.3>")
-            TurnOffAoes()
-            ForlornMarked = true
+        if GetTargetHP() > 0 then
+            if not ForlornMarked then
+                yield("/enemysign attack1")
+                yield("/echo Found Forlorn! <se.3>")
+                TurnOffAoes()
+                ForlornMarked = true
+            end
+        else
+            ClearTarget()
+            TurnOnAoes()
         end
     else
         TurnOnAoes()

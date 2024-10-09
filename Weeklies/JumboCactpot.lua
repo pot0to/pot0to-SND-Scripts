@@ -1,3 +1,27 @@
+--[[
+
+****************************************
+*            Jumbo Cactpot             * 
+****************************************
+
+Created by: pot0to (https://ko-fi.com/pot0to)
+Description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if you had any), and
+purchases 3 new tickets using random numbers.
+
+***********
+* Version *
+*  1.0.0  *
+***********
+
+*********************
+*  Required Plugins *
+*********************
+1. Telepoter
+2. Lifestream
+3. TextAdvance
+4. Vnavmesh
+]]
+
 function Teleport(aetheryteName)
     yield("/tp "..aetheryteName)
     while not GetCharacterCondition(45) do
