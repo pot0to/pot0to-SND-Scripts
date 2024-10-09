@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.15.2 *
+* 2.15.3 *
 ***********
         
-    -> 2.15.2   Fixed name of Fate La Selva se lo Llevó in Yak T'el
+    -> 2.15.3   Added a dismount check before summoning chocobo
+                Fixed name of Fate La Selva se lo Llevó in Yak T'el
                 Fix for chocobo summoning
                 Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
                     turned off BMR when turning in collections fates, fixed S9 waits
@@ -1251,10 +1252,6 @@ function Dismount()
     end
 
     if GetCharacterCondition(CharacterCondition.flying) then
-        local x1 = GetPlayerRawXPos()
-        local y1 = GetPlayerRawYPos()
-        local z1 = GetPlayerRawZPos()
-
         yield('/ac dismount')
 
         local now = os.clock()
@@ -1599,6 +1596,11 @@ function GetClassJobTableFromAbbrev(classString)
 end
 
 function SummonChocobo()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        Dismount()
+        return
+    end
+
     if ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
         if GetItemCount(4868) > 0 then
             yield("/item Gysahl Greens")
@@ -1660,7 +1662,7 @@ end
 
 --Paths to the enemy (for Meele)
 function EnemyPathing()
-    while HasTarget() and GetDistanceToTarget() > 3.5 do
+    while HasTarget() and GetDistanceToTarget() > (GetTargetHitboxRadius() + MaxDistance) do
         local enemy_x = GetTargetRawXPos()
         local enemy_y = GetTargetRawYPos()
         local enemy_z = GetTargetRawZPos()
