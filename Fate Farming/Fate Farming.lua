@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.15.1 *
+* 2.15.2 *
 ***********
         
-    -> 2.15.1   Fix for chocobo summoning
+    -> 2.15.2   Fixed name of Fate La Selva se lo Llevó in Yak T'el
+                Fix for chocobo summoning
                 Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
                     turned off BMR when turning in collections fates, fixed S9 waits
                 Fixing fate selection bug
@@ -651,7 +652,7 @@ FatesData = {
             },
             otherNpcFates= {
                 --{ fateName=, npcName="Xbr'aal Hunter" }, 2 npcs names same thing....
-                { fateName="Le Selva se lo Llevó", npcName="Xbr'aal Hunter" },
+                { fateName="La Selva se lo Llevó", npcName="Xbr'aal Hunter" },
                 { fateName="Stabbing Gutward", npcName="Doppro Spearbrother" },
                 --{ fateName=, npcName="Xbr'aal Sentry" }, -- 2 npcs named same thing.....
             },
@@ -1289,16 +1290,15 @@ function MiddleOfFateDismount()
         return
     end
 
-    if PathfindInProgress() or PathIsRunning() then
-        return
-    end
-
     if HasTarget() then
         if DistanceBetween(GetPlayerRawXPos(), 0, GetPlayerRawZPos(), GetTargetRawXPos(), 0, GetTargetRawZPos()) > (RangedDist + GetTargetHitboxRadius()) then
-            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+            if not (PathfindInProgress() or PathIsRunning()) then
+                LogInfo("[FATE DEBUG] MiddleOfFateDismount PathfindAndMoveTo")
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+            end
         else
             if GetCharacterCondition(CharacterCondition.mounted) then
-                yield("/vnav stop")
+                LogInfo("[FATE DEBUG] MiddleOfFateDismount Dismount()")
                 Dismount()
             else
                 State = CharacterState.doFate
@@ -1927,7 +1927,7 @@ function DoFate()
             end
             return
         else
-            yield("/targetenemy")
+            TargetClosestFateEnemy()
         end
     else
         if HasTarget() and GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then

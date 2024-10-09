@@ -42,7 +42,7 @@ WonderousTailsDuties = {
     },
     { -- type 1: expansion cap dungeons
         { dutyName="Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
-        { dutyName="Dungeons (Lv. 60)", dutyId=1126 }, --The Aetherfont
+        { dutyName="Dungeons (Lv. 60)", dutyId=1111 }, --The Antitower
         { dutyName="Dungeons (Lv. 70)", dutyId=1146 }, --Ala Mhigo
         { dutyName="Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
         { dutyName="Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
@@ -180,7 +180,7 @@ end
 -- skip 13: Shadowbringers raids (not doable solo unsynced)
 -- skip 14: Endwalker raids (not doable solo unsynced)
 -- skip 15: PVP
-for i = 0, 12 do
+for i = 0, 12 doq
     if GetWeeklyBingoTaskStatus(i) == 0 then
         local key = GetWeeklyBingoOrderDataKey(i)
         local type = GetWeeklyBingoOrderDataType(key)
