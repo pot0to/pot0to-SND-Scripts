@@ -9,7 +9,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.1                                    *
+*                                     0.0.2                                    *
 ********************************************************************************
 Gathers a map, relogs as the next character in the list, and repeat.
 
@@ -61,11 +61,16 @@ function GetMapInfo()
 end
 
 function Gather()
-    yield("/gbr auto on")
+    yield("/echo gathering")
+    if not GBRAutoOn then
+        yield("/gbr auto on")
+        GBRAutoOn = true
+    end
     yield("/wait 10")
 end
 
 function SwapCharacters()
+    yield("/echo swapping characters")
     yield("/ays multi d")
     yield("/ays disable")
 	for i=1, #Characters do
@@ -84,19 +89,26 @@ function SwapCharacters()
 end
 
 function Main()
-
     if GetItemCount(MapInfo.itemId) > 0 then
-        yield("/gbr auto off")
+        yield("/echo you have a map already")
+        if GBRAutoOn then
+            yield("/gbr auto off")
+            GBRAutoOn = false
+        end
         if IsPlayerOccupied() then
             return
         end
+
+        yield("/echo player is not occupied")
 
         SwapCharacters()
     else
         Gather()
     end
+    yield("/wait 1")
 end
 
+GBRAutoOn = false
 MapInfo = GetMapInfo()
 if MapInfo == nil then
     yield("/echo Cannot find item # for "..MapName)

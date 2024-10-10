@@ -617,7 +617,7 @@ FatesData = {
                 { fateName="Lay Off the Horns", npcName="Yok Huy Vigilkeeper" },
                 { fateName="Birds Up", npcName="Coffee Farmer" },
                 { fateName="Salty Showdown", npcName="Chirwagur Sabreur" },
-                { fateName="Fire Suppression", npcName="Tsivli Stoutstrider"},
+                { fateName="Fire Suppression", npcName="Tsivli Stoutstrider"} ,
                 { fateName="Panaq Attack", npcName="Pelupelu Peddler" }
             },
             fatesWithContinuations = {
