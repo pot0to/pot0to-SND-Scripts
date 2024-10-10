@@ -1,8 +1,8 @@
 --[[
-
-****************************************
-*         Wondrous Tails Doer          * 
-****************************************
+********************************************************************************
+*                             Wondrous Tails Doer                              *
+*                                Version 0.0.0                                 *
+********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
@@ -10,30 +10,26 @@ Description: Picks up a Wondrous Tails journal from Khloe, then attempts each du
 
 For dungeons:
 - Attempts dungeon Unsynced if duty is at least 20 levels below you
-- Attempts dungeon with Duty Support if duty is within 20 levels of you and Duty Support is available
+- Attempts dungeon with Duty Support if duty is within 20 levels of you and Duty
+Support is available
 
 For EX Trials:
 - Attempts any duty unsynced if it is 20 levels below you
-- Note: Not all EX trials have BossMod support, but this script will attempt each one once anyways
-- Some EX trials are blacklisted due to mechanics that cannot be done solo (Byakko tank buster, Tsukuyomi meteors, etc.)
+- Note: Not all EX trials have BossMod support, but this script will attempt
+each one once anyways
+- Some EX trials are blacklisted due to mechanics that cannot be done solo
+(Byakko tank buster, Tsukuyomi meteors, etc.)
 
 Alliance Raids/PVP/Treasure Maps/Palace of the Dead
 - Skips them all
 
-***********
-* Version *
-*  0.0.0  *
-***********
-
-*********************
-*  Required Plugins *
-*********************
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
 1. Autoduty
 2. Rotation Solver Reborn
 3. BossModReborn (BMR) or Veyn's BossMod (VBM)
 ]]
-
-StopPlacingStickersAt7 = true
 
 -- Region: Data ---------------------------------------------------------------------------------
 
@@ -274,14 +270,14 @@ for i = 0, 12 do
         end
     end
 
-    if GetWeeklyBingoTaskStatus(i) == 1
-       and (not StopPlacingStickersAt7 or WeeklyBingoNumPlacedStickers() < 7)
-    then
-        if not IsAddonVisible("WeeklyBingo") then
-            yield("/callback WeeklyBingo true 2 "..i)
-            yield("/wait 1")
-        end
-    end
+    -- if GetWeeklyBingoTaskStatus(i) == 1
+    --    and (not StopPlacingStickersAt7 or WeeklyBingoNumPlacedStickers() < 7)
+    -- then
+    --     if not IsAddonVisible("WeeklyBingo") then
+    --         yield("/callback WeeklyBingo true 2 "..i)
+    --         yield("/wait 1")
+    --     end
+    -- end
 end
 
 yield("/echo Completed all Wonderous Tails entries it is capable of.<se.3>")
