@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.15.4 *
+* 2.15.5 *
 ***********
         
-    -> 2.15.4   Switch to /rsr manual for forlorns and switch back after
+    -> 2.15.5   Fixed wait for bonus buff for retainers, mender, gysahl greens and dark matter purchases
+                Switch to /rsr manual for forlorns and switch back after
                 Added a dismount check before summoning chocobo
                 Fixed name of Fate La Selva se lo Llevó in Yak T'el
                 Fix for chocobo summoning
@@ -1698,7 +1699,7 @@ function TurnOnAoes()
         else
             yield("/rotation auto on")
         end
-        
+
         if RSRAoeType == "Cleave" then
             yield("/rotation settings aoetype 1")
         elseif RSRAoeType == "Full" then
@@ -1984,6 +1985,8 @@ function Ready()
     GotCollectionsFullCredit = false
     ForlornMarked = false
 
+    local shouldWaitForBonusBuff = WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))
+
     NextFate = SelectNextFate()
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateId) then
         CurrentFate = nil
@@ -2003,13 +2006,14 @@ function Ready()
 
     if not LogInfo("[FATE] Ready -> IsPlayerAvailable()") and not IsPlayerAvailable() then
         return
-    elseif not LogInfo("[FATE] Ready -> Repair") and RepairAmount > 0 and NeedsRepair(RepairAmount) then
+    elseif not LogInfo("[FATE] Ready -> Repair") and RepairAmount > 0 and NeedsRepair(RepairAmount) and
+        (not shouldWaitForBonusBuff or (SelfRepair and GetItemCount(33916) > 0)) then
         State = CharacterState.repair
         LogInfo("[FATE] State Change: Repair")
     elseif not LogInfo("[FATE] Ready -> ExtractMateria") and ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
-    elseif not LogInfo("[FATE] Ready -> WaitBonusBuff") and NextFate == nil and WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289)) then
+    elseif not LogInfo("[FATE] Ready -> WaitBonusBuff") and NextFate == nil and shouldWaitForBonusBuff then
         if not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
             State = CharacterState.flyBackToAetheryte
             LogInfo("[FATE] State Change: FlyBackToAetheryte")
@@ -2017,23 +2021,30 @@ function Ready()
             yield("/wait 10")
         end
         return
-    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and ShouldExchangeBicolorVouchers and (BicolorGemCount >= 1400) then
+    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and
+        ShouldExchangeBicolorVouchers and (BicolorGemCount >= 1400) and not shouldWaitForBonusBuff
+    then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
-    elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForCollectionsFate == 0 and Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
+    elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForCollectionsFate == 0 and
+        Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1  and not shouldWaitForBonusBuff
+    then
         State = CharacterState.processRetainers
         LogInfo("[FATE] State Change: ProcessingRetainers")
-    elseif not LogInfo("[FATE] Ready -> GC TurnIn") and ShouldGrandCompanyTurnIn and GetInventoryFreeSlotCount() < InventorySlotsLeft then
+    elseif not LogInfo("[FATE] Ready -> GC TurnIn") and ShouldGrandCompanyTurnIn and
+        GetInventoryFreeSlotCount() < InventorySlotsLeft and not shouldWaitForBonusBuff
+    then
         yield("/echo "..tostring(ShouldGrandCompanyTurnIn))
         State = CharacterState.gcTurnIn
         LogInfo("[FATE] State Change: GCTurnIn")
     elseif not LogInfo("[FATE] Ready -> TeleportBackToFarmingZone") and not IsInZone(SelectedZone.zoneId) then
         TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         return
-    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
+    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 and
+        (not shouldWaitForBonusBuff or GetItemCount(4868) > 0) then
         State = CharacterState.summonChocobo
     elseif not LogInfo("[FATE] Ready -> ChangingInstances") and NextFate == nil then
-        if EnableChangeInstance and GetZoneInstance() > 0 then
+        if EnableChangeInstance and GetZoneInstance() > 0 and not shouldWaitForBonusBuff then
             State = CharacterState.changingInstances
             LogInfo("[FATE] State Change: ChangingInstances")
         elseif not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
