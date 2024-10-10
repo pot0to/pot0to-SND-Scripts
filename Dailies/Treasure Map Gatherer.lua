@@ -66,7 +66,8 @@ function Gather()
 end
 
 function SwapCharacters()
-    yield("/ays multi e")
+    yield("/ays multi d")
+    yield("/ays disable")
 	for i=1, #Characters do
 		if Characters[i].visited == nil then
 			Characters[i].visited = true

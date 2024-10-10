@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.15.8                                 *
+*                               Version 2.15.9                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.8   Added nilcheck for BossFatesClass
+    -> 2.15.9   Added <0,0,0> check for pathing to enemies while in a fate
+                Added nilcheck for BossFatesClass
                 Fixed class changing for part 2 fates, fixed materia extraction flag
                 Fixed wait for bonus buff for retainers, mender, gysahl greens
                     and dark matter purchases, bugfix for
@@ -1988,7 +1989,10 @@ function DoFate()
                 yield("/vnav stop")
             elseif not (PathfindInProgress() or PathIsRunning()) then
                 yield("/wait 1")
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+                local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
+                if x ~= 0 and z~=0 then
+                    PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying))
+                end
             end
             return
         else
@@ -2000,7 +2004,10 @@ function DoFate()
         else
             if not (PathfindInProgress() or PathIsRunning()) and not UseBM then
                 yield("/wait 1")
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+                local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
+                if x ~= 0 and z~=0 then
+                    PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying))
+                end
             end
         end
     end
