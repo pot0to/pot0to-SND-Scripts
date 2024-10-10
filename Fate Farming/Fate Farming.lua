@@ -9,10 +9,11 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ***********
 * Version *
-* 2.15.5 *
+* 2.15.6 *
 ***********
         
-    -> 2.15.5   Fixed wait for bonus buff for retainers, mender, gysahl greens and dark matter purchases
+    -> 2.15.6   Fixed wait for bonus buff for retainers, mender, gysahl greens and dark matter purchases,
+                    bugfix for unexpectedCombat -> ready -> unexpectedCombat loop
                 Switch to /rsr manual for forlorns and switch back after
                 Added a dismount check before summoning chocobo
                 Fixed name of Fate La Selva se lo Llevó in Yak T'el
@@ -1790,10 +1791,12 @@ end
 function HandleUnexpectedCombat()
     TurnOnCombatMods("manual")
 
-    if not GetCharacterCondition(CharacterCondition.inCombat) or
-        (IsInFate() and GetFateProgress(GetNearestFate()) < 100) or
-        (CurrentFate ~= nil and CurrentFate.startTime == 0 and GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 50)
-    then
+    if IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
+        CurrentFate = BuildFateTable(GetNearestFate())
+        State = CharacterState.doFate
+        LogInfo("[FATE] State Change: DoFate")
+        return
+    elseif not GetCharacterCondition(CharacterCondition.inCombat) then
         yield("/vnav stop")
         ClearTarget()
         TurnOffCombatMods()
