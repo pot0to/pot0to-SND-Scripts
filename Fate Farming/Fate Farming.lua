@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.15.7                                 *
+*                               Version 2.15.8                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.7   Fixed class changing for part 2 fates, fixed materia extraction flag
+    -> 2.15.8   Added nilcheck for BossFatesClass
+                Fixed class changing for part 2 fates, fixed materia extraction flag
                 Fixed wait for bonus buff for retainers, mender, gysahl greens
                     and dark matter purchases, bugfix for
                     unexpectedCombat -> ready -> unexpectedCombat loop
@@ -1880,15 +1881,13 @@ end
 function DoFate()
     local currentClass = GetClassJobId()
     -- switch classes (mostly for continutation fates that pop you directly into the next one)
-    if CurrentFate.isBossFate and currentClass ~= BossFatesClass.classId and not IsPlayerOccupied() then
+    if CurrentFate.isBossFate and BossFatesClass ~= nil and currentClass ~= BossFatesClass.classId and not IsPlayerOccupied() then
         TurnOffCombatMods()
-        LogInfo("DoFate SwitchToBoss")
         yield("/gs change "..BossFatesClass.className)
         yield("/wait 1")
         return
-    elseif not CurrentFate.isBossFate and currentClass ~= MainClass.classId and not IsPlayerOccupied() then
+    elseif not CurrentFate.isBossFate and BossFatesClass ~= nil and currentClass ~= MainClass.classId and not IsPlayerOccupied() then
         TurnOffCombatMods()
-        LogInfo("DoFate SwitchToMain")
         yield("/gs change "..MainClass.className)
         yield("/wait 1")
         return
