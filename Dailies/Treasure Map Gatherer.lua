@@ -47,13 +47,13 @@ Characters =
 ]]
 
 TimewornMapIds = {
+    {itemId=17836, itemName="Timeworn Gazelleskin Map"},
     {itemId=43557, itemName="Timeworn Br'aaxskin Map"},
     {itemId=43556, itemName="Timeworn Loboskin Map"}
 }
 
 function GetMapInfo()
     for _, mapInfo in ipairs(TimewornMapIds) do
-        yield("/echo "..mapInfo.itemName)
         if mapInfo.itemName == MapName then
             return mapInfo
         end
@@ -66,6 +66,7 @@ function Gather()
 end
 
 function SwapCharacters()
+    yield("/ays multi e")
 	for i=1, #Characters do
 		if Characters[i].visited == nil then
 			Characters[i].visited = true
@@ -96,6 +97,10 @@ function Main()
 end
 
 MapInfo = GetMapInfo()
-repeat
-	Main()
-until not Multimode
+if MapInfo == nil then
+    yield("/echo Cannot find item # for "..MapName)
+else
+    repeat
+        Main()
+    until not Multimode
+end
