@@ -1,40 +1,42 @@
 --[[
 
-****************************************
-*            Fate Farming              * 
-****************************************
+********************************************************************************
+*                                Fate Farming                                  *
+*                               Version 2.15.7                                 *
+********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
-
-***********
-* Version *
-* 2.15.6 *
-***********
         
-    -> 2.15.6   Fixed wait for bonus buff for retainers, mender, gysahl greens and dark matter purchases,
-                    bugfix for unexpectedCombat -> ready -> unexpectedCombat loop
+    -> 2.15.7   Fixed class changing for part 2 fates, fixed materia extraction flag
+                Fixed wait for bonus buff for retainers, mender, gysahl greens
+                    and dark matter purchases, bugfix for
+                    unexpectedCombat -> ready -> unexpectedCombat loop
                 Switch to /rsr manual for forlorns and switch back after
                 Added a dismount check before summoning chocobo
                 Fixed name of Fate La Selva se lo Llevó in Yak T'el
                 Fix for chocobo summoning
-                Removed Pandora, added feature to purchase Gysahl Greens and Grade 8 Dark Matter from Limsa vendors,
-                    turned off BMR when turning in collections fates, fixed S9 waits
+                Removed Pandora, added feature to purchase Gysahl Greens and
+                    Grade 8 Dark Matter from Limsa vendors, turned off BMR when
+                    turning in collections fates, fixed S9 waits
                 Fixing fate selection bug
-                Added missing Kozama'uka npc fates, fixed aoe settings after forlorn dies
+                Added missing Kozama'uka npc fates, fixed aoe settings after
+                    forlorn dies
                 Added pretty README
-                Added setting to select RSR aoe type, reworked aoe settings for targeting forlorns, added settings
-                    for special fates, updated RSR recommendations
-                Removed feature to use Thavnairian Onions when chocobo is ready for level up
+                Added setting to select RSR aoe type, reworked aoe settings for
+                    targeting forlorns, added settings for special fates,
+                    updated RSR recommendations
+                Removed feature to use Thavnairian Onions when chocobo is ready
+                    for level up
                 Fixed fate name for The Serpentlord Seethes
                 Turn off aoes for forlorn
                 Added Dawntrail special fates to blacklist
                 Fixed continaution fates
     -> 2.0.0    State system
 
-*********************
-*  Required Plugins *
-*********************
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
 
 Plugins that are needed for it to work:
 
@@ -49,9 +51,9 @@ Plugins that are needed for it to work:
     -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
     -> Lifestream :  (for changing Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
 
-*********************
-*  Optional Plugins *
-*********************
+********************************************************************************
+*                                Optional Plugins                              *
+********************************************************************************
 
 This Plugins are Optional and not needed unless you have it enabled in the settings:
 
@@ -65,6 +67,12 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 ]]
 
 --#region Settings
+
+--[[
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
 
 --Pre Fate Settings
 Food = ""                           --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
@@ -98,7 +106,7 @@ ShouldExchangeBicolorVouchers = true            --Should it exchange Bicolor Gem
 SelfRepair = false                              --if false, will go to Limsa mender
     RepairAmount = 20                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
     ShouldAutoBuyDarkMatter = true                  --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
-ExtractMateria = true                           --should it Extract Materia
+ShouldExtractMateria = true                           --should it Extract Materia
 Retainers = true                                --should it do Retainers
 ShouldGrandCompanyTurnIn = false                --should it to Turn ins at the GC (requires Deliveroo)
     InventorySlotsLeft = 5                          --how much inventory space before turning in
@@ -165,11 +173,11 @@ if ShouldGrandCompanyTurnIn then
         yield("/echo [FATE] Please Install Deliveroo")
     end
 end
-if ExtractMateria == true then
+if ShouldExtractMateria then
     if HasPlugin("YesAlready") == false then
         yield("/echo [FATE] Please Install YesAlready")
     end 
-end   
+end
 
 if not HasPlugin("ChatCoordinates") then
     yield("/echo [FATE] ChatCoordinates is not installed. Map will not show flag when moving to next Fate.")
@@ -611,7 +619,7 @@ FatesData = {
                 { fateName="Panaq Attack", npcName="Pelupelu Peddler" }
             },
             fatesWithContinuations = {
-                "Salty Showdown"
+                { fateName="Salty Showdown", continuationIsBoss=true }
             },
             blacklistedFates= {
                 "Young Volcanoes",
@@ -723,7 +731,7 @@ FatesData = {
                 { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
             fatesWithContinuations = {
-                "Domo Arigato"
+                { fateName="Domo Arigato", continuationIsBoss=false }
             },
             blacklistedFates= {
                 "When It's So Salvage", -- terrain is terrible
@@ -750,8 +758,8 @@ FatesData = {
             },
             fatesWithContinuations =
             {
-                "Plumbers Don't Fear Slimes",
-                "Mascot March"
+                { fateName="Plumbers Don't Fear Slimes", continuationIsBoss=true },
+                { fateName="Mascot March", continuationIsBoss=true }
             },
             specialFates =
             {
@@ -776,12 +784,6 @@ function IsCollectionsFate(fateName)
 end
 
 function IsBossFate(fateId)
-    -- for i, bossFate in ipairs(SelectedZone.fatesList.bossFates) do
-    --     if bossFate == fateName then
-    --         return true
-    --     end
-    -- end
-    -- return false
     local fateIcon = GetFateIconId(fateId)
     return fateIcon == 60722
 end
@@ -789,15 +791,6 @@ end
 function IsOtherNpcFate(fateName)
     for i, otherNpcFate in ipairs(SelectedZone.fatesList.otherNpcFates) do
         if otherNpcFate.fateName == fateName then
-            return true
-        end
-    end
-    return false
-end
-
-function HasContinuation(fateName)
-    for i, continuationFate in ipairs(SelectedZone.fatesList.fatesWithContinuations) do
-        if continuationFate == fateName then
             return true
         end
     end
@@ -940,6 +933,21 @@ function BuildFateTable(fateId)
         fateTable.timeLeft = fateTable.duration - fateTable.timeElapsed
     end
 
+    fateTable.isCollectionsFate = IsCollectionsFate(fateTable.fateName)
+    fateTable.isBossFate = IsBossFate(fateTable.fateId)
+    fateTable.isOtherNpcFate = IsOtherNpcFate(fateTable.fateName)
+    fateTable.isSpecialFate = IsSpecialFate(fateTable.fateName)
+    fateTable.isBlacklistedFate = IsBlacklistedFate(fateTable.fateName)
+
+    fateTable.continuationIsBoss = false
+    fateTable.hasContinuation = false
+    for _, continuationFate in ipairs(SelectedZone.fatesList.fatesWithContinuations) do
+        if fateTable.fateName == continuationFate.fateName then
+            fateTable.hasContinuation = true
+            fateTable.continuationIsBoss = continuationFate.continuationIsBoss
+        end
+    end
+
     return fateTable
 end
 
@@ -957,15 +965,15 @@ function SelectNextFate()
         LogInfo("[FATE] Time left on fate #:"..tempFate.fateId..": "..math.floor(tempFate.timeLeft//60).."min, "..math.floor(tempFate.timeLeft%60).."s")
         
         if not (tempFate.x == 0 and tempFate.z == 0) then -- sometimes game doesn't send the correct coords
-            if not IsBlacklistedFate(tempFate.fateName) then -- check fate is not blacklisted for any reason
-                if IsBossFate(tempFate.fateId) then
-                    if (IsSpecialFate(tempFate.fateName) and tempFate.progress >= CompletionToJoinSpecialBossFates) or
-                        (not IsSpecialFate(tempFate.fateName) and tempFate.progress >= CompletionToJoinBossFate) then
+            if not tempFate.isBlacklistedFate then -- check fate is not blacklisted for any reason
+                if tempFate.isBossFate then
+                    if (tempFate.isSpecialFate and tempFate.progress >= CompletionToJoinSpecialBossFates) or
+                        (not tempFate.isSpecialFate and tempFate.progress >= CompletionToJoinBossFate) then
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
                     else
                         LogInfo("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
                     end
-                elseif (IsOtherNpcFate(tempFate.fateName) or IsCollectionsFate(tempFate.fateName)) and tempFate.startTime == 0 then
+                elseif (tempFate.isOtherNpcFate or tempFate.isCollectionsFate) and tempFate.startTime == 0 then
                     if nextFate == nil then -- pick this if there's nothing else
                         nextFate = tempFate
                     elseif tempFate.isBonusFate then
@@ -1177,6 +1185,7 @@ end
 
 function WaitForContinuation()
     if IsInFate() then
+        LogInfo("WaitForContinuation IsInFate")
         local nextFateId = GetNearestFate()
         if nextFateId ~= CurrentFate.fateId then
             CurrentFate = BuildFateTable(nextFateId)
@@ -1184,11 +1193,27 @@ function WaitForContinuation()
             LogInfo("State Change: DoFate")
         end
     elseif os.clock() - LastFateEndTime > 30 then
+        LogInfo("WaitForContinuation Abort")
         LogInfo("Over 30s since end of last fate. Giving up on part 2.")
         TurnOffCombatMods()
         State = CharacterState.ready
         LogInfo("State Change: Ready")
     else
+        LogInfo("WaitForContinuation Else")
+        if BossFatesClass ~= nil then
+            local currentClass = GetClassJobId()
+            LogInfo("WaitForContinuation "..CurrentFate.fateName)
+            if not IsPlayerOccupied() then
+                if CurrentFate.continuationIsBoss and currentClass ~= BossFatesClass.classId then
+                    LogInfo("WaitForContinuation SwitchToBoss")
+                    yield("/gs change "..BossFatesClass.className)
+                elseif not CurrentFate.continuationIsBoss and currentClass ~= MainClass.classId then
+                    LogInfo("WaitForContinuation SwitchToMain")
+                    yield("/gs change "..MainClass.className)
+                end
+            end
+        end
+
         yield("/wait 1")
     end
 end
@@ -1383,10 +1408,10 @@ function MoveToFate()
     -- change to secondary class if it's a boss fate
     if BossFatesClass ~= nil then
         local currentClass = GetClassJobId()
-        if IsBossFate(CurrentFate.fateId) and currentClass ~= BossFatesClass.classId then
+        if CurrentFate.isBossFate and currentClass ~= BossFatesClass.classId then
             yield("/gs change "..BossFatesClass.className)
             return
-        elseif not IsBossFate(CurrentFate.fateId) and currentClass ~= MainClass.classId then
+        elseif not CurrentFate.isBossFate and currentClass ~= MainClass.classId then
             yield("/gs change "..MainClass.className)
             return
         end
@@ -1406,7 +1431,7 @@ function MoveToFate()
         end
         return
     elseif GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 40 then
-        if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and not IsInFate() then
+        if (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) and not IsInFate() then
             yield("/target "..CurrentFate.npcName)
         else
             TargetClosestFateEnemy()
@@ -1472,7 +1497,7 @@ function MoveToFate()
     end
 
     local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y, CurrentFate.z
-    if not (IsCollectionsFate(CurrentFate.fateName) or IsOtherNpcFate(CurrentFate.fateName)) then
+    if not (CurrentFate.isCollectionsFate or CurrentFate.isOtherNpcFate) then
         nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 10)
     end
 
@@ -1853,7 +1878,21 @@ function HandleUnexpectedCombat()
 end
 
 function DoFate()
-    if IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
+    local currentClass = GetClassJobId()
+    -- switch classes (mostly for continutation fates that pop you directly into the next one)
+    if CurrentFate.isBossFate and currentClass ~= BossFatesClass.classId and not IsPlayerOccupied() then
+        TurnOffCombatMods()
+        LogInfo("DoFate SwitchToBoss")
+        yield("/gs change "..BossFatesClass.className)
+        yield("/wait 1")
+        return
+    elseif not CurrentFate.isBossFate and currentClass ~= MainClass.classId and not IsPlayerOccupied() then
+        TurnOffCombatMods()
+        LogInfo("DoFate SwitchToMain")
+        yield("/gs change "..MainClass.className)
+        yield("/wait 1")
+        return
+    elseif IsInFate() and (GetFateMaxLevel(CurrentFate.fateId) < GetLevel()) and not IsLevelSynced() then
         yield("/lsync")
         yield("/wait 0.5") -- give it a second to register
     elseif IsFateActive(CurrentFate.fateId) and not IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 and
@@ -1867,7 +1906,7 @@ function DoFate()
     elseif not IsFateActive(CurrentFate.fateId) then
         yield("/vnav stop")
         ClearTarget()
-        if not LogInfo("[FATE] HasContintuation check") and HasContinuation(CurrentFate.fateName) then
+        if not LogInfo("[FATE] HasContintuation check") and CurrentFate.hasContinuation then
             LastFateEndTime = os.clock()
             State = CharacterState.waitForContinuation
             LogInfo("[FATE] State Change: WaitForContinuation")
@@ -1883,7 +1922,7 @@ function DoFate()
         State = CharacterState.middleOfFateDismount
         LogInfo("[FATE] State Change: MiddleOfFateDismount")
         return
-    elseif IsCollectionsFate(CurrentFate.fateName) then
+    elseif CurrentFate.isCollectionsFate then
         WaitingForCollectionsFate = CurrentFate.fateId
         yield("/wait 1") -- needs a moment after start of fate for GetFateEventItem to populate
         if GetItemCount(GetFateEventItem(CurrentFate.fateId)) >= 7 or (GotCollectionsFullCredit and GetFateProgress(CurrentFate.fateId) == 100) then
@@ -2019,7 +2058,7 @@ function Ready()
         (not shouldWaitForBonusBuff or (SelfRepair and GetItemCount(33916) > 0)) then
         State = CharacterState.repair
         LogInfo("[FATE] State Change: Repair")
-    elseif not LogInfo("[FATE] Ready -> ExtractMateria") and ExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
+    elseif not LogInfo("[FATE] Ready -> ExtractMateria") and ShouldExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
     elseif not LogInfo("[FATE] Ready -> WaitBonusBuff") and NextFate == nil and shouldWaitForBonusBuff then
