@@ -106,7 +106,6 @@ function Main()
     yield("/echo "..MapInfo.itemId)
     yield("/echo "..GetItemCount(MapInfo.itemId))
     if GetItemCount(MapInfo.itemId) > 0 or hasMapAllowance ~= "Available Now" then
-        yield("/echo No map allowance left for today.")
         if GBRAutoOn then
             yield("/gbr auto off")
             GBRAutoOn = false
@@ -114,6 +113,8 @@ function Main()
         if IsPlayerOccupied() then
             return
         end
+
+        yield("/echo No map allowance left for today.")
 
         yield("/li auto")
         yield("/wait 1")
