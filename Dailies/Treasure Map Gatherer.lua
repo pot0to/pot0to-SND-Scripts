@@ -9,7 +9,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.4                                    *
+*                                     0.0.5                                    *
 ********************************************************************************
 Gathers a map, relogs as the next character in the list, and repeat.
 
@@ -81,8 +81,12 @@ function SwapCharacters()
             yield("/echo "..nextCharacterName)
 			if GetCharacterName(true) ~= nextCharacterName then
 				yield("/ays relog "..nextCharacterName)
-				yield("/wait 3")
-				yield("/waitaddon _ActionBar <maxwait.600><wait.5>")
+				-- yield("/wait 3")
+                repeat
+                    yield("/wait 1")
+                until GetCharacterName(true) == nextCharacterName
+                -- yield("/waitaddon _ActionBar <maxwait.600><wait.5>")
+                yield("/waitaddon _ActionBar")
 			end
 			return
 		end
