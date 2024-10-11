@@ -9,7 +9,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.2                                    *
+*                                     0.0.3                                    *
 ********************************************************************************
 Gathers a map, relogs as the next character in the list, and repeat.
 
@@ -89,8 +89,16 @@ function SwapCharacters()
 end
 
 function Main()
-    if GetItemCount(MapInfo.itemId) > 0 then
-        yield("/echo you have a map already")
+
+    if not IsAddonVisible("ContentsInfo") then
+        yield("/timers")
+        return
+    end
+
+    local hasMapAllowance = GetNodeText("ContentsInfo", 8, 10, 4)
+
+    if GetItemCount(MapInfo.itemId) > 0 or hasMapAllowance ~= "Available Now" then
+        yield("/echo No map allowance left for today.")
         if GBRAutoOn then
             yield("/gbr auto off")
             GBRAutoOn = false
