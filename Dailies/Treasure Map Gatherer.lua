@@ -77,6 +77,7 @@ function SwapCharacters()
 		if Characters[i].visited == nil then
 			Characters[i].visited = true
 			local nextCharacterName = Characters[i].characterName.."@"..Characters[i].worldName
+            yield("/echo "..nextCharacterName)
 			if GetCharacterName(true) ~= nextCharacterName then
 				yield("/ays relog "..nextCharacterName)
 				yield("/wait 3")
@@ -113,7 +114,6 @@ function Main()
     else
         Gather()
     end
-    yield("/wait 1")
 end
 
 GBRAutoOn = false
@@ -123,5 +123,6 @@ if MapInfo == nil then
 else
     repeat
         Main()
+        yield("/wait 1")
     until not Multimode
 end
