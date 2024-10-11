@@ -29,13 +29,13 @@ Gathers a map, relogs as the next character in the list, and repeat.
 ********************************************************************************
 ]]
 
-MapName = "Timeworn Br'aaxskin Map"
+MapName = "Iron Ore"
 
 Multimode = true
 Characters =
 {
-	{ characterName="Cyriac Klein", worldName="Midgardsormr" },
-	{ characterName="Otoro Tunacat", worldName="Midgardsormr" }
+	{ characterName="John Doe", worldName="Excalibur" },
+	{ characterName="Jane Doe", worldName="Excalibur" }
 }
 
 --#endregion Settings
@@ -49,7 +49,8 @@ Characters =
 TimewornMapIds = {
     {itemId=17836, itemName="Timeworn Gazelleskin Map"},
     {itemId=43557, itemName="Timeworn Br'aaxskin Map"},
-    {itemId=43556, itemName="Timeworn Loboskin Map"}
+    {itemId=43556, itemName="Timeworn Loboskin Map"},
+    {itemId=5111, itemName="Iron Ore"}
 }
 
 function GetMapInfo()
@@ -97,7 +98,10 @@ function Main()
     end
 
     local hasMapAllowance = GetNodeText("ContentsInfo", 8, 10, 4)
+    hasMapAllowance = "Available Now"
 
+    yield("/echo "..MapInfo.itemId)
+    yield("/echo "..GetItemCount(MapInfo.itemId))
     if GetItemCount(MapInfo.itemId) > 0 or hasMapAllowance ~= "Available Now" then
         yield("/echo No map allowance left for today.")
         if GBRAutoOn then
