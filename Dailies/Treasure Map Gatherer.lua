@@ -9,7 +9,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.3                                    *
+*                                     0.0.4                                    *
 ********************************************************************************
 Gathers a map, relogs as the next character in the list, and repeat.
 
