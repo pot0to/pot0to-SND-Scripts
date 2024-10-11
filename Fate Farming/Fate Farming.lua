@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.15.9                                 *
+*                               Version 2.15.10                                *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.9   Added <0,0,0> check for pathing to enemies while in a fate
+    -> 2.15.10  Removed check for targeting forlorn only once
+                Added <0,0,0> check for pathing to enemies while in a fate
                 Added nilcheck for BossFatesClass
                 Fixed class changing for part 2 fates, fixed materia extraction flag
                 Fixed wait for bonus buff for retainers, mender, gysahl greens
@@ -1946,10 +1947,8 @@ function DoFate()
     GemAnnouncementLock = false
 
     -- switches to targeting forlorns for bonus (if present)
-    if not ForlornMarked then
-        yield("/target Forlorn Maiden")
-        yield("/target The Forlorn")
-    end
+    yield("/target Forlorn Maiden")
+    yield("/target The Forlorn")
 
     if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
         if GetTargetHP() > 0 then
