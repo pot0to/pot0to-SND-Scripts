@@ -9,7 +9,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.5                                    *
+*                                     0.0.6                                    *
 ********************************************************************************
 Gathers a map, relogs as the next character in the list, and repeat.
 
@@ -102,7 +102,6 @@ function Main()
     end
 
     local hasMapAllowance = GetNodeText("ContentsInfo", 8, 10, 4)
-    hasMapAllowance = "Available Now"
 
     yield("/echo "..MapInfo.itemId)
     yield("/echo "..GetItemCount(MapInfo.itemId))
@@ -115,6 +114,12 @@ function Main()
         if IsPlayerOccupied() then
             return
         end
+
+        yield("/li auto")
+        yield("/wait 1")
+        repeat
+            yield("/wait 1")
+        until LifestreamIsBusy()
 
         yield("/echo player is not occupied")
 
