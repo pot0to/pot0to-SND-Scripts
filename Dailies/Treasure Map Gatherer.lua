@@ -9,7 +9,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.6                                    *
+*                                     0.0.7                                    *
 ********************************************************************************
 Gathers a map, relogs as the next character in the list, and repeat.
 
@@ -98,6 +98,7 @@ function Main()
 
     if not IsAddonVisible("ContentsInfo") then
         yield("/timers")
+        yield("/wait 3")
         return
     end
 
