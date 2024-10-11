@@ -34,8 +34,8 @@ MapName = "Timeworn Br'aaxskin Map"
 Multimode = true
 Characters =
 {
-	{ characterName="John Doe", worldName="Behemoth" },
-	{ characterName="Jane Doe", worldName="Excalibur" }
+	{ characterName="Cyriac Klein", worldName="Midgardsormr" },
+	{ characterName="Otoro Tunacat", worldName="Midgardsormr" }
 }
 
 --#endregion Settings
