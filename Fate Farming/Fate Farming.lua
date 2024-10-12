@@ -1918,7 +1918,8 @@ function DoFate()
             TurnOffCombatMods()
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
-            yield("/wait "..math.random()*3)
+            local randomWait = math.floor(math.random()*3 * 1000)/1000 -- truncated to 3 decimal places
+            yield("/wait "..randomWait)
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
