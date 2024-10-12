@@ -149,7 +149,6 @@ function SwapCharacters()
 end
 
 function Main()
-
     if not IsAddonVisible("ContentsInfo") then
         yield("/timers")
         yield("/wait 3")
