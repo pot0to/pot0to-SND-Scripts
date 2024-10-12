@@ -11,8 +11,10 @@ Gathers a map, relogs as the next character in the list, and repeat.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.8                                    *
+*                                     0.0.9                                    *
 ********************************************************************************
+0.0.9   Added checks to stop pathing and close gathering menus when ready to
+            switch characters
 0.0.8   Added ability to search entire timers list for map allowances, added
             other maps
 
@@ -113,6 +115,16 @@ function Gather()
 end
 
 function SwapCharacters()
+    if IsAddonVisible("Gathering") then
+        yield("/callback Gathering true -1")
+        return
+    end
+
+    if PathIsRunning() or PathfindInProgress() then
+        yield("/vnav stop")
+        return
+    end
+
     yield("/echo swapping characters")
     yield("/ays multi d")
     yield("/ays disable")
