@@ -175,7 +175,7 @@ end
 CurrentLevel = GetLevel()
 
 -- Pick up a journal if you need one
-if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() then
+if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() or WeeklyBingoNumPlacedStickers() == 9 then
     if not IsInZone(478) then
         yield("/tp Idyllshire")
         yield("/wait 1")
@@ -199,6 +199,8 @@ if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() then
             yield("/callback SelectString true 0")
         elseif IsWeeklyBingoExpired() then
             yield("/callback SelectString true 1")
+        elseif WeeklyBingoNumPlacedStickers() == 9 then
+            yield("/callback SelectString true 0")
         end
         
     end
@@ -250,8 +252,11 @@ for i = 0, 12 do
                 yield("/rotation auto")
                 yield("/wait 10")
                 while GetCharacterCondition(34) or GetCharacterCondition(51) or GetCharacterCondition(56) do -- wait for duty to be finished
-                    if GetCharacterCondition(2) then -- dead
+                    if GetCharacterCondition(2) and i > 4 then -- dead, not a dungeon
                         yield("/echo Died to "..duty.dutyName..". Skipping.")
+                        repeat
+                            yield("/wait 1")
+                        until not GetCharacterCondition(2)
                         LeaveDuty()
                         break
                     end
