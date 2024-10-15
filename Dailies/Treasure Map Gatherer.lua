@@ -11,9 +11,10 @@ Gathers a map, relogs as the next character in the list, and repeat.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.1.0                                    *
+*                                     0.1.1                                    *
 ********************************************************************************
 
+0.1.1   Added code to support Delivery Moogle at Radz-at-Han (/tp radz)
 0.1.0   Added ability to mail
 0.0.10  Moved command to close gathering menu
 0.0.9   Added checks to stop pathing and close gathering menus when ready to
@@ -48,8 +49,8 @@ Characters =
 
 Mail = true
     RecipientName = "John Doe"
-    MailboxName = "Moogle Letter Box" -- or Regal Letter Box
-    MailboxTeleportCommand = "/li auto"
+    MailboxName = "Moogle Letter Box"       -- options: Moogle Letter Box, Regal Letter Box, Delivery Moogle
+    MailboxTeleportCommand = "/li auto"     -- if you don't have a private home or fc, then "/tp radz" + Delivery Moogle will work
 
 --#endregion Settings
 
@@ -181,7 +182,16 @@ function MailMap()
     end
 
     yield("/target "..MailboxName)
+
     if HasTarget() and GetTargetName() == MailboxName then
+        if GetDistanceToTarget() > 5 then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), false)
+
+            repeat
+                yield("/wait 1")
+            until GetDistanceToTarget() <= 5
+            yield("/vnav stop")
+        end
         yield("/interact")
         return
     else
