@@ -11,8 +11,9 @@ Gathers a map, relogs as the next character in the list, and repeat.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.9                                    *
+*                                    0.0.10                                    *
 ********************************************************************************
+0.0.10  Moved command to close gathering menu
 0.0.9   Added checks to stop pathing and close gathering menus when ready to
             switch characters
 0.0.8   Added ability to search entire timers list for map allowances, added
@@ -115,10 +116,6 @@ function Gather()
 end
 
 function SwapCharacters()
-    if IsAddonVisible("Gathering") then
-        yield("/callback Gathering true -1")
-        return
-    end
 
     if PathIsRunning() or PathfindInProgress() then
         yield("/vnav stop")
@@ -164,7 +161,13 @@ function Main()
             yield("/gbr auto off")
             GBRAutoOn = false
         end
-        if IsPlayerOccupied() then
+
+        if IsAddonVisible("Gathering") then
+            yield("/callback Gathering true -1")
+            return
+        end
+
+        if IsPlayerOccupied() then -- wait for players to be available
             return
         end
 
@@ -172,6 +175,7 @@ function Main()
             yield("/echo Already have map in inventory.")
         end
         if not HasMapAllowance() then
+            LogInfo("No map allowance left for today.")
             yield("/echo No map allowance left for today.")
         end
 
