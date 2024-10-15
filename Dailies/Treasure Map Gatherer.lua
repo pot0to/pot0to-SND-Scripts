@@ -11,9 +11,10 @@ Gathers a map, relogs as the next character in the list, and repeat.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.1.1                                    *
+*                                     0.1.2                                    *
 ********************************************************************************
 
+0.1.2   Fixed state change between character swap and ready
 0.1.1   Added code to support Delivery Moogle at Radz-at-Han (/tp radz)
 0.1.0   Added ability to mail
 0.0.10  Moved command to close gathering menu
@@ -223,6 +224,7 @@ function SwapCharacters()
                 until GetCharacterName(true) == nextCharacterName
                 -- yield("/waitaddon _ActionBar <maxwait.600><wait.5>")
                 yield("/waitaddon _ActionBar")
+                State = CharacterState.ready
 			end
 			return
 		end
