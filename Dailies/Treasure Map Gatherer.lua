@@ -11,8 +11,10 @@ Gathers a map, relogs as the next character in the list, and repeat.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                    0.0.10                                    *
+*                                     0.1.0                                    *
 ********************************************************************************
+
+0.1.0   Added ability to mail
 0.0.10  Moved command to close gathering menu
 0.0.9   Added checks to stop pathing and close gathering menus when ready to
             switch characters
@@ -43,6 +45,11 @@ Characters =
 	{ characterName="John Doe", worldName="Excalibur" },
 	{ characterName="Jane Doe", worldName="Excalibur" }
 }
+
+Mail = true
+    RecipientName = "John Doe"
+    MailboxName = "Moogle Letter Box" -- or Regal Letter Box
+    MailboxTeleportCommand = "/li auto"
 
 --#endregion Settings
 
@@ -108,6 +115,17 @@ end
 
 function Gather()
     yield("/echo gathering")
+    if LifestreamIsBusy() then
+        return
+    end
+
+    if GetItemCount(MapInfo.itemId) > 0 then
+        yield("/echo Acquired map.")
+        State = CharacterState.ready
+        return
+    end
+
+    yield("/echo gathering")
     if not GBRAutoOn then
         yield("/gbr auto on")
         GBRAutoOn = true
@@ -115,11 +133,68 @@ function Gather()
     yield("/wait 10")
 end
 
-function SwapCharacters()
-
-    if PathIsRunning() or PathfindInProgress() then
-        yield("/vnav stop")
+function MailMap()
+    if LifestreamIsBusy() then
         return
+    end
+
+    yield("/echo mailing")
+    if GetItemCount(MapInfo.itemId) == 0 then
+        if IsAddonVisible("LetterList") then
+            yield("/callback LetterList true -1")
+        end
+        State = CharacterState.ready
+        return
+    end
+
+    if IsAddonVisible("SelectYesno") then
+        yield("/callback SelectYesno true 0")
+        return
+    end
+
+    if IsAddonVisible("LetterEditor") then
+        if MapAttached then
+            --local dateString = os.date("%B %d, %Y", os.time(os.date("*t")))
+            yield('/callback LetterEditor true 0 0 "'..RecipientName..'" "sending you a map" 0 0')
+            return
+        end
+
+        -- search through every inventory slot until you find the map
+        for inventoryPage=0,4 do
+            for inventorySlot=0,34 do
+                if (GetItemIdInSlot(inventoryPage, inventorySlot) == MapInfo.itemId) then
+                    yield("/callback LetterEditor true 3 0 "..inventoryPage.." "..inventorySlot.." 0 0")
+                    MapAttached = true
+                    return
+                end
+            end
+        end
+
+        yield("/echo Could not find "..MapInfo.itemName.." in inventory.")
+        State = CharacterState.ready
+        return
+    end
+
+    if IsAddonVisible("LetterList") then
+        yield("/callback LetterList true 1 0 0 0") -- click "New"
+        return
+    end
+
+    yield("/target "..MailboxName)
+    if HasTarget() and GetTargetName() == MailboxName then
+        yield("/interact")
+        return
+    else
+        yield(MailboxTeleportCommand)
+        return
+    end
+end
+
+function SwapCharacters()
+    yield("/echo swapping")
+    if GBRAutoOn then
+        yield("/gbr auto off")
+        GBRAutoOn = false
     end
 
     yield("/echo swapping characters")
@@ -145,61 +220,48 @@ function SwapCharacters()
 	Multimode = false
 end
 
-function Main()
-    if not IsAddonVisible("ContentsInfo") then
-        yield("/timers")
-        yield("/wait 3")
+function Ready()
+    yield("/echo ready")
+    if IsAddonVisible("Gathering") then
+        yield("/callback Gathering true -1")
         return
     end
 
-    local hasMapAllowance = GetNodeText("ContentsInfo", 8, 10, 4)
+    if IsPlayerOccupied() then -- wait for player to be available
+        return
+    end
 
-    yield("/echo "..MapInfo.itemId)
-    yield("/echo "..GetItemCount(MapInfo.itemId))
-    if GetItemCount(MapInfo.itemId) > 0 or not HasMapAllowance() then
-        if GBRAutoOn then
-            yield("/gbr auto off")
-            GBRAutoOn = false
+    if GetItemCount(MapInfo.itemId) > 0 then
+        if RecipientName ~= GetCharacterName(false) then
+            MapAttached = false
+            State = CharacterState.mailing
         end
-
-        if IsAddonVisible("Gathering") then
-            yield("/callback Gathering true -1")
-            return
+    elseif not HasMapAllowance() then
+        yield("/echo No map allowance left for today.")
+        if Multimode then
+            State = CharacterState.swapping
         end
-
-        if IsPlayerOccupied() then -- wait for players to be available
-            return
-        end
-
-        if GetItemCount(MapInfo.itemId) > 0 then
-            yield("/echo Already have map in inventory.")
-        end
-        if not HasMapAllowance() then
-            LogInfo("No map allowance left for today.")
-            yield("/echo No map allowance left for today.")
-        end
-
-        yield("/li auto")
-        yield("/wait 1")
-        repeat
-            yield("/wait 1")
-        until LifestreamIsBusy()
-
-        yield("/echo player is not occupied")
-
-        SwapCharacters()
     else
-        Gather()
+        State = CharacterState.gathering
     end
 end
 
+CharacterState =
+{
+    ready = Ready,
+    gathering = Gather,
+    mailing = MailMap,
+    swapping = SwapCharacters
+}
+
 GBRAutoOn = false
 MapInfo = GetMapInfo()
+State = CharacterState.ready
 if MapInfo == nil then
     yield("/echo Cannot find item # for "..MapName)
 else
     repeat
-        Main()
+        State()
         yield("/wait 1")
-    until not Multimode
+    until not Multimode and not HasMapAllowance()
 end
