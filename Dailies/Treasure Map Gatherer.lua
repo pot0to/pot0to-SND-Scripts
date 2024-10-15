@@ -264,6 +264,7 @@ CharacterState =
     swapping = SwapCharacters
 }
 
+yield("/at y")
 GBRAutoOn = false
 MapInfo = GetMapInfo()
 State = CharacterState.ready
