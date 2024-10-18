@@ -27,7 +27,7 @@ Gathers a map, relogs as the next character in the list, and repeat.
 *                               Required Plugins                               *
 ********************************************************************************
 1. Vnavmesh
-2. Gather Buddy Reborn
+2. Gather Buddy Reborn - Create an autogather list with your desired map
 3. Autoretainer
 ]]
 
@@ -39,7 +39,7 @@ Gathers a map, relogs as the next character in the list, and repeat.
 ********************************************************************************
 ]]
 
-MapName = "Timeworn Gazelleskin Map"
+MapName = "Timeworn Gazelleskin Map" -- must match the map on your GBR list
 
 Multimode = true
 Characters =

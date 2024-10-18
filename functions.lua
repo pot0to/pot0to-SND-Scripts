@@ -7,7 +7,7 @@ function GetAetheryteName(aetheryteId)
                     if AetheryteList[i].AetheryteData.GameData.PlaceName.Value ~= nil then
                         if AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name ~= nil then
                             LogInfo(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name)
-                            return tostring(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name):gsub(": %d+", "")
+                            return tostring(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name):match("(.+):")
                         end
                     end
                 end
@@ -30,6 +30,29 @@ function GetAetherytesInZone(zoneId)
     return aetherytes
 end
 
-for _, aetheryte in ipairs(GetAetherytesInZone(478)) do
-    yield("/echo "..aetheryte)
+-- Svc.AetheryteList.FirstOrDefault(x => x.AetheryteId == aetheryteID)?.AetheryteData.GameData?.Level.FirstOrDefault()?.Value?.X ?? 0;
+function GetAetheryteRawPos(aetheryteId)
+    for i=0,AetheryteList.Count do
+        if AetheryteList[i] ~= nil then
+            if AetheryteList[i].AetheryteId == aetheryteId then
+                if AetheryteList[i].AetheryteData.GameData ~= nil then
+                    if AetheryteList[i].AetheryteData.GameData.Map ~= nil then
+                        yield("/echo map not nil")
+                        local level = AetheryteList[i].AetheryteData.GameData.Map
+                        LogInfo(AetheryteList[i].AetheryteData.GameData.Level[1].X)
+                        if AetheryteList[i].AetheryteData.GameData.Level[1].Value ~= nil then
+                            
+                            yield("/echo level value not nil")
+                            return level.Value.X, level.Value.Y, level.Value.Z
+                        end
+                        yield("/echo level value is nil")
+                    end
+                end
+            end
+        end
+    end
+    return 0, 0, 0
 end
+
+local x,y,z = GetAetheryteRawPos(210)
+yield("/echo "..x..", "..y..", "..z)
