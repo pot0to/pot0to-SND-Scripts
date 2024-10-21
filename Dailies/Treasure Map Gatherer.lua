@@ -5,9 +5,12 @@
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
-State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
 Gathers a map, relogs as the next character in the list, and repeat.
+You will need to install Gather Buddy Reborn and add your desired map to the
+auto gather list. This plugin only kicks off the gather list and waits for the
+map to drop in your inventory, then stops the gathering and relogs as the next
+character.
 
 ********************************************************************************
 *                                    Version                                   *
