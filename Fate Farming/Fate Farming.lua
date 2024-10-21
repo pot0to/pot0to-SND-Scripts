@@ -2,13 +2,16 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                              Version 2.15.12                                 *
+*                              Version 2.15.13                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.12  Fixed autobuy for gysahl greens, added a path back to center of
+    -> 2.15.13  Added a 5s wait for casts to go off. If character is still not
+                    in combat by the end of 5s, attempts to move to edge of
+                    hitbox and try again
+                Fixed autobuy for gysahl greens, added a path back to center of
                     fate if no targets found
                 Truncated random wait  to 3 decimal places
                 Removed check for targeting forlorn only once
@@ -217,18 +220,20 @@ CharacterCondition = {
     mounted=4,
     inCombat=26,
     casting=27,
-    occupied31=31,
-    occupiedShopkeeper=32,
+    occupiedInEvent=31,
+    occupiedInQuestEvent=32,
     occupied=33,
-    occupiedMateriaExtraction=39,
+    boundByDuty34=34,
+    occupiedMateriaExtractionAndRepair=39,
     betweenAreas=45,
     jumping48=48,
     jumping61=61,
     occupiedSummoningBell=50,
+    betweenAreasForDuty=51,
+    boundByDuty56=56,
     mounting57=57,
     mounting64=64,
-    beingmoved70=70,
-    beingmoved75=75,
+    beingMoved=70,
     flying=77
 }
 
@@ -1028,6 +1033,36 @@ end
 
 --#region Movement Functions
 
+function GetAetheryteName(aetheryteId)
+    for i=0,AetheryteList.Count do
+        if AetheryteList[i] ~= nil then
+            if AetheryteList[i].AetheryteId == aetheryteId then
+                if AetheryteList[i].AetheryteData.GameData ~= nil then
+                    if AetheryteList[i].AetheryteData.GameData.PlaceName.Value ~= nil then
+                        if AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name ~= nil then
+                            LogInfo(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name)
+                            return tostring(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name):match("(.+):")
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+function GetAetherytesInZone(zoneId)
+    local aetherytes = {}
+    for i=0,AetheryteList.Count do
+        if AetheryteList[i] ~= nil then
+            if AetheryteList[i].TerritoryId == zoneId then
+                yield("/echo "..AetheryteList[i].AetheryteId)
+                table.insert(aetherytes, AetheryteList[i].AetheryteId)
+            end
+        end
+    end
+    return aetherytes
+end
+
 function GetClosestAetheryte(x, y, z, teleportTimePenalty)
     local closestAetheryte = nil
     local closestTravelDistance = math.maxinteger
@@ -1515,7 +1550,6 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-    
 
     if IsInFate() or GetFateStartTimeEpoch(CurrentFate.fateId) > 0 then
         State = CharacterState.doFate
@@ -1992,15 +2026,16 @@ function DoFate()
             if GetDistanceToTarget() <= (1 + GetTargetHitboxRadius()) then
                 yield("/vnav stop")
             elseif not (PathfindInProgress() or PathIsRunning()) then
-                yield("/wait 1")
+                yield("/wait 5") -- wait 5 seconds for casts to go off to engage combat
                 local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
-                if x ~= 0 and z~=0 then
+                if x ~= 0 and z~=0 and not GetCharacterCondition(CharacterCondition.inCombat) then
                     PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying))
                 end
             end
             return
         else
             TargetClosestFateEnemy()
+            yield("/wait 1") -- wait in case target doesn't stick
             if not HasTarget() then
                 PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
             end
@@ -2175,7 +2210,7 @@ function ExchangeOldVouchers()
     else
         if not HasTarget() or GetTargetName() ~= "Gadfrid" then
             yield("/target Gadfrid")
-        elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
+        elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
             yield("/interact")
         end
     end
@@ -2207,7 +2242,7 @@ function ExchangeNewVouchers()
         LogInfo("Arrived at Beryl")
         if not HasTarget() or GetTargetName() ~= "Beryl" then
             yield("/target Beryl")
-        elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
+        elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
             yield("/interact")
         end
     end
@@ -2331,7 +2366,7 @@ function Repair()
     end
 
     -- if occupied by repair, then just wait
-    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtraction) then
+    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
         LogInfo("[FATE] Repairing...")
         yield("/wait 1")
         return
@@ -2385,7 +2420,7 @@ function Repair()
             else
                 if not HasTarget() or GetTargetName() ~= darkMatterVendor.npcName then
                     yield("/target "..darkMatterVendor.npcName)
-                elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
+                elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
                     yield("/interact")
                 elseif IsAddonVisible("SelectYesno") then
                     yield("/callback SelectYesno true 0")
@@ -2417,7 +2452,7 @@ function Repair()
             else
                 if not HasTarget() or GetTargetName() ~= mender.npcName then
                     yield("/target "..mender.npcName)
-                elseif not GetCharacterCondition(CharacterCondition.occupiedShopkeeper) then
+                elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
                     yield("/interact")
                 end
             end
@@ -2435,7 +2470,7 @@ function ExtractMateria()
         return
     end
 
-    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtraction) then
+    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
         return
     end
 
@@ -2526,7 +2561,6 @@ if SelectedZone == nil then
     }
 end
 
-
 -- variable to track collections fates that you have completed but are still active.
 -- will not leave area or change instance if value ~= 0
 WaitingForCollectionsFate = 0
@@ -2540,6 +2574,7 @@ end
 LogInfo("[FATE] Starting fate farming script.")
 while true do
     if NavIsReady() then
+
         if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
@@ -2560,9 +2595,8 @@ while true do
             GetCharacterCondition(CharacterCondition.jumping61) or
             GetCharacterCondition(CharacterCondition.mounting57) or
             GetCharacterCondition(CharacterCondition.mounting64) or
-            GetCharacterCondition(CharacterCondition.beingmoved70) or
-            GetCharacterCondition(CharacterCondition.beingmoved75) or
-            GetCharacterCondition(CharacterCondition.occupiedMateriaExtraction) or
+            GetCharacterCondition(CharacterCondition.beingMoved) or
+            GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
             LifestreamIsBusy())
         then
             if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
