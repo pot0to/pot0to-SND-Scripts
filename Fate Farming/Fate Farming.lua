@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                              Version 2.15.14                                 *
+*                              Version 2.15.15                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.14  Added support for ARR base classes
+    -> 2.15.15  Fixed partial support feature
+                Added support for ARR base classes
                 Added a 5s wait for casts to go off. If character is still not
                     in combat by the end of 5s, attempts to move to edge of
                     hitbox and try again
@@ -32,16 +33,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Fixing fate selection bug
                 Added missing Kozama'uka npc fates, fixed aoe settings after
                     forlorn dies
-                Added pretty README
-                Added setting to select RSR aoe type, reworked aoe settings for
-                    targeting forlorns, added settings for special fates,
-                    updated RSR recommendations
-                Removed feature to use Thavnairian Onions when chocobo is ready
-                    for level up
-                Fixed fate name for The Serpentlord Seethes
-                Turn off aoes for forlorn
-                Added Dawntrail special fates to blacklist
-                Fixed continaution fates
     -> 2.0.0    State system
 
 ********************************************************************************
@@ -2566,7 +2557,8 @@ if SelectedZone == nil then
             collectionsFates= {},
             otherNpcFates= {},
             bossFates= {},
-            blacklistedFates= {}
+            blacklistedFates= {},
+            fatesWithContinuations = {}
         }
     }
 end
@@ -2584,7 +2576,6 @@ end
 LogInfo("[FATE] Starting fate farming script.")
 while true do
     if NavIsReady() then
-
         if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
             State = CharacterState.dead
             LogInfo("[FATE] State Change: Dead")
