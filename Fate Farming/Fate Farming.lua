@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                              Version 2.15.13                                 *
+*                              Version 2.15.14                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.13  Added a 5s wait for casts to go off. If character is still not
+    -> 2.15.14  Added support for ARR base classes
+                Added a 5s wait for casts to go off. If character is still not
                     in combat by the end of 5s, attempts to move to edge of
                     hitbox and try again
                 Fixed autobuy for gysahl greens, added a path back to center of
@@ -239,6 +240,13 @@ CharacterCondition = {
 
 ClassList =
 {
+    gla = { classId=1, className="Gladiator", isMelee=true, isTank=true },
+    pgl = { classId=2, className="Pugilist", isMelee=true, isTank=false },
+    mrd = { classId=3, className="Marauder", isMelee=true, isTank=true },
+    lnc = { classId=4, className="Lancer", isMelee=true, isTank=false },
+    arc = { classId=5, className="Archer", isMelee=false, isTank=false },
+    cnj = { classId=6, className="Conjurer", isMelee=false, isTank=false },
+    thm = { classId=7, className="Thaumaturge", isMelee=false, isTank=false },
     pld = { classId=19, className="Paladin", isMelee=true, isTank=true },
     mnk = { classId=20, className="Monk", isMelee=true, isTank=false },
     war = { classId=21, className="Warrior", isMelee=true, isTank=true },
@@ -246,8 +254,10 @@ ClassList =
     brd = { classId=23, className="Bard", isMelee=false, isTank=false },
     whm = { classId=24, className="White Mage", isMelee=false, isTank=false },
     blm = { classId=25, className="Black Mage", isMelee=false, isTank=false },
+    acn = { classId=26, className="Arcanist", isMelee=false, isTank=false },
     smn = { classId=27, className="Summoner", isMelee=false, isTank=false },
     sch = { classId=28, className="Scholar", isMelee=false, isTank=false },
+    rog = { classId=29, className="Rogue", isMelee=false, isTank=false },
     nin = { classId=30, className="Ninja", isMelee=true, isTank=false },
     mch = { classId=31, className="Machinist", isMelee=false, isTank=false},
     drk = { classId=32, className="Dark Knight", isMelee=true, isTank=true },
@@ -2607,5 +2617,8 @@ while true do
     end
     yield("/wait 0.1")
 end
+
+::StopLoop::
+    yield("/vnav stop")
 
 --#endregion Main
