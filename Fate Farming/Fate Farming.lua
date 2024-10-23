@@ -8,7 +8,10 @@
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.15.15  Fixed partial support feature
+    -> 2.16.0   Updated aetheryte code to use new SND aetheryte functions, fixed
+                    bug that causes character to path to center of mob even when
+                    playing as ranged
+                Fixed partial support feature
                 Added support for ARR base classes
                 Added a 5s wait for casts to go off. If character is still not
                     in combat by the end of 5s, attempts to move to edge of
@@ -268,9 +271,6 @@ FatesData = {
     {
         zoneName = "Coerthas Central Highlands",
         zoneId = 155,
-        aetheryteList = {
-            { aetheryteName="Camp Dragonhead", x=223.98718, y=315.7854, z=-234.85168 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -281,9 +281,6 @@ FatesData = {
     {
         zoneName = "Coerthas Western Highlands",
         zoneId = 397,
-        aetheryteList = {
-            { aetheryteName="Falcon's Nest", x=474.87585, y=217.94458, z=708.5221 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -294,9 +291,6 @@ FatesData = {
     {
         zoneName = "Mor Dhona",
         zoneId = 156,
-        aetheryteList = {
-            { aetheryteName="Revenant's Toll", x=40.024292, y=24.002441, z=-668.0247 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -307,10 +301,6 @@ FatesData = {
     {
         zoneName = "The Sea of Clouds",
         zoneId = 401,
-        aetheryteList = {
-            { aetheryteName="Camp Cloudtop", x=-615.7473, y=-118.36426, z=546.5934 },
-            { aetheryteName="Ok' Zundu", x=-613.1533, y=-49.485046, z=-415.03015 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -321,9 +311,6 @@ FatesData = {
     {
         zoneName = "Azys Lla",
         zoneId = 402,
-        aetheryteList = {
-            { aetheryteName="Helix", x=-722.8046, y=-182.29956, z=-593.40814 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -334,10 +321,6 @@ FatesData = {
     {
         zoneName = "The Dravanian Forelands",
         zoneId = 398,
-        aetheryteList = {
-            { aetheryteName="Tailfeather", x=532.6771, y=-48.722107, z=30.166992 },
-            { aetheryteName="Anyx Trine", x=-304.12756, y=-16.70868, z=32.059082 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -349,9 +332,6 @@ FatesData = {
         zoneName = "The Dravanian Hinterlands",
         zoneId=399,
         tpZoneId = 478,
-        aetheryteList = {
-            -- { aetheryteName="Idyllshire", x=71.94617, y=211.26111, z=-18.905945 }
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -362,10 +342,6 @@ FatesData = {
     {
         zoneName = "The Churning Mists",
         zoneId=400,
-        aetheryteList = {
-            { aetheryteName="Moghome", x=259.20496, y=-37.70508, z=596.85657 },
-            { aetheryteName="Zenith", x=-584.9546, y=52.84192, z=313.43542 },
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -376,10 +352,6 @@ FatesData = {
     {
         zoneName = "Lakeland",
         zoneId = 813,
-        aetheryteList = {
-            { aetheryteName="The Ostall Imperative", x=-735, y=53, z=-230 },
-            { aetheryteName="Fort Jobb", x=753, y=24, z=-28 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Pick-up Sticks", npcName="Crystarium Botanist" }
@@ -397,11 +369,6 @@ FatesData = {
     {
         zoneName = "Kholusia",
         zoneId = 814,
-        aetheryteList = {
-            { aetheryteName="Stilltide", x=668, y=29, z=289 },
-            { aetheryteName="Wright", x=-244, y=20, z=385 },
-            { aetheryteName="Tomra", x=-426, y=419, z=-623 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Ironbeard Builders - Rebuilt", npcName="Tholl Engineer" }
@@ -414,11 +381,6 @@ FatesData = {
     {
         zoneName = "Amh Araeng",
         zoneId = 815,
-        aetheryteList = {
-            { aetheryteName="Mord Souq", x=246, y=12, z=-220 },
-            { aetheryteName="Twine", x=-511, y=47, z=-212 },
-            { aetheryteName="The Inn at Journey's Head", x=399, y=-24, z=307 },
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
@@ -431,11 +393,6 @@ FatesData = {
     {
         zoneName = "Il Mheg",
         zoneId = 816,
-        aetheryteList = {
-            { aetheryteName="Lydha Lran", x=-344, y=48, z=512 },
-            { aetheryteName="Wolekdorf", x=380, y=87, z=-687 },
-            { aetheryteName="Pla Enni", x=-72, y=103, z=-857 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Twice Upon a Time", npcName="Nectar-seeking Pixie" }
@@ -450,10 +407,6 @@ FatesData = {
     {
         zoneName = "The Rak'tika Greatwood",
         zoneId = 817,
-        aetheryteList = {
-            { aetheryteName="Slitherbough", x=-103, y=-19, z=297 },
-            { aetheryteName="Fanow", x=382, y=21, z=-194 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Picking up the Pieces", npcName="Night's Blessed Missionary" },
@@ -471,10 +424,6 @@ FatesData = {
     {
         zoneName = "The Tempest",
         zoneId = 818,
-        aetheryteList = {
-            { aetheryteName="The Ondo Cups", x=561, y=352, z=-199 },
-            { aetheryteName="The Macarenses Angle", x=-141, y=-280, z=218 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Low Coral Fiber", npcName="Teushs Ooan" },
@@ -495,11 +444,6 @@ FatesData = {
     {
         zoneName = "Labyrinthos",
         zoneId = 956,
-        aetheryteList = {
-            { aetheryteName="The Archeion", x=443, y=170, z=-476 },
-            { aetheryteName="Sharlayan Hamlet", x=8, y=-27, z=-46 },
-            { aetheryteName="Aporia", x=-729, y=-27, z=302 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Sheaves on the Wind", npcName="Vexed Researcher" },
@@ -513,11 +457,6 @@ FatesData = {
     {
         zoneName = "Thavnair",
         zoneId = 957,
-        aetheryteList = {
-            { aetheryteName="Yedlihmad", x=193, y=6, z=629 },
-            { aetheryteName="The Great Work", x=-527, y=4, z=36 },
-            { aetheryteName="Palaka's Stand", x=405, y=5, z=-244 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Full Petal ALchemist: Perilous Pickings", npcName="???" }
@@ -530,10 +469,6 @@ FatesData = {
     {
         zoneName = "Garlemald",
         zoneId = 958,
-        aetheryteList = {
-            { aetheryteName="Camp Broken Glass", x=-408, y=24, z=479 },
-            { aetheryteName="Tertium", x=518, y=-35, z=-178 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Parts Unknown", npcName="Displaced Engineer" }
@@ -551,11 +486,6 @@ FatesData = {
     {
         zoneName = "Mare Lamentorum",
         zoneId = 959,
-        aetheryteList = {
-            { aetheryteName="Sinus Lacrimarum", x=-566, y=134, z=650 },
-            -- { aetheryteName="Sinus Lacrimarum",  x=-0.10, y=116.80, z=311.89938 },
-            { aetheryteName="Bestways Burrow", x=0, y=-128, z=-512 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="What a Thrill", npcName="Thrillingway" }
@@ -573,11 +503,6 @@ FatesData = {
     {
         zoneName = "Ultima Thule",
         zoneId = 960,
-        aetheryteList = {
-            { aetheryteName="Reah Tahra", x=-544, y=74, z=269 },
-            { aetheryteName="Abode of the Ea", x=64, y=272, z=-657 },
-            { aetheryteName="Base omicron", x=-489, y=437, z=333 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Omicron Recall: Comms Expansion", npcName="N-6205" }
@@ -594,11 +519,6 @@ FatesData = {
     {
         zoneName = "Elpis",
         zoneId = 961,
-        aetheryteList = {
-            { aetheryteName="Anagnorisis", x=159, y=11, z=126 },
-            { aetheryteName="The Twelve Wonders", x=-633, y=-19, z=542 },
-            { aetheryteName="Poieten Oikos", x=-529, y=161, z=-222 },
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="So Sorry, Sokles", npcName="Flora Overseer" }
@@ -615,10 +535,6 @@ FatesData = {
     {
         zoneName = "Urqopacha",
         zoneId = 1187,
-        aetheryteList = {
-            { aetheryteName="Wachunpelo", x=335, y=-160, z=-415 },
-            { aetheryteName="Worlar's Echo", x=465, y=115, z=635 },
-        },
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {
@@ -643,11 +559,6 @@ FatesData = {
     {
         zoneName="Kozama'uka",
         zoneId=1188,
-        aetheryteList={
-            { aetheryteName="Ok'hanu", x=-170, y=6, z=-470 },
-            { aetheryteName="Many Fires", x=541, y=117, z=203 },
-            { aetheryteName="Earthenshire", x=-477, y=124, z=311 }
-        },
         fatesList={
             collectionsFates={
                 { fateName="Borne on the Backs of Burrowers", npcName="Moblin Forager" },
@@ -672,10 +583,6 @@ FatesData = {
     {
         zoneName="Yak T'el",
         zoneId=1189,
-        aetheryteList={
-            { aetheryteName="Iq Br'aax", x=-400, y=24, z=-431 },
-            { aetheryteName="Mamook", x=720, y=-132, z=527 }
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Escape Shroom", npcName="Hoobigo Forager" }
@@ -696,11 +603,6 @@ FatesData = {
     {
         zoneName="Shaaloani",
         zoneId=1190,
-        aetheryteList= {
-            { aetheryteName="Hhusatahwi", x=390, y=0, z=465 }, -- 23 collections
-            { aetheryteName="Sheshenewezi Springs", x=-295, y=19, z=-115 },
-            { aetheryteName="Mehwahhetsoan", x=310, y=-15, z=-567 }
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Gonna Have Me Some Fur", npcName="Tonawawtan Trapper" },
@@ -724,11 +626,6 @@ FatesData = {
     {
         zoneName="Heritage Found",
         zoneId=1191,
-        aetheryteList= {
-            { aetheryteName="Yyasulani Station", x=515, y=145, z=210 },
-            { aetheryteName="The Outskirts", x=-221, y=32, z=-583 },
-            { aetheryteName="Electrope Strike", x=-222, y=31, z=123 }
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="License to Dill", npcName="Tonawawtan Provider" },
@@ -754,11 +651,6 @@ FatesData = {
     {
         zoneName="Living Memory",
         zoneId=1192,
-        aetheryteList= {
-            { aetheryteName="Leynode Mnemo", x=0, y=56, z=796 },
-            { aetheryteName="Leynode Pyro", x=659, y=27, z=-285 },
-            { aetheryteName="Leynode Aero", x=-253, y=56, z=-400 }
-        },
         fatesList= {
             collectionsFates= {
                 { fateName="Seeds of Tomorrow", npcName="Unlost Sentry GX" },
@@ -1034,41 +926,11 @@ end
 
 --#region Movement Functions
 
-function GetAetheryteName(aetheryteId)
-    for i=0,AetheryteList.Count do
-        if AetheryteList[i] ~= nil then
-            if AetheryteList[i].AetheryteId == aetheryteId then
-                if AetheryteList[i].AetheryteData.GameData ~= nil then
-                    if AetheryteList[i].AetheryteData.GameData.PlaceName.Value ~= nil then
-                        if AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name ~= nil then
-                            LogInfo(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name)
-                            return tostring(AetheryteList[i].AetheryteData.GameData.PlaceName.Value.Name):match("(.+):")
-                        end
-                    end
-                end
-            end
-        end
-    end
-end
-
-function GetAetherytesInZone(zoneId)
-    local aetherytes = {}
-    for i=0,AetheryteList.Count do
-        if AetheryteList[i] ~= nil then
-            if AetheryteList[i].TerritoryId == zoneId then
-                yield("/echo "..AetheryteList[i].AetheryteId)
-                table.insert(aetherytes, AetheryteList[i].AetheryteId)
-            end
-        end
-    end
-    return aetherytes
-end
-
 function GetClosestAetheryte(x, y, z, teleportTimePenalty)
     local closestAetheryte = nil
     local closestTravelDistance = math.maxinteger
     for _, aetheryte in ipairs(SelectedZone.aetheryteList) do
-        local distanceAetheryteToFate = DistanceBetween(aetheryte.x, aetheryte.y, aetheryte.z, x, y, z)
+        local distanceAetheryteToFate = DistanceBetween(aetheryte.x, y, aetheryte.z, x, y, z)
         local comparisonDistance = distanceAetheryteToFate + teleportTimePenalty
         LogInfo("[FATE] Distance via "..aetheryte.aetheryteName.." adjusted for tp penalty is "..tostring(comparisonDistance))
 
@@ -1087,7 +949,7 @@ function GetClosestAetheryteToPoint(x, y, z, teleportTimePenalty)
     LogInfo("[FATE] Direct flight distance is: "..directFlightDistance)
     local closestAetheryte = GetClosestAetheryte(x, y, z, teleportTimePenalty)
     if closestAetheryte ~= nil then
-        local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z) + teleportTimePenalty
+        local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, y, closestAetheryte.z) + teleportTimePenalty
 
         if closestAetheryteDistance < directFlightDistance then
             return closestAetheryte
@@ -1748,23 +1610,6 @@ function EnemyPathing()
     end
 end
 
--- function AvoidEnemiesWhileFlying()
---     --If you get attacked it flies up
---     if GetCharacterCondition(CharacterCondition.inCombat) then
---         Name = GetCharacterName()
---         PlocX = GetPlayerRawXPos(Name)
---         PlocY = GetPlayerRawYPos(Name)+40
---         PlocZ = GetPlayerRawZPos(Name)
---         yield("/gaction jump")
---         yield("/wait 0.5")
---         yield("/vnavmesh stop")
---         yield("/wait 1")
---         PathfindAndMoveTo(PlocX, PlocY, PlocZ, true)
---         PathStop()
---         yield("/wait 2")
---     end
--- end
-
 function TurnOnAoes()
     if not AoesOn then
         if rotationMode == "manual" then
@@ -2024,13 +1869,17 @@ function DoFate()
     -- pathfind closer if enemies are too far
     if not GetCharacterCondition(CharacterCondition.inCombat) then
         if HasTarget() then
-            if GetDistanceToTarget() <= (1 + GetTargetHitboxRadius()) then
-                yield("/vnav stop")
+            local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
+            if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
+                if PathfindInProgress() or PathIsRunning() then
+                    yield("/vnav stop")
+                else
+                    PathfindAndMoveTo(x, y, z)
+                    yield("/wait 1") -- inch closer by 1s
+                end
             elseif not (PathfindInProgress() or PathIsRunning()) then
-                yield("/wait 5") -- wait 5 seconds for casts to go off to engage combat
-                local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
                 if x ~= 0 and z~=0 and not GetCharacterCondition(CharacterCondition.inCombat) then
-                    PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying))
+                    PathfindAndMoveTo(x, y, z)
                 end
             end
             return
@@ -2038,17 +1887,22 @@ function DoFate()
             TargetClosestFateEnemy()
             yield("/wait 1") -- wait in case target doesn't stick
             if not HasTarget() then
+                yield("/echo manual target did not stick")
                 PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
             end
         end
     else
         if HasTarget() and (GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius())) then
-            yield("/vnav stop")
+            if PathfindInProgress() or PathIsRunning() then
+                yield("/echo target within distance, vnav stop")
+                yield("/vnav stop")
+            end
         else
             if not (PathfindInProgress() or PathIsRunning()) and not UseBM then
                 yield("/wait 1")
                 local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
                 if x ~= 0 and z~=0 then
+                    yield("/echo not in ranged/melee distance")
                     PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying))
                 end
             end
@@ -2562,6 +2416,20 @@ if SelectedZone == nil then
         }
     }
 end
+SelectedZone.zoneName = GetZoneName(SelectedZone.zoneId)
+SelectedZone.aetheryteList = {}
+local aetheryteIds = GetAetherytesInZone(SelectedZone.zoneId)
+for i=0, aetheryteIds.Count-1 do
+    local aetherytePos = GetAetheryteRawPos(aetheryteIds[i])
+    local aetheryteTable = {
+        aetheryteName = GetAetheryteName(aetheryteIds[i]),
+        aetheryteId = aetheryteIds[i],
+        x = aetherytePos.Item1,
+        y = 0,
+        z = aetherytePos.Item2
+    }
+    table.insert(SelectedZone.aetheryteList, aetheryteTable)
+end
 
 -- variable to track collections fates that you have completed but are still active.
 -- will not leave area or change instance if value ~= 0
@@ -2608,8 +2476,5 @@ while true do
     end
     yield("/wait 0.1")
 end
-
-::StopLoop::
-    yield("/vnav stop")
 
 --#endregion Main
