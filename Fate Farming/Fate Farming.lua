@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                              Version 2.15.15                                 *
+*                               Version 2.16.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -1873,6 +1873,7 @@ function DoFate()
             if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
                 if PathfindInProgress() or PathIsRunning() then
                     yield("/vnav stop")
+                    yield("/wait 5") -- give it 5s to engage combat upon first entering combat range
                 else
                     PathfindAndMoveTo(x, y, z)
                     yield("/wait 1") -- inch closer by 1s
@@ -1887,14 +1888,12 @@ function DoFate()
             TargetClosestFateEnemy()
             yield("/wait 1") -- wait in case target doesn't stick
             if not HasTarget() then
-                yield("/echo manual target did not stick")
                 PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
             end
         end
     else
         if HasTarget() and (GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius())) then
             if PathfindInProgress() or PathIsRunning() then
-                yield("/echo target within distance, vnav stop")
                 yield("/vnav stop")
             end
         else
@@ -1902,7 +1901,6 @@ function DoFate()
                 yield("/wait 1")
                 local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
                 if x ~= 0 and z~=0 then
-                    yield("/echo not in ranged/melee distance")
                     PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying))
                 end
             end
