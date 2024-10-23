@@ -3,10 +3,34 @@
 *                           Allied Society Quests                              *
 *                               Version 0.0.0                                  *
 ********************************************************************************
+Created by: pot0to (https://ko-fi.com/pot0to)
 
+Goes around to the specified beast tribes, picks up 3 quests, does them, and
+moves on to the next beast tribe.
+
+********************************************************************************
+*                                    Version                                   *
+*                                     0.0.0                                    *
+********************************************************************************
+
+0.0.0   First working version
+
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
+1. Vnavmesh
+2. Questionable
+3. TextAdvance
+
+--#region Settings
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
 --]]
 
 ToDoList = { "Loporrits", "Omicrons" }
+
+--#endregion Settings
 
 --[[
 ********************************************************************************
@@ -16,6 +40,136 @@ ToDoList = { "Loporrits", "Omicrons" }
 
 AlliedSocietiesTable =
 {
+    amaljaa = {
+        alliedSocietyName = "Amalj'aa",
+        questGiver = "Fibubb Gah",
+        x = 103.12,
+        y = 15.05,
+        z = -359.51,
+        zoneId = 146,
+        aetheryteName = "Little Ala Mhigo"
+    },
+    sylphs =
+    {
+        alliedSocietyName = "Sylphs",
+        questGiver = "Tonaxia",
+        x = 46.41,
+        y = 6.07,
+        z = 252.91,
+        zoneId = 152,
+        aetheryteName = "The Hawthorne Hut"
+    },
+    kobolds =
+    {
+        alliedSocietyName = "Kobolds",
+        questGiver = "789th Order Dustman Bo Bu",
+        x = 12.857726,
+        y = 16.164295,
+        z = -178.77,
+        zoneId = 180,
+        aetheryteName = "Camp Overlook"
+    },
+    sahagin =
+    {
+        alliedSocietyName = "Sahagin",
+        questGiver = "Houu",
+        x = -244.53,
+        y = -41.46,
+        z = 52.75,
+        zoneId = 138,
+        aetheryteName = "Aleport"
+    },
+    ixal =
+    {
+        alliedSocietyName = "Ixal",
+        questGiver = "Ehcatl Nine Manciple",
+        x = 173.21,
+        y = -5.37,
+        z = 81.85,
+        zoneId = 154,
+        aetheryteName = "Fallgourd Float"
+    },
+    vanuvanu = {
+        alliedSocietyName = "Vanu Vanu",
+        questGiver = "Muna Vanu",
+        x = -796.3722,
+        y = -133.27,
+        z = -404.35,
+        zoneId = 401,
+        aetheryteName = "Ok' Zundu"
+    },
+    vath = {
+        alliedSocietyName = "Vath",
+        questGiver = "Vath Keeneye",
+        x = 58.80,
+        y = -48.00,
+        z = -171.64,
+        zoneId = 398,
+        aetheryteName = "Tailfeather"
+    },
+    moogles = {
+        alliedSocietyName = "Moogles",
+        questGiver = "Mogek the Marvelous",
+        x = -335.28,
+        y = 58.94,
+        z = 316.30,
+        zoneId = 400,
+        aetheryteName = "Zenith"
+    },
+    kojin = {
+        alliedSocietyName = "Kojin",
+        questGiver = "Zukin",
+        x = 391.22,
+        y = -119.59,
+        z = -234.92,
+        zoneId = 613,
+        aetheryteName = "Tamamizu"
+    },
+    ananta = {
+        alliedSocietyName = "Ananta",
+        questGiver = "Eshana",
+        x = -26.91,
+        y = 56.12,
+        z = 233.53,
+        zoneId = 612,
+        aetheryteName = "The Peering Stones"
+    },
+    namazu = {
+        alliedSocietyName = "Namazu",
+        questGiver = "Seigetsu the Enlightened",
+        x = -777.72,
+        y = 127.81,
+        z = 98.76,
+        zoneId = 622,
+        aetheryteName = "The Dawn Throne"
+    },
+    pixies = {
+        alliedSocietyName = "Pixies",
+        questGiver = "Uin Nee",
+        x = -453.69,
+        y = 71.21,
+        z = 573.54,
+        zoneId = 816,
+        aetheryteName = "Lydha Lran"
+    },
+    qitari = {
+        alliedSocietyName = "Qitari",
+        questGiver = "Qhoterl Pasol",
+        x = 786.83,
+        y = -45.82,
+        z = -214.51,
+        zoneId = 817,
+        aetheryteName = "Fanow"
+    },
+    dwarves = {
+        alliedSocietyName = "Dwarves",
+        questGiver = "Regitt",
+        x = -615.48,
+        y = 65.60,
+        z = -423.82,
+        zoneId = 813,
+        aetheryteName = "The Ostall Imperative"
+    },
     arkosodara =
     {
         alliedSocietyName = "Arkosodara",
@@ -81,7 +235,7 @@ end
 function GetAcceptedAlliedSocietyQuests(alliedSocietyName)
     local accepted = {}
     local allAcceptedQuests = GetAcceptedQuests()
-    for i=1, allAcceptedQuests.Count do
+    for i=0, allAcceptedQuests.Count-1 do
         if GetQuestAlliedSociety(allAcceptedQuests[i]) == alliedSocietyName then
             table.insert(accepted, allAcceptedQuests[i])
         end
@@ -148,24 +302,10 @@ for _, alliedSocietyName in ipairs(ToDoList) do
             repeat
                 yield("/wait 1")
             until IsAddonVisible("SelectIconString")
-
-            local questName = GetNodeText("SelectIconString", 2, 1, 4)
-            if string.sub(questName, 1, 3) == "" then
-                local questId = GetQuestIDByName(questName)
-                if questId ~= nil then
-                    table.insert(quests, questId)
-                    yield("/echo inserted quest #"..questId)
-                end
-
-                repeat
-                    yield("/wait 1")
-                until IsAddonVisible("SelectIconString")
-                yield("/callback SelectIconString true 0")
-
-                repeat
-                    yield("/wait 1")
-                until not IsPlayerOccupied()
-            end
+            yield("/callback SelectIconString true 0")
+            repeat
+                yield("/wait 1")
+            until not IsPlayerOccupied()
         end
 
         yield("/qst start")
