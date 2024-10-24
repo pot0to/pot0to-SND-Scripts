@@ -10,9 +10,10 @@ moves on to the next beast tribe.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.0.0                                    *
+*                                     0.1.0                                    *
 ********************************************************************************
 
+0.1.0   Added ability to change classes for different Allied Socieities
 0.0.0   First working version
 
 ********************************************************************************
@@ -28,7 +29,10 @@ moves on to the next beast tribe.
 ********************************************************************************
 --]]
 
-ToDoList = { "Loporrits", "Omicrons" }
+ToDoList = {
+    { alliedSocietyName="Loporrits", class="Carpenter" },
+    { alliedSocietyName="Omicrons", class="Miner" }
+}
 
 --#endregion Settings
 
@@ -274,9 +278,13 @@ function TeleportTo(aetheryteName)
 end
 
 yield("/at y")
-for _, alliedSocietyName in ipairs(ToDoList) do
-    local alliedSocietyTable = GetAlliedSocietyTable(alliedSocietyName)
+for _, alliedSociety in ipairs(ToDoList) do
+    local alliedSocietyTable = GetAlliedSocietyTable(alliedSociety.alliedSocietyName)
     if alliedSocietyTable ~= nil then
+        repeat
+            yield("/wait 1")
+        until not IsPlayerOccupied()
+
         if not IsInZone(alliedSocietyTable.zoneId) then
             TeleportTo(alliedSocietyTable.aetheryteName)
         end
@@ -291,11 +299,13 @@ for _, alliedSocietyName in ipairs(ToDoList) do
         repeat
             yield("/wait 1")
         until not PathIsRunning() and not PathfindInProgress()
+
+        yield("/gs change "..alliedSociety.class)
+        yield("/wait 3")
     
         -- accept 3 allocations
         local quests = {}
         for i=1,3 do
-            yield("/echo accepting quest "..i)
             yield("/target "..alliedSocietyTable.questGiver)
             yield("/interact")
 
@@ -311,6 +321,6 @@ for _, alliedSocietyName in ipairs(ToDoList) do
         yield("/qst start")
         repeat
             yield("/wait 10")
-        until #GetAcceptedAlliedSocietyQuests(alliedSocietyName) == 0
+        until #GetAcceptedAlliedSocietyQuests(alliedSociety.alliedSocietyName) == 0
     end
 end
