@@ -25,7 +25,7 @@ GatheringSlot = 4
 -- This will NOT work with Pandora's Gathering, as a fair warning in itself. 
 -- Options : 1 | 2 | 3 | 4 | 7 | 8 (1st slot... 2nd slot... ect)
 
-TargetOption = 1
+TargetType = 1
 -- This will let you tell the script which target to use Aethercannon.
 -- Options : 0 | 1 | 2 | 3 (Option: 0 is don't use cannon, Option: 1 is any target, Option: 2 only sprites, Option: 3 is don't include sprites)
 
@@ -127,8 +127,8 @@ UmbralWeatherNodes = {
             itemName = "Grade 4 Artisanal Skybuilders' Meganeura",
             baitName = "Diadem Red Balloon", -- mooched from Grade 4 Skybuilders' Ghost Faerie
             baitId = 30279,
-            x = 358.22882, y = -285.27814, z = 87.26572,
-            fishingX = 351.93, fishingY = -286.31, fishingZ = 83.93
+            x = 223.03, y=-183.59, z=-239.19,
+            fishingX = 218.7, fishingY = -182.81, fishingZ = -223.35
         }
     },
     tempest = {
@@ -151,9 +151,9 @@ UmbralWeatherNodes = {
     }
 }
 
-if RouteType == "MinerIslands" then
-    GatheringRoute =
-        {
+GatheringRoute =
+ {
+    MinerIslands = {
             {x = -570.90, y = 45.80, z = -242.08, nodeName = "Mineral Deposit"},
             {x = -512.28, y = 35.19, z = -256.92, nodeName = "Mineral Deposit"},
             {x = -448.87, y = 32.54, z = -256.16, nodeName = "Mineral Deposit"},
@@ -203,9 +203,8 @@ if RouteType == "MinerIslands" then
             {x = -577.23, y = 331.88, z = 519.38, nodeName = "Mineral Deposit"},
             {x = -558.09, y = 334.52, z = 448.38, nodeName = "Mineral Deposit"}, -- End of Island #7
             {x = -729.13, y = 272.73, z = -62.52, nodeName = "Mineral Deposit"}
-        }
-elseif RouteType == "RedRoute" then 
-    GatheringRoute = 
+        },
+    RedRoute =
         {
             {x = -161.2715, y = -3.5233, z = -378.8041, nodeName = "Mineral Deposit", antistutter = 0}, -- Start of the route
             {x = -169.3415, y = -7.1092, z = -518.7053, nodeName = "Mineral Deposit", antistutter = 0}, -- Around the tree (Rock + Bones?)
@@ -215,9 +214,8 @@ elseif RouteType == "RedRoute" then
             {x = 59.4516, y = -41.6749, z = -520.2413, nodeName = "Rocky Outcrop", antistutter = 0}, -- Spaces out nodes on rock (hate this one)
             {x = 102.3, y = -47.3, z = -500.1, nodeName = "Mineral Deposit", antistutter = 0}, -- Over the gap
             {x = -209.1468, y = -3.9325, z = -357.9749, nodeName = "Rocky Outcrop", antistutter = 1}
-        }
-elseif RouteType == "PinkRoute" then
-    GatheringRoute =
+        },
+    PinkRoute =
         {
             {x = -248.6381, y = -1.5664, z = -468.8910, nodeName = "Lush Vegetation Patch", antistutter = 0},
             {x = -338.3759, y = -0.4761, z = -415.3227, nodeName = "Lush Vegetation Patch", antistutter = 0},
@@ -228,10 +226,10 @@ elseif RouteType == "PinkRoute" then
             {x = -571.2896, y = 35.2772, z = -236.6808, nodeName = "Lush Vegetation Patch", antistutter = 0},
             {x = -215.1211, y = -1.3262, z = -494.8219, nodeName = "Lush Vegetation Patch", antistutter = 1}
         }
-end
+    }
 
-if TargetOption == 1 then 
-    MobTable = 
+MobTable = 
+    {
         {
             {"Proto-noctilucale"},
             {"Diadem Bloated Bulb"},
@@ -244,14 +242,10 @@ if TargetOption == 1 then
             {"Diadem Ice Golem"},
             {"Diadem Golem"},
             {"Corrupted Sprite"},
-        }
-elseif TargetOption == 2 then 
-    MobTable = 
+        },
         {
             {"Corrupted Sprite"},
-        }
-elseif TargetOption == 3 then 
-    MobTable = 
+        },
         {
             {"Proto-noctilucale"},
             {"Diadem Bloated Bulb"},
@@ -264,7 +258,7 @@ elseif TargetOption == 3 then
             {"Diadem Ice Golem"},
             {"Diadem Golem"}
         }
-end 
+    }
 
 spawnisland_table = 
 {
@@ -300,6 +294,9 @@ function Ready()
     if GetItemCount(30279) == 0 or GetItemCount(30280) == 0 or GetItemCount(30281) == 0 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: BuyFishingBait")
+    elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
+        State = CharacterState.fireCannon
+        LogInfo("State Change: Fire Cannon")
     else
         State = CharacterState.moving
         LogInfo("State Change: MoveToNextNode")
@@ -325,7 +322,9 @@ function TeleportTo(aetheryteName)
 end
 
 function EnterDiadem()
-    if IsInZone(DiademZoneId) then
+    if IsInZone(DiademZoneId) and IsPlayerAvailable() then
+        LastStuckCheckTime = os.clock()
+        LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
         State = CharacterState.ready
         return
     end
@@ -377,21 +376,26 @@ function Mount()
 end
 
 function Dismount()
+    yield("/e dismount")
     if PathIsRunning() or PathfindInProgress() then
+        yield("/e stop")
         yield("/vnav stop")
         return
     end
 
     if GetCharacterCondition(CharacterCondition.flying) then
+        yield("/e is flying")
         yield('/ac dismount')
 
         local now = os.clock()
         if now - LastStuckCheckTime > 1 then
+            yield("/e awhile since last stuck check")
             local x = GetPlayerRawXPos()
             local y = GetPlayerRawYPos()
             local z = GetPlayerRawZPos()
 
             if GetCharacterCondition(CharacterCondition.flying) and GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 2 then
+                yield("/e in same spot")
                 LogInfo("Unable to dismount here. Moving to another spot.")
                 local random_x, random_y, random_z = RandomAdjustCoordinates(x, y, z, 10)
                 local nearestPointX = QueryMeshNearestPointX(random_x, random_y, random_z, 100, 100)
@@ -402,11 +406,13 @@ function Dismount()
                     yield("/wait 1")
                 end
             end
+            yield("/e continue")
 
             LastStuckCheckTime = now
             LastStuckCheckPosition = {x=x, y=y, z=z}
         end
     elseif GetCharacterCondition(CharacterCondition.mounted) then
+        yield("/e is mounted")
         yield("/e actual dismount")
         yield('/ac dismount')
     else
@@ -446,7 +452,7 @@ function SelectNextNode()
                 return umbralWeather.gatheringNode
             end
         end
-    elseif PrioritizeUmbral and UmbralGathered then
+    elseif PrioritizeUmbral and UmbralGathered and (weather >= 133 and weather <= 136) then
         for _, umbralWeather in pairs(UmbralWeatherNodes) do
             if umbralWeather.weatherId == weather then
                 umbralWeather.fishingNode.isUmbralNode = true
@@ -457,11 +463,12 @@ function SelectNextNode()
             end
         end
     else
-        GatheringRoute[NextNodeId].isUmbralNode = false
-        GatheringRoute[NextNodeId].isFishingNode = false
-        LogInfo("Selected regular gathering node :"..GatheringRoute[NextNodeId].nodeName)
-        return GatheringRoute[NextNodeId]
+        GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
+        GatheringRoute[RouteType][NextNodeId].isFishingNode = false
+        LogInfo("Selected regular gathering node :"..GatheringRoute[RouteType][NextNodeId].nodeName)
+        return GatheringRoute[RouteType][NextNodeId]
     end
+    yield("/echo NextNodeCandidate is nil WHY???")
 end
 
 function MoveToNextNode()
@@ -499,10 +506,6 @@ function MoveToNextNode()
         if NextNode.isFishingNode then
             State = CharacterState.fishing
             LogInfo("State Change: Fishing")
-            return
-        elseif NextNode.isUmbralNode and not NextNode.isFishingNode then
-            State = CharacterState.gathering
-            LogInfo("State Change: Gathering")
             return
         else
             State = CharacterState.gathering
@@ -557,7 +560,7 @@ function Gather()
             if NextNode.nodeName:sub(1, 7) == "Clouded" then
                 UmbralGathered = true
             else
-                NextNodeId = (NextNodeId % #GatheringRoute) + 1
+                NextNodeId = (NextNodeId % #GatheringRoute[RouteType]) + 1
             end
             State = CharacterState.ready
             LogInfo("State Change: Ready")
@@ -640,9 +643,8 @@ function Fish()
     end
     
     if GetCharacterCondition(CharacterCondition.fishing) then
-        yield("/echo has fishing status")
         if (PathfindInProgress() or PathIsRunning()) then
-            yield("/vanv stop")
+            yield("/vnav stop")
         end
         return
     end
@@ -720,6 +722,66 @@ function BuyFishingBait()
         return
     end
 end
+
+function FireCannon()
+    if GetDiademAetherGaugeBarCount() == 0 then
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
+        return
+    end
+
+    if GetClassJobId() ~= 16 and GetClassJobId() ~= 17 then
+        yield("/gs change Miner")
+        yield("/wait 3")
+        return
+    end
+
+    if not HasTarget() then
+        for i=1, #MobTable[TargetType] do
+            yield("/target "..MobTable[TargetType][i][1])
+            yield("/wait 0.03")
+            if HasTarget() then
+                return
+            end
+        end
+        
+        State = CharacterState.moving
+        LogInfo("State Change: MoveToNextNode")
+        return
+    end
+
+    if GetDistanceToTarget() > 10 then
+        -- if not GetCharacterCondition(CharacterCondition.flying) then
+        --     State = CharacterState.mounting
+        --     LogInfo("State Change: Mount")
+        -- else
+        --     PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+        -- end
+        -- return
+        if not PathfindInProgress() and not PathIsRunning() then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+        end
+        return
+    end
+
+    if PathfindInProgress() or PathIsRunning() then
+        yield("/vnav stop")
+        return
+    end
+
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        -- State = CharacterState.dismounting
+        -- LogInfo("State Change: Dismount")
+        yield("/ac dismount")
+        yield("/wait 1")
+        return
+    end
+
+    if GetTargetHP() > 0 then
+        yield("/gaction \"Duty Action I\"")
+        yield("/wait 1")
+    end
+end
 --#endregion Gathering
 
 CharacterState = {
@@ -730,6 +792,7 @@ CharacterState = {
     moving = MoveToNextNode,
     gathering = Gather,
     fishing = Fish,
+    fireCannon = FireCannon,
     buyFishingBait = BuyFishingBait
 }
 
@@ -760,7 +823,7 @@ LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = G
 
 State = CharacterState.ready
 NextNodeId = 1
-NextNode = GatheringRoute[NextNodeId]
+NextNode = GatheringRoute[RouteType][NextNodeId]
 while true do
     if not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry then
         State = CharacterState.diademEntry
