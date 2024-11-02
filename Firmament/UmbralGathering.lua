@@ -13,7 +13,7 @@ FoodTimeout = 5
 -- How many attempts would you like it to try and food before giving up?
 -- The higher this is, the longer it's going to take. Don't set it below 5 for safety. 
 
-RouteType = "PinkRoute"
+RouteType = "RedRoute"
 -- Select which route you would like to do. 
     -- Options are:
         -- "RedRoute"     -> MIN perception route, 8 node loop
@@ -92,7 +92,7 @@ UmbralWeatherNodes = {
             baitName = "Diadem Crane Fly",
             baitId = 30280,
             x = 370.88373, y = 255.67848, z = 525.73334,
-            fishingX = 372.4, fishingY = 254.99, fishingZ = 521.72
+            fishingX = 372.32, fishingY = 254.9, fishingZ = 521.2
         }
     },
     duststorms = {
@@ -127,8 +127,8 @@ UmbralWeatherNodes = {
             itemName = "Grade 4 Artisanal Skybuilders' Meganeura",
             baitName = "Diadem Red Balloon", -- mooched from Grade 4 Skybuilders' Ghost Faerie
             baitId = 30279,
-            x = 223.03, y=-183.59, z=-239.19,
-            fishingX = 218.7, fishingY = -182.81, fishingZ = -223.35
+            x = 365.84, y = -193.35, z = -222.72,
+            fishingX = 369.91, fishingY = -195.22, fishingZ = -209.88
         }
     },
     tempest = {
@@ -145,8 +145,8 @@ UmbralWeatherNodes = {
             itemName = "Grade 4 Artisanal Skybuilders' Griffin",
             baitName = "Diadem Hoverworm", -- mooched from Grade 4 Skybuilders' Ghost Faerie
             baitId = 30281,
-            x = -437.75, y = -207.36, z = 191.91,
-            fishingX = -437.06, fishingY = -207.31, fishingZ = 196.36
+            x = -417.17, y = -206.7, z = 165.31,
+            fishingX = -411.73, fishingY = -207.15, fishingZ = 166.06
         }
     }
 }
@@ -206,14 +206,14 @@ GatheringRoute =
         },
     RedRoute =
         {
-            {x = -161.2715, y = -3.5233, z = -378.8041, nodeName = "Mineral Deposit", antistutter = 0}, -- Start of the route
+            {x = -161.2715, y = -3.5233, z = -378.8041, nodeName = "Rocky Outcrop", antistutter = 0}, -- Start of the route
+            {x = -209.1468, y = -3.9325, z = -357.9749, nodeName = "Mineral Deposit", antistutter = 1},
             {x = -169.3415, y = -7.1092, z = -518.7053, nodeName = "Mineral Deposit", antistutter = 0}, -- Around the tree (Rock + Bones?)
-            {x = -78.5548, y = -18.1347, z = -594.6666, nodeName = "Rocky Outcrop", antistutter = 0}, -- Log + Rock (Problematic)
+            {x = -78.5548, y = -18.1347, z = -594.6666, nodeName = "Mineral Deposit", antistutter = 0}, -- Log + Rock (Problematic)
             {x = -54.6772, y = -45.7177, z = -521.7173, nodeName = "Mineral Deposit", antistutter = 0}, -- Down the hill
             {x = -22.5868, y = -26.5050, z = -534.9953, nodeName = "Rocky Outcrop", antistutter = 0}, -- up the hill (rock + tree)
             {x = 59.4516, y = -41.6749, z = -520.2413, nodeName = "Rocky Outcrop", antistutter = 0}, -- Spaces out nodes on rock (hate this one)
             {x = 102.3, y = -47.3, z = -500.1, nodeName = "Mineral Deposit", antistutter = 0}, -- Over the gap
-            {x = -209.1468, y = -3.9325, z = -357.9749, nodeName = "Rocky Outcrop", antistutter = 1}
         },
     PinkRoute =
         {
@@ -291,7 +291,7 @@ CharacterCondition = {
 }
 
 function Ready()
-    if GetItemCount(30279) == 0 or GetItemCount(30280) == 0 or GetItemCount(30281) == 0 then
+    if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: BuyFishingBait")
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
@@ -553,10 +553,11 @@ function Gather()
     
     if not HasTarget() or GetTargetName() ~= NextNode.nodeName then
         yield("/target "..NextNode.nodeName)
+        
 
         yield("/wait 1")
         if not HasTarget() then
-            -- target not found
+            yield("/echo Could not find "..NextNode.nodeName)
             if NextNode.nodeName:sub(1, 7) == "Clouded" then
                 UmbralGathered = true
             else
@@ -568,14 +569,16 @@ function Gather()
         return
     end
 
-    if GetDistanceToTarget() >= 3.5 and not (PathfindInProgress() or PathIsRunning()) then
-        PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
-        return
-    end
-
     if GetDistanceToTarget() < 5 and GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
         LogInfo("State Change: Dismount")
+        return
+    end
+
+    if GetDistanceToTarget() >= 3.5 then
+        if not (PathfindInProgress() or PathIsRunning()) and not IsPlayerOccupied() then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
+        end
         return
     end
 
@@ -585,7 +588,6 @@ function Gather()
         yield("/vnav stop")
         return
     end
-        
 
     if not GetCharacterCondition(CharacterCondition.gathering) then
         SkillCheck()
@@ -635,6 +637,7 @@ function Fish()
     if not (weather >= 133 and weather <= 136) then
         if GetCharacterCondition(CharacterCondition.fishing) then
             yield("/ac Quit")
+            yield("/wait 1")
         else
             State = CharacterState.ready
             LogInfo("State Change: ready")
@@ -666,7 +669,7 @@ function Fish()
 end
 
 function BuyFishingBait()
-    if GetItemCount(30279) > 0 and GetItemCount(30280) > 0 and GetItemCount(30281) > 0 then
+    if GetItemCount(30279) >= 30 and GetItemCount(30280) >= 30 and GetItemCount(30281) >= 30 then
         if IsAddonVisible("Shop") then
             yield("/callback Shop true -1")
         else
@@ -712,11 +715,11 @@ function BuyFishingBait()
     end
 
     if IsAddonVisible("Shop") then
-        if GetItemCount(30279) == 0 then
+        if GetItemCount(30279) < 30 then
             yield("/callback Shop true 0 4 99 0")
-        elseif GetItemCount(30280) == 0 then
+        elseif GetItemCount(30280) < 30 then
             yield("/callback Shop true 0 5 99 0")
-        elseif GetItemCount(30281) == 0 then
+        elseif GetItemCount(30281) < 30 then
             yield("/callback Shop true 0 6 99 0")
         end
         return
@@ -782,6 +785,119 @@ function FireCannon()
         yield("/wait 1")
     end
 end
+
+function Repair()
+    if IsAddonVisible("SelectYesno") then
+        yield("/callback SelectYesno true 0")
+        return
+    end
+
+    if IsAddonVisible("Repair") then
+        if not NeedsRepair(RepairAmount) then
+            yield("/callback Repair true -1") -- if you don't need repair anymore, close the menu
+        else
+            yield("/callback Repair true 0") -- select repair
+        end
+        return
+    end
+
+    -- if occupied by repair, then just wait
+    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
+        LogInfo("[FATE] Repairing...")
+        yield("/wait 1")
+        return
+    end
+
+    local hawkersAlleyAethernetShard = { x=-213.95, y=15.99, z=49.35 }
+    if SelfRepair then
+        if GetItemCount(33916) > 0 then
+            if IsAddonVisible("Shop") then
+                yield("/callback Shop true -1")
+                return
+            end
+
+            if not IsInZone(SelectedZone.zoneId) then
+                TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
+                return
+            end
+
+            if GetCharacterCondition(CharacterCondition.mounted) then
+                Dismount()
+                LogInfo("[FATE] State Change: Dismounting")
+                return
+            end
+
+            if NeedsRepair(RepairAmount) then
+                if not IsAddonVisible("Repair") then
+                    LogInfo("[FATE] Opening repair menu...")
+                    yield("/generalaction repair")
+                end
+            else
+                State = CharacterState.ready
+                LogInfo("[FATE] State Change: Ready")
+            end
+        elseif ShouldAutoBuyDarkMatter then
+            if not IsInZone(129) then
+                yield("/echo Out of Dark Matter! Purchasing more from Limsa Lominsa.")
+                TeleportTo("Limsa Lominsa Lower Decks")
+                return
+            end
+
+            local darkMatterVendor = { npcName="Unsynrael", x=-257.71, y=16.19, z=50.11, wait=0.08 }
+            if GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z,darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) + 10) then
+                yield("/li Hawkers' Alley")
+                yield("/wait 1") -- give it a moment to register
+            elseif IsAddonVisible("TelepotTown") then
+                yield("/callback TelepotTown false -1")
+            elseif GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > 5 then
+                if not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z)
+                end
+            else
+                if not HasTarget() or GetTargetName() ~= darkMatterVendor.npcName then
+                    yield("/target "..darkMatterVendor.npcName)
+                elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
+                    yield("/interact")
+                elseif IsAddonVisible("SelectYesno") then
+                    yield("/callback SelectYesno true 0")
+                elseif IsAddonVisible("Shop") then
+                    yield("/callback Shop true 0 40 99")
+                end
+            end
+        else
+            yield("/echo Out of Dark Matter and ShouldAutoBuyDarkMatter is false. Switching to Limsa mender.")
+            SelfRepair = false
+        end
+    else
+        if NeedsRepair(RepairAmount) then
+            if not IsInZone(129) then
+                TeleportTo("Limsa Lominsa Lower Decks")
+                return
+            end
+            
+            local mender = { npcName="Alistair", x=-246.87, y=16.19, z=49.83 }
+            if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z, mender.x, mender.y, mender.z) + 10) then
+                yield("/li Hawkers' Alley")
+                yield("/wait 1") -- give it a moment to register
+            elseif IsAddonVisible("TelepotTown") then
+                yield("/callback TelepotTown false -1")
+            elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then
+                if not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(mender.x, mender.y, mender.z)
+                end
+            else
+                if not HasTarget() or GetTargetName() ~= mender.npcName then
+                    yield("/target "..mender.npcName)
+                elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
+                    yield("/interact")
+                end
+            end
+        else
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
+        end
+    end
+end
 --#endregion Gathering
 
 CharacterState = {
@@ -825,7 +941,12 @@ State = CharacterState.ready
 NextNodeId = 1
 NextNode = GatheringRoute[RouteType][NextNodeId]
 while true do
-    if not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry then
+    if GetInventoryFreeSlotCount() == 0 then
+        if IsInZone(DiademZoneId) then
+            LeaveDuty()
+        end
+        yield("/snd stop")
+    elseif not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry then
         State = CharacterState.diademEntry
     end
     if not (IsPlayerCasting() or

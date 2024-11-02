@@ -8,7 +8,8 @@
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.16.0   Updated aetheryte code to use new SND aetheryte functions, fixed
+    -> 2.16.1   Added option to ignore forlorns
+                Updated aetheryte code to use new SND aetheryte functions, fixed
                     bug that causes character to path to center of mob even when
                     playing as ranged
                 Fixed partial support feature
@@ -101,6 +102,8 @@ UseBM = true                        --if you want to use the BossMod dodge/follo
     MeleeDist = 2.5                     --distance for BMRAI melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
     RangedDist = 20                     --distance for BMRAI ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
 
+IgnoreForlorns = false
+    IgnoreBigForlornOnly = false
 
 --Post Fate Settings
 EnableChangeInstance = true                     --should it Change Instance when there is no Fate (only works on DT fates)
@@ -949,7 +952,11 @@ function GetClosestAetheryteToPoint(x, y, z, teleportTimePenalty)
     LogInfo("[FATE] Direct flight distance is: "..directFlightDistance)
     local closestAetheryte = GetClosestAetheryte(x, y, z, teleportTimePenalty)
     if closestAetheryte ~= nil then
-        local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, y, closestAetheryte.z) + teleportTimePenalty
+        local aetheryteY = QueryMeshPointOnFloorY(closestAetheryte.x, y, closestAetheryte.z, true, 50)
+        if aetheryteY == nil then
+            aetheryteY = GetPlayerRawYPos()
+        end
+        local closestAetheryteDistance = DistanceBetween(x, y, z, closestAetheryte.x, aetheryteY, closestAetheryte.z) + teleportTimePenalty
 
         if closestAetheryteDistance < directFlightDistance then
             return closestAetheryte
@@ -1575,7 +1582,6 @@ function AutoBuyGysahlGreens()
                 end
             elseif HasTarget() and GetTargetName() == gysahlGreensVendor.npcName then
                 yield("/vnav stop")
-                yield("/echo has target")
                 if IsAddonVisible("SelectYesno") then
                     yield("/callback SelectYesno true 0")
                 elseif IsAddonVisible("SelectIconString") then
@@ -1832,11 +1838,17 @@ function DoFate()
     GemAnnouncementLock = false
 
     -- switches to targeting forlorns for bonus (if present)
-    yield("/target Forlorn Maiden")
-    yield("/target The Forlorn")
+    if not IgnoreForlorns then
+        yield("/target Forlorn Maiden")
+        if not IgnoreBigForlornOnly then
+            yield("/target The Forlorn")
+        end
+    end
 
     if (GetTargetName() == "Forlorn Maiden" or GetTargetName() == "The Forlorn") then
-        if GetTargetHP() > 0 then
+        if IgnoreForlorns or (IgnoreBigForlornOnly and GetTargetName() == "The Forlorn") then
+            ClearTarget()
+        elseif GetTargetHP() > 0 then
             if not ForlornMarked then
                 yield("/enemysign attack1")
                 yield("/echo Found Forlorn! <se.3>")
@@ -1873,12 +1885,13 @@ function DoFate()
             if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
                 if PathfindInProgress() or PathIsRunning() then
                     yield("/vnav stop")
-                    yield("/wait 5") -- give it 5s to engage combat upon first entering combat range
-                else
+                    yield("/wait 5") -- wait 5s before inching any closer
+                elseif GetDistanceToTarget() > (1 + GetTargetHitboxRadius()) then -- never move into hitbox
                     PathfindAndMoveTo(x, y, z)
                     yield("/wait 1") -- inch closer by 1s
                 end
             elseif not (PathfindInProgress() or PathIsRunning()) then
+                yield("/wait 5") -- give 5s for casts to go off before attempting to move closer
                 if x ~= 0 and z~=0 and not GetCharacterCondition(CharacterCondition.inCombat) then
                     PathfindAndMoveTo(x, y, z)
                 end
@@ -2400,11 +2413,9 @@ for i, zone in ipairs(FatesData) do
     end
 end
 if SelectedZone == nil then
-    yield("/echo [FATE] Current zone is only partially supported. Will not teleport back on death or leaving.")
+    yield("/echo [FATE] Current zone is only partially supported. No data on npc fates.")
     SelectedZone = {
-        zoneName = "Unknown Zone Name",
         zoneId = selectedZoneId,
-        aetheryteList = {},
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
