@@ -462,7 +462,7 @@ FatesData = {
         zoneId = 957,
         fatesList= {
             collectionsFates= {
-                { fateName="Full Petal ALchemist: Perilous Pickings", npcName="???" }
+                { fateName="Full Petal Alchemist: Perilous Pickings", npcName="Sajabaht" }
             },
             otherNpcFates= {},
             fatesWithContinuations = {},
