@@ -1,3 +1,50 @@
+--[[
+
+********************************************************************************
+*                              Umbral Gathering                                *
+********************************************************************************
+
+Does DiademV2 gathering until umbral weather happens, then gathers umbral node
+and goes fishing until umbral weather disappears.
+
+********************************************************************************
+*                               Version 0.0.0                                  *
+********************************************************************************
+
+Created by: pot0to (https://ko-fi.com/pot0to)
+        
+    -> 0.0.0    First release
+
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
+
+Plugins that are needed for it to work:
+
+    -> Something Need Doing [Expanded Edition] : Main Plugin for everything to work   (https://puni.sh/api/repository/croizat)
+    -> VNavmesh :   For Pathing/Moving    (https://puni.sh/api/repository/veyn)
+    -> TextAdvance: For interacting with NPCs
+    -> Autohook:    For fishing during umbral weather
+
+********************************************************************************
+*                                Optional Plugins                              *
+********************************************************************************
+
+This Plugins are optional and not needed unless you have it enabled in the settings:
+
+    -> Teleporter :  (for Teleporting to Ishgard/Firmament if you're not already in that zone)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------
+]]
+
+--#region Settings
+
+--[[
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
+
 UseFood = false
 FoodKind = "Sideritis Cookie <HQ>"
 RemainingFoodTimer = 5 -- This is in minutes
@@ -62,12 +109,12 @@ AntiStutter = 2
 debug = false
 -- This is for debugging 
 
+--#endregion Settings
+
 --[[
-
-***************************
-* Setting up values here  *
-***************************
-
+********************************************************************************
+*           Code: Don't touch this unless you know what you're doing           *
+********************************************************************************
 ]]
 
 --script Started echo for debug
