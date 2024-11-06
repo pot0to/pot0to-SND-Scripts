@@ -44,9 +44,10 @@ BuffTidings2 = true -- Nald'thal's Tidings (Min) | Nophica's Tidings (Btn) [+1 e
 -- These are all togglable with true | false 
 -- They will go off in the order they are currently typed out, so keep that in mind for GP Usage if that's something you want to consider
 
-Repair_Amount = 99
-Self_Repair = true --if its true script will try to self reapair
-Npc_Repair = false --if its true script will try to go to mender npc and repair
+SelfRepair = true                              --if false, will go to Limsa mender
+    RepairAmount = 1                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+    ShouldAutoBuyDarkMatter = true                  --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
+ShouldExtractMateria = true                           --should it Extract Materia
 --When do you want to repair your own gear? From 0-100 (it's in percentage, but enter a whole value
 
 PlayerWaitTime = true 
@@ -265,6 +266,11 @@ spawnisland_table =
     {x = -605.7039, y = 312.0701, z = -159.7864, antistutter = 0},
 }
 
+local Mender = {
+    npcName = "Mender",
+    x = -639.8871, y = 285.3894, z = -136.52252
+}
+
 --#endregion Gathering Nodes
 
 --#region States
@@ -291,9 +297,13 @@ CharacterCondition = {
 }
 
 function Ready()
+    yield("/echo ready")
     if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: BuyFishingBait")
+    elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
+        State = CharacterState.repair
+        LogInfo("State Change: Repair")
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
         State = CharacterState.fireCannon
         LogInfo("State Change: Fire Cannon")
@@ -326,6 +336,7 @@ function EnterDiadem()
         LastStuckCheckTime = os.clock()
         LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
         State = CharacterState.ready
+        LogInfo("State Change: Ready")
         return
     end
 
@@ -628,7 +639,7 @@ function Gather()
     if GetTargetName():sub(1, 7) == "Clouded" then
         yield("/callback Gathering true 0")
     else
-        yield("/callback Gathering true 3")
+        yield("/callback Gathering true "..GatheringSlot-1)
     end
 end
 
@@ -679,14 +690,20 @@ function BuyFishingBait()
         return
     end
 
-    local npc = {
-        npcName = "Mender",
-        x = -639.8871, y = 285.3894, z = -136.52252
-    }
+    if not HasTarget() or GetTargetName() ~= Mender.npcName then
+        yield("/target "..Mender.npcName)
+        yield("/wait 1")
+        if not HasTarget() or GetTargetName() ~= Mender.npcName then
+            LeaveDuty()
+        else
+            yield("/interact")
+        end
+        return
+    end
 
-    if GetDistanceToPoint(npc.x, npc.y, npc.z) > 5 then
+    if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(npc.x, npc.y, npc.z)
+            PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
         end
         yield("/wait 1")
         return
@@ -697,12 +714,7 @@ function BuyFishingBait()
         return
     end
 
-    if not HasTarget() or GetTargetName() ~= npc.npcName then
-        yield("/target "..npc.npcName)
-        yield("/wait 1")
-        yield("/interact")
-        return
-    end
+    
 
     if IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
@@ -808,7 +820,6 @@ function Repair()
         return
     end
 
-    local hawkersAlleyAethernetShard = { x=-213.95, y=15.99, z=49.35 }
     if SelfRepair then
         if GetItemCount(33916) > 0 then
             if IsAddonVisible("Shop") then
@@ -837,60 +848,67 @@ function Repair()
                 LogInfo("[FATE] State Change: Ready")
             end
         elseif ShouldAutoBuyDarkMatter then
-            if not IsInZone(129) then
-                yield("/echo Out of Dark Matter! Purchasing more from Limsa Lominsa.")
-                TeleportTo("Limsa Lominsa Lower Decks")
+            if not HasTarget() or GetTargetName() ~= "Mender" then
+                yield("/target Mender")
+                yield("/wait 1")
+                if not HasTarget() or GetTargetName() ~= "Mender" then
+                    LeaveDuty() -- leave and reenter next to mender
+                else
+                    yield("/interact")
+                end
                 return
             end
 
-            local darkMatterVendor = { npcName="Unsynrael", x=-257.71, y=16.19, z=50.11, wait=0.08 }
-            if GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z,darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) + 10) then
-                yield("/li Hawkers' Alley")
-                yield("/wait 1") -- give it a moment to register
-            elseif IsAddonVisible("TelepotTown") then
-                yield("/callback TelepotTown false -1")
-            elseif GetDistanceToPoint(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z) > 5 then
-                if not (PathfindInProgress() or PathIsRunning()) then
-                    PathfindAndMoveTo(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z)
+            if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 3.5 then
+                if not (PathIsRunning() or PathfindInProgress()) then
+                    PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
                 end
+                return
             else
-                if not HasTarget() or GetTargetName() ~= darkMatterVendor.npcName then
-                    yield("/target "..darkMatterVendor.npcName)
-                elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
-                    yield("/interact")
-                elseif IsAddonVisible("SelectYesno") then
-                    yield("/callback SelectYesno true 0")
-                elseif IsAddonVisible("Shop") then
-                    yield("/callback Shop true 0 40 99")
+                if PathIsRunning() or PathfindInProgress() then
+                    yield("/vnav stop")
                 end
             end
+
+            if not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
+                yield("/interact")
+            elseif IsAddonVisible("SelectIconString") then
+                yield("/callback SelectIconString true 0")
+            elseif IsAddonVisible("Shop") then
+                yield("/callback Shop true 0 14 99")
+            end
         else
-            yield("/echo Out of Dark Matter and ShouldAutoBuyDarkMatter is false. Switching to Limsa mender.")
+            yield("/echo Out of Dark Matter and ShouldAutoBuyDarkMatter is false. Switching to Mender.")
             SelfRepair = false
         end
     else
         if NeedsRepair(RepairAmount) then
-            if not IsInZone(129) then
-                TeleportTo("Limsa Lominsa Lower Decks")
+            if not HasTarget() or GetTargetName() ~= "Mender" then
+                yield("/target Mender")
+                yield("/wait 1")
+                if not HasTarget() or GetTargetName() ~= "Mender" then
+                    LeaveDuty() -- leave and reenter next to mender
+                else
+                    yield("/interact")
+                end
                 return
             end
             
-            local mender = { npcName="Alistair", x=-246.87, y=16.19, z=49.83 }
-            if GetDistanceToPoint(mender.x, mender.y, mender.z) > (DistanceBetween(hawkersAlleyAethernetShard.x, hawkersAlleyAethernetShard.y, hawkersAlleyAethernetShard.z, mender.x, mender.y, mender.z) + 10) then
-                yield("/li Hawkers' Alley")
-                yield("/wait 1") -- give it a moment to register
-            elseif IsAddonVisible("TelepotTown") then
-                yield("/callback TelepotTown false -1")
-            elseif GetDistanceToPoint(mender.x, mender.y, mender.z) > 5 then
-                if not (PathfindInProgress() or PathIsRunning()) then
-                    PathfindAndMoveTo(mender.x, mender.y, mender.z)
+            if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 3.5 then
+                if not (PathIsRunning() or PathfindInProgress()) then
+                    PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
                 end
+                return
             else
-                if not HasTarget() or GetTargetName() ~= mender.npcName then
-                    yield("/target "..mender.npcName)
-                elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
-                    yield("/interact")
+                if PathIsRunning() or PathfindInProgress() then
+                    yield("/vnav stop")
                 end
+            end
+
+            if not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
+                yield("/interact")
+            elseif IsAddonVisible("SelectIconString") then
+                yield("/callback SelectIconString true 1")
             end
         else
             State = CharacterState.ready
@@ -909,7 +927,8 @@ CharacterState = {
     gathering = Gather,
     fishing = Fish,
     fireCannon = FireCannon,
-    buyFishingBait = BuyFishingBait
+    buyFishingBait = BuyFishingBait,
+    repair = Repair
 }
 
 FoundationZoneId = 418
