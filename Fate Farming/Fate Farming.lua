@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.16.1                                 *
+*                               Version 2.16.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.16.1   Added option to ignore forlorns
+    -> 2.16.2   Added param for ResummonChocoboTimeLeft
+                Added option to ignore forlorns
                 Updated aetheryte code to use new SND aetheryte functions, fixed
                     bug that causes character to path to center of mob even when
                     playing as ranged
@@ -83,6 +84,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 Food = ""                           --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                         --Leave "" Blank if you don't want to use any potions.
 ShouldSummonChocobo = true          --Summon chocobo?
+    ResummonChocoboTimeLeft = 3 * 60            --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
     ShouldAutoBuyGysahlGreens = true    --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
 MountToUse = "mount roulette"       --The mount you'd like to use when flying between fates
 
@@ -1545,7 +1547,7 @@ function SummonChocobo()
         return
     end
 
-    if ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 then
+    if ShouldSummonChocobo and GetBuddyTimeRemaining() <= ResummonChocoboTimeLeft then
         if GetItemCount(4868) > 0 then
             yield("/item Gysahl Greens")
         elseif ShouldAutoBuyGysahlGreens then
@@ -2002,7 +2004,7 @@ function Ready()
     elseif not LogInfo("[FATE] Ready -> TeleportBackToFarmingZone") and not IsInZone(SelectedZone.zoneId) then
         TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
         return
-    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() == 0 and
+    elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() <= ResummonChocoboTimeLeft and
         (not shouldWaitForBonusBuff or GetItemCount(4868) > 0) then
         State = CharacterState.summonChocobo
     elseif not LogInfo("[FATE] Ready -> ChangingInstances") and NextFate == nil then
