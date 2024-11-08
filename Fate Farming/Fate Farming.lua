@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.16.2                                 *
+*                               Version 2.16.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.16.2   Added param for ResummonChocoboTimeLeft
+    -> 2.16.3   Changed movement so it teleports and then mounts
+                Added param for ResummonChocoboTimeLeft
                 Added option to ignore forlorns
                 Updated aetheryte code to use new SND aetheryte functions, fixed
                     bug that causes character to path to center of mob even when
@@ -1356,12 +1357,6 @@ function MoveToFate()
         return
     end
 
-    -- if not PathIsRunning() and IsInFate() and GetFateProgress(CurrentFate.fateId) < 100 then
-    --     State = CharacterState.doFate
-    --     LogInfo("[FATE] State Change: DoFate")
-    --     return
-    -- end
-
     -- check for stuck
     if (PathIsRunning() or PathfindInProgress()) and GetCharacterCondition(CharacterCondition.mounted) then
         local now = os.clock()
@@ -1383,20 +1378,17 @@ function MoveToFate()
         return
     end
 
-    -- if GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < GetFateRadius(CurrentFate.fateId) + 20 then
-    --     if (IsOtherNpcFate(CurrentFate.fateName) or IsCollectionsFate(CurrentFate.fateName)) and CurrentFate.startTime == 0 then
-    --         State = CharacterState.interactWithNpc
-    --         LogInfo("[FATE] State Change: InteractWithFateNpc")
-    --         return
-    --     else
-    --         if not PathIsRunning() and GetFateProgress(CurrentFate.fateId) < 100 then
-    --             State = CharacterState.doFate
-    --             LogInfo("[FATE] State Change: DoFate")
-    --             return
-    --         end
-    --     end
-    --     return
-    -- end
+    if not MovingAnnouncementLock then
+        LogInfo("[FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+        MovingAnnouncementLock = true
+        if Echo == 2 then
+            yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
+        end
+    end
+
+    if TeleportToClosestAetheryteToFate(CurrentFate) then
+        return
+    end
 
     if not GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.mounting
@@ -1404,18 +1396,9 @@ function MoveToFate()
         return
     end
 
-    LogInfo("[FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
-    if Echo == 2 then
-        yield("/echo [FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
-    end
-
     local nearestLandX, nearestLandY, nearestLandZ = CurrentFate.x, CurrentFate.y, CurrentFate.z
     if not (CurrentFate.isCollectionsFate or CurrentFate.isOtherNpcFate) then
         nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 10)
-    end
-
-    if TeleportToClosestAetheryteToFate(CurrentFate) then
-        return
     end
 
     PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId))
@@ -1948,6 +1931,7 @@ function Ready()
     CombatModsOn = false -- expect RSR to turn off after every fate
     GotCollectionsFullCredit = false
     ForlornMarked = false
+    MovingAnnouncementLock = false
 
     local shouldWaitForBonusBuff = WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))
 
@@ -2395,6 +2379,7 @@ CharacterState = {
 
 GemAnnouncementLock = false
 DeathAnnouncementLock = false
+MovingAnnouncementLock = false
 SuccessiveInstanceChanges = 0
 LastInstanceChangeTimestamp = 0
 LastTeleportTimeStamp = 0

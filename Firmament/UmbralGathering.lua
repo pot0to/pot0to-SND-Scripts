@@ -34,7 +34,6 @@ This Plugins are optional and not needed unless you have it enabled in the setti
 
     -> Teleporter :  (for Teleporting to Ishgard/Firmament if you're not already in that zone)
 
---------------------------------------------------------------------------------------------------------------------------------------------------------------
 ]]
 
 --#region Settings
