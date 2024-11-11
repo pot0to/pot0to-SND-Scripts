@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.16.3                                 *
+*                               Version 2.17.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.16.3   Changed movement so it teleports and then mounts
+    -> 2.17.0   Released companion mode, banned flying in some ARR zones
+                Changed movement so it teleports and then mounts
                 Added param for ResummonChocoboTimeLeft
                 Added option to ignore forlorns
                 Updated aetheryte code to use new SND aetheryte functions, fixed
