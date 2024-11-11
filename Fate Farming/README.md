@@ -8,6 +8,7 @@ Fate farming script with the following features:
 - Attempts to change instances when there are no fates left in the zone
 - Can process your retainers and Grand Company turn ins, then get back to fate farming
 - Autobuys gysahl greens and grade 8 dark matter when you run out
+- Has companion scripts dedicated to atma farming, or you can write your own! (See [section for companion scripts](#companion-scripts))
 
 ## New to Something Need Doing (SND)
 ![SND Basics](img/SNDBasics.png)
@@ -42,6 +43,17 @@ The script contains several settings you can mess around with to minmax gem inco
 | ![RSR Engage Settings](img/RSREngageSettings.png) | Select "All Targets that are in range for any abilities (Tanks/Autoduty)" regardless of whether you're a tank |
 | ![RSR Map Specific Priorities](img/RSRMapSpecificPriorities.png) | Add "Forlorn Maiden" and "The Forlorn" to Prio Targets |
 | ![RSR Gap Closer Distance](img/RSRGapCloserDistance.png) | Recommended for melees: gapcloser distance = 20y |
+
+## Companion Scripts
+Companion scripts are meant to be used with the base `Fate Farming.lua` script
+and are meant to give you more control over different fate farming scenarios.
+
+Let's take the `Atma Farming.lua` script as an example.
+
+1. Set up both `Atma Farming.lua` and `Fate Farming.lua` as macros in your your SND.
+2. Make sure that the `CompanionScriptMode` setting in `Fate Farming.lua` is set to `true`
+3. Make sure the `FateMacro` setting in `Atma Farming.lua` matches whatever you named your fate macro
+4. Hit play on `Atma Farming.lua`
 
 ## FAQ
 ### What's the best zone to farm fates?

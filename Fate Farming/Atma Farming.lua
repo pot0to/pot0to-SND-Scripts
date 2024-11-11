@@ -1,5 +1,38 @@
+--[[
+
+********************************************************************************
+*                                Atma Farming                                  *
+*                                Version 1.0.0                                 *
+********************************************************************************
+
+Atma farming script meant to be used with `Fate Farming.lua`. This will go down
+the list of atma farming zones and farm fates until you have 12 of the required
+atmas in your inventory, then teleport to the next zone and restart the fate
+farming script.
+
+Created by: pot0to (https://ko-fi.com/pot0to)
+        
+    -> 1.0.0    First release
+
+--#region Settings
+
+--[[
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
+
 FateMacro = "Fate Farming"
 
+--#endregion Settings
+
+------------------------------------------------------------------------------------------------------------------------------------------------------
+
+--[[
+**************************************************************
+*  Code: Don't touch this unless you know what you're doing  *
+**************************************************************
+]]
 Atmas =
 {
     {zoneName = "Middle La Noscea", zoneId = 134, itemName = "Atma of the Ram", itemId = 7856},
