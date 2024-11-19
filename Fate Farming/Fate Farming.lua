@@ -2,13 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.17.0                                 *
+*                               Version 2.17.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.17.0   Released companion mode, banned flying in some ARR zones
+    -> 2.17.1   Updated to support 2 instances, updated prints to use hardcoded
+                    zoneName
+                Released companion mode, banned flying in some ARR zones
                 Changed movement so it teleports and then mounts
                 Added param for ResummonChocoboTimeLeft
                 Added option to ignore forlorns
@@ -834,7 +836,7 @@ function SelectNextZone()
         }
     end
 
-    nextZone.zoneName = GetZoneName(nextZone.zoneId).ToString()
+    nextZone.zoneName = nextZone.zoneName
     nextZone.aetheryteList = {}
     local aetheryteIds = GetAetherytesInZone(nextZone.zoneId)
     for i=0, aetheryteIds.Count-1 do
@@ -1132,7 +1134,7 @@ function TeleportTo(aetheryteName)
 end
 
 function ChangeInstance()
-    if SuccessiveInstanceChanges >= 3 then
+    if SuccessiveInstanceChanges >= 2 then
         yield("/wait 10")
         SuccessiveInstanceChanges = 0
         return
@@ -1184,7 +1186,7 @@ function ChangeInstance()
     end
 
     LogInfo("[FATE] Transferring to next instance")
-    local nextInstance = (GetZoneInstance() % 3) + 1
+    local nextInstance = (GetZoneInstance() % 2) + 1
     yield("/li "..nextInstance) -- start instance transfer
     yield("/wait 1") -- wait for instance transfer to register
     State = CharacterState.ready
