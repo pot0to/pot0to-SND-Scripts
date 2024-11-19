@@ -741,8 +741,6 @@ function BuyFishingBait()
         yield("/wait 1")
         if not HasTarget() or GetTargetName() ~= Mender.npcName then
             LeaveDuty()
-        else
-            yield("/interact")
         end
         return
     end
@@ -751,7 +749,6 @@ function BuyFishingBait()
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
         end
-        yield("/wait 1")
         return
     end
 
@@ -760,19 +757,11 @@ function BuyFishingBait()
         return
     end
 
-    
-
     if IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
-        return
-    end
-
-    if IsAddonVisible("SelectYesno") then
+    elseif IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
-        return
-    end
-
-    if IsAddonVisible("Shop") then
+    elseif IsAddonVisible("Shop") then
         if GetItemCount(30279) < 30 then
             yield("/callback Shop true 0 4 99 0")
         elseif GetItemCount(30280) < 30 then
@@ -780,7 +769,8 @@ function BuyFishingBait()
         elseif GetItemCount(30281) < 30 then
             yield("/callback Shop true 0 6 99 0")
         end
-        return
+    else
+        yield("/interact")
     end
 end
 

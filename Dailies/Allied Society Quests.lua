@@ -30,6 +30,7 @@ moves on to the next beast tribe.
 --]]
 
 ToDoList = {
+    { alliedSocietyName="Pelupelu", class="Summoner" },
     { alliedSocietyName="Loporrits", class="Carpenter" },
     { alliedSocietyName="Omicrons", class="Miner" }
 }
@@ -203,6 +204,16 @@ AlliedSocietiesTable =
         z=152.08,
         zoneId = 960,
         aetheryteName = "Base Omicron"
+    },
+    pelupleu =
+    {
+        alliedSocietyName = "Pelupelu",
+        questGiver="Yubli",
+        x=770.89954,
+        y=12.846571,
+        z=-261.0889,
+        zoneId=1188,
+        aetheryteName="Dock Poga",
     }
 }
 
