@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.17.1                                 *
+*                               Version 2.17.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.17.1   Updated to support 2 instances, updated prints to use hardcoded
+    -> 2.17.2   Updated index for bicolor vouchers
+                Updated to support 2 instances, updated prints to use hardcoded
                     zoneName
                 Released companion mode, banned flying in some ARR zones
                 Changed movement so it teleports and then mounts
@@ -2219,7 +2220,11 @@ function ExchangeVouchers()
         end
 
         if IsAddonVisible("ShopExchangeCurrency") then
-            yield("/callback ShopExchangeCurrency false 0 5 "..(BicolorGemCount//100))
+            if VoucherType == "Bicolor Gemstone Voucher" then
+                yield("/callback ShopExchangeCurrency false 0 8 "..(BicolorGemCount//100))
+            else
+                yield("/callback ShopExchangeCurrency false 0 6 "..(BicolorGemCount//100))
+            end
             return
         end
 
