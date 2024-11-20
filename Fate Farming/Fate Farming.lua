@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.17.2                                 *
+*                               Version 2.17.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.17.2   Updated index for bicolor vouchers
+    -> 2.17.3   Substituted empty zone names for unsupported zones
+                Updated index for bicolor vouchers
                 Updated to support 2 instances, updated prints to use hardcoded
                     zoneName
                 Released companion mode, banned flying in some ARR zones
@@ -826,6 +827,7 @@ function SelectNextZone()
     if nextZone == nil then
         yield("/echo [FATE] Current zone is only partially supported. No data on npc fates.")
         nextZone = {
+            zoneName = "",
             zoneId = nextZoneId,
             fatesList= {
                 collectionsFates= {},
