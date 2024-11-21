@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                             Wondrous Tails Doer                              *
-*                                Version 0.0.0                                 *
+*                                Version 0.1.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -71,10 +71,8 @@ WonderousTailsDuties = {
         { instanceId=20090, dutyId=1141, dutyName="The Voidcast Dais (Extreme)", minLevel=90 },
         { instanceId=20092, dutyId=1169, dutyName="The Abyssal Fracture (Extreme)", minLevel=90 }
     },
-    {},
-    {
-
-    },
+    1,
+    2,
     { -- type 3: special content
         -- { dutyName="Deep Dungeons" }
     },
@@ -93,20 +91,20 @@ WonderousTailsDuties = {
         { dutyName="Eden's Promise", dutyId=942, minLevel=80 },
     },
     { -- type 5: leveling dungeons
-        { dutyName="Dungeons (Lv. 1-49)", dutyId=172 }, --The Aurum Vale
-        { dutyName="Dungeons (Lv. 51-59)", dutyId=434 }, --The Dusk Vigil
-        { dutyName="Dungeons (Lv. 61-69)", dutyId=1142 }, --The Sirensong Sea
-        { dutyName="Dungeons (Lv. 71-79)", dutyId=837 }, --Holminster Switch
-        { dutyName="Dungeons (Lv. 81-89)", dutyId=952 }, --The Tower of Zot
-        { dutyName="Dungeons (Lv. 91-99)", dutyId=1167 } --Ihuykatumu
+        { dutyName="Leveling Dungeons (Lv. 1-49)", dutyId=172 }, --The Aurum Vale
+        { dutyName="Leveling Dungeons (Lv. 51-59)", dutyId=434 }, --The Dusk Vigil
+        { dutyName="Leveling Dungeons (Lv. 61-69)", dutyId=1142 }, --The Sirensong Sea
+        { dutyName="Leveling Dungeons (Lv. 71-79)", dutyId=837 }, --Holminster Switch
+        { dutyName="Leveling Dungeons (Lv. 81-89)", dutyId=952 }, --The Tower of Zot
+        { dutyName="Leveling Dungeons (Lv. 91-99)", dutyId=1167 } --Ihuykatumu
     },
     { -- type 6: expansion cap dungeons
-        { dutyName="Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
-        { dutyName="Dungeons (Lv. 60)", dutyId=1111 }, --The Antitower
-        { dutyName="Dungeons (Lv. 70)", dutyId=1146 }, --Ala Mhigo
-        { dutyName="Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
-        { dutyName="Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
-        { dutyName="Dungeons (Lv. 100)", dutyId=1199 } --Alexandria
+        { dutyName="High-level Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
+        { dutyName="High-level Dungeons (Lv. 60)", dutyId=1111 }, --The Antitower
+        { dutyName="High-level Dungeons (Lv. 70-80)", dutyId=1146 }, --Ala Mhigo
+        { dutyName="High-level Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
+        { dutyName="High-level Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
+        { dutyName="High-level Dungeons (Lv. 100)", dutyId=1199 } --Alexandria
     },
     Blacklisted= {
         {
@@ -135,7 +133,7 @@ WonderousTailsDuties = {
     }
 }
 
-khloe = {
+Khloe = {
     x = -19.346453,
     y = 210.99998,
     z = 0.086749226,
@@ -151,14 +149,14 @@ function SearchWonderousTailsTable(type, data, text)
                 return duty
             end
         end
-    elseif type == 1 then
+    elseif type == 5 then
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.dutyName == text then
                 duty.minLevel = data
                 return duty
             end
         end
-    elseif type == 2 then
+    elseif type == 6 then
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.dutyName == text then
                 duty.minLevel = data - 9
@@ -187,11 +185,11 @@ if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() or WeeklyBingoNumPlaced
     while not (IsInZone(478) and IsPlayerAvailable()) do
         yield("/wait 1")
     end
-    PathfindAndMoveTo(khloe.x, khloe.y, khloe.z)
-    while(GetDistanceToPoint(khloe.x, khloe.y, khloe.z) > 5) do
+    PathfindAndMoveTo(Khloe.x, Khloe.y, Khloe.z)
+    while(GetDistanceToPoint(Khloe.x, Khloe.y, Khloe.z) > 5) do
         yield("/wait 1")
     end
-    yield("/target "..khloe.name)
+    yield("/target "..Khloe.name)
     yield("/wait 1")
     yield("/interact")
     while not IsAddonVisible("SelectString") do
@@ -230,6 +228,9 @@ for i = 0, 12 do
         LogInfo("[WonderousTails] Wonderous Tails #"..(i+1).." Text: "..text)
 
         local duty = SearchWonderousTailsTable(type, data, text)
+        if duty == nil then
+            yield("/echo duty is nil")
+        end
         local dutyMode = "Support"
         if duty ~= nil then
             if CurrentLevel < duty.minLevel then
