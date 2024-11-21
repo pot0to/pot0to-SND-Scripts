@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.17.4                                 *
+*                               Version 2.18.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.17.4   Fixed typo
+    -> 2.18.0   Updated rotation plugins stuff
+                Fixed typo
                 Substituted empty zone names for unsupported zones
                 Updated index for bicolor vouchers
                 Updated to support 2 instances, updated prints to use hardcoded
@@ -25,26 +26,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Added a 5s wait for casts to go off. If character is still not
                     in combat by the end of 5s, attempts to move to edge of
                     hitbox and try again
-                Fixed autobuy for gysahl greens, added a path back to center of
-                    fate if no targets found
-                Truncated random wait  to 3 decimal places
-                Removed check for targeting forlorn only once
-                Added <0,0,0> check for pathing to enemies while in a fate
-                Added nilcheck for BossFatesClass
-                Fixed class changing for part 2 fates, fixed materia extraction flag
-                Fixed wait for bonus buff for retainers, mender, gysahl greens
-                    and dark matter purchases, bugfix for
-                    unexpectedCombat -> ready -> unexpectedCombat loop
-                Switch to /rsr manual for forlorns and switch back after
-                Added a dismount check before summoning chocobo
-                Fixed name of Fate La Selva se lo Llevó in Yak T'el
-                Fix for chocobo summoning
-                Removed Pandora, added feature to purchase Gysahl Greens and
-                    Grade 8 Dark Matter from Limsa vendors, turned off BMR when
-                    turning in collections fates, fixed S9 waits
-                Fixing fate selection bug
-                Added missing Kozama'uka npc fates, fixed aoe settings after
-                    forlorn dies
     -> 2.0.0    State system
 
 ********************************************************************************
