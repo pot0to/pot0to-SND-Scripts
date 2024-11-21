@@ -94,6 +94,13 @@ end
 function TurnIn()
     if IsAddonVisible("RecipeNote") then
         yield("/callback RecipeNote true -1")
+    elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
+        if IsAddonVisible("CollectablesShop") then
+            yield("/callback CollectablesShop true -1")
+        else
+            State = CharacterState.scripExchange
+            LogInfo("State Change: ScripExchange")
+        end
     elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
