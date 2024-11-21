@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.17.3                                 *
+*                               Version 2.17.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.17.3   Substituted empty zone names for unsupported zones
+    -> 2.17.4   Fixed typo
+                Substituted empty zone names for unsupported zones
                 Updated index for bicolor vouchers
                 Updated to support 2 instances, updated prints to use hardcoded
                     zoneName
@@ -104,9 +105,8 @@ CompletionToJoinBossFate = 0        --If the boss fate has less than this much p
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
 RSRAoeType = "Full"               --Options: Cleave/Full/Off
 RSRAutoType = "HighHP"               --Options: LowHP/HighHP/Big/Small/HighMaxHP/LowMaxHP/Nearest/Farthest.
-                                    
-UseBM = true                        --if you want to use the BossMod dodge/follow mode
-    BMorBMR = "BMR"
+
+RotationPlugin = "BMR"              --Options: BMR/VBM/Wrath/None
     MeleeDist = 2.5                     --distance for BMRAI melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
     RangedDist = 20                     --distance for BMRAI ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
 
@@ -151,24 +151,6 @@ if not HasPlugin("vnavmesh") then
     yield("/echo [FATE] Please Install vnavmesh")
 end
 
-if UseBM then
-    if HasPlugin("BossModReborn") then
-        BMorBMR = "BMR"
-    elseif HasPlugin("BossMod") then
-        BMorBMR = "BM"
-    else
-        UseBM = false
-        yield("/echo [FATE] Neither BossMod nor BossModReborn have been detected. "..
-            "Please set useBM to false or install one of these plugins to silence this warning.")
-    end
-end
-
-if HasPlugin("RotationSolver") then
-    yield("/rotation Settings TargetingTypes removeall")
-    yield("/rotation Settings TargetingTypes add "..RSRAutoType)
-else
-    yield("/echo [FATE] Please Install Rotation Solver Reborn")
-end
 if not HasPlugin("TextAdvance") then
     yield("/echo [FATE] Please Install TextAdvance")
 end
@@ -1767,22 +1749,22 @@ function TurnOnCombatMods(rotationMode)
 
         TurnOnAoes()
         
-        if not bossModAIActive and UseBM then
+        if not CombatPluginActive then
             SetMaxDistance()
             
-            if BMorBMR == "BMR" then
+            if RotationPlugin == "BMR" then
                 yield("/bmrai on")
                 yield("/bmrai followtarget on") -- overrides navmesh path and runs into walls sometimes
                 yield("/bmrai followcombat on")
                 -- yield("/bmrai followoutofcombat on")
                 yield("/bmrai maxdistancetarget " .. MaxDistance)
-            else
+            elseif RotationPlugin == "VBM" then
                 yield("/vbmai on")
                 yield("/vbmai followtarget on")
                 yield("/vbmai followcombat on")
                 --yield("/vbmai followoutofcombat on")
             end
-            bossModAIActive = true
+            CombatPluginActive = true
         end
     end
 end
@@ -1797,8 +1779,8 @@ function TurnOffCombatMods()
         -- yield("/rotation off") -- rotation off doesn't always stick
 
         -- turn off BMR so you don't start following other mobs
-        if UseBM and bossModAIActive then
-            if BMorBMR == "BMR" then
+        if CombatPluginActive then
+            if RotationPlugin == "BMR" then
                 yield("/bmrai off")
                 yield("/bmrai followtarget off")
                 yield("/bmrai followcombat off")
@@ -1809,7 +1791,7 @@ function TurnOffCombatMods()
                 --yield("/vbmai followcombat off")
                 --yield("/vbmai followoutofcombat off")
             end
-            bossModAIActive = false
+            CombatPluginActive = false
         end
     end
 end
@@ -1847,11 +1829,6 @@ function HandleUnexpectedCombat()
     -- targets whatever is trying to kill you
     if not HasTarget() then
         yield("/battletarget")
-    end
-
-    --Paths to enemys when Bossmod is disabled
-    if not UseBM then
-        EnemyPathing()
     end
 
     -- pathfind closer if enemies are too far
@@ -1977,11 +1954,6 @@ function DoFate()
     -- clears target
     if GetTargetFateID() ~= CurrentFate.fateId and not IsTargetInCombat() then
         ClearTarget()
-    end
-
-    --Paths to enemys when Bossmod is disabled
-    if not UseBM then
-        EnemyPathing()
     end
 
     -- pathfind closer if enemies are too far
@@ -2521,7 +2493,7 @@ end
 SetMaxDistance()
 
 SelectedZone = SelectNextZone()
-if SelectonedZone.zoneName ~= "" then
+if SelectedZone.zoneName ~= "" then
     yield("/echo Farming "..SelectedZone.zoneName)
 end
 
