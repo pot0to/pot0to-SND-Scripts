@@ -71,21 +71,9 @@ WonderousTailsDuties = {
         { instanceId=20090, dutyId=1141, dutyName="The Voidcast Dais (Extreme)", minLevel=90 },
         { instanceId=20092, dutyId=1169, dutyName="The Abyssal Fracture (Extreme)", minLevel=90 }
     },
-    { -- type 1: expansion cap dungeons
-        { dutyName="Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
-        { dutyName="Dungeons (Lv. 60)", dutyId=1111 }, --The Antitower
-        { dutyName="Dungeons (Lv. 70)", dutyId=1146 }, --Ala Mhigo
-        { dutyName="Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
-        { dutyName="Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
-        { dutyName="Dungeons (Lv. 100)", dutyId=1199 } --Alexandria
-    },
-    { -- type 2: leveling dungeons
-        { dutyName="Dungeons (Lv. 1-49)", dutyId=172 }, --The Aurum Vale
-        { dutyName="Dungeons (Lv. 51-59)", dutyId=434 }, --The Dusk Vigil
-        { dutyName="Dungeons (Lv. 61-69)", dutyId=1142 }, --The Sirensong Sea
-        { dutyName="Dungeons (Lv. 71-79)", dutyId=837 }, --Holminster Switch
-        { dutyName="Dungeons (Lv. 81-89)", dutyId=952 }, --The Tower of Zot
-        { dutyName="Dungeons (Lv. 91-99)", dutyId=1167 } --Ihuykatumu
+    {},
+    {
+
     },
     { -- type 3: special content
         -- { dutyName="Deep Dungeons" }
@@ -103,6 +91,22 @@ WonderousTailsDuties = {
         { dutyName="Eden's Gate", dutyId=849, minLevel=80 },
         { dutyName="Eden's Verse", dutyId=903, minLevel=80 },
         { dutyName="Eden's Promise", dutyId=942, minLevel=80 },
+    },
+    { -- type 5: leveling dungeons
+        { dutyName="Dungeons (Lv. 1-49)", dutyId=172 }, --The Aurum Vale
+        { dutyName="Dungeons (Lv. 51-59)", dutyId=434 }, --The Dusk Vigil
+        { dutyName="Dungeons (Lv. 61-69)", dutyId=1142 }, --The Sirensong Sea
+        { dutyName="Dungeons (Lv. 71-79)", dutyId=837 }, --Holminster Switch
+        { dutyName="Dungeons (Lv. 81-89)", dutyId=952 }, --The Tower of Zot
+        { dutyName="Dungeons (Lv. 91-99)", dutyId=1167 } --Ihuykatumu
+    },
+    { -- type 6: expansion cap dungeons
+        { dutyName="Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
+        { dutyName="Dungeons (Lv. 60)", dutyId=1111 }, --The Antitower
+        { dutyName="Dungeons (Lv. 70)", dutyId=1146 }, --Ala Mhigo
+        { dutyName="Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
+        { dutyName="Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
+        { dutyName="Dungeons (Lv. 100)", dutyId=1199 } --Alexandria
     },
     Blacklisted= {
         {

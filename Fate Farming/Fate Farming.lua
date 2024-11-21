@@ -309,6 +309,18 @@ FatesData = {
         }
     },
     {
+        zoneName = "Central Thanalan",
+        zoneId = 141,
+        fatesList = {
+            collectionsFates= {},
+            otherNpcFates= {
+                { fateName="" , npcName="Crestfallen Merchant" }
+            },
+            fatesWithContinuations = {},
+            blacklistedFates= {}
+        }
+    },
+    {
         zoneName = "Southern Thanalan",
         zoneId = 146,
         fatesList = {
@@ -1272,9 +1284,6 @@ function FlyBackToAetheryte()
     if not (PathfindInProgress() or PathIsRunning()) then
         local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
         if closestAetheryte ~= nil then
-            yield("/echo x: "..closestAetheryte.x)
-            yield("/echo y: "..closestAetheryte.y)
-            yield("/echo z: "..closestAetheryte.z)
             SetMapFlag(SelectedZone.zoneId, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z)
             PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying) and SelectedZone.flying)
         end
@@ -2512,7 +2521,9 @@ end
 SetMaxDistance()
 
 SelectedZone = SelectNextZone()
-yield("/echo Farming "..SelectedZone.zoneName)
+if SelectonedZone.zoneName ~= "" then
+    yield("/echo Farming "..SelectedZone.zoneName)
+end
 
 -- variable to track collections fates that you have completed but are still active.
 -- will not leave area or change instance if value ~= 0
