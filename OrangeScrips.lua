@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.1.0                                 *
+*                                Version 0.2.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -10,6 +10,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 Condensed Solution, repeat.
+
+    -> 0.2.0    Fixed some bugs related to /li inn
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -19,6 +21,7 @@ Plugins that are needed for it to work:
 
     -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat
     -> Artisan
+    -> Vnavmesh for finding your way to the turn in npcs
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 ]]
@@ -61,15 +64,20 @@ local Npcs =
 {
     turnInNpc = "Collectable Appraiser",
     scripExchangeNpc = "Scrip Exchange",
-    x=-157.96, y=0.92, z=-38.06
+    x=-157.96, y=0.92, z=-38.06,
+    aethernetShortcut = { x=-157.74, y=0.29, z=17.43 }
 }
 
 CharacterCondition =
 {
     craftingMode = 5,
+    casting=27,
     occupiedInQuestEvent=32,
+    occupiedMateriaExtractionAndRepair=39,
     executingCraftingSkill = 40,
-    craftingModeIdle = 41
+    craftingModeIdle = 41,
+    betweenAreas=45,
+    beingMoved=70,
 }
 
 function TeleportTo(aetheryteName)
@@ -102,6 +110,7 @@ end
 
 function Crafting()
     if LifestreamIsBusy() then
+        yield("/wait 1")
         return
     elseif not AtInn and HomeCommand ~= "" then
         yield(HomeCommand)
@@ -139,13 +148,37 @@ function Crafting()
     end
 end
 
+function GoToSolutionNine()
+    if not IsPlayerAvailable() then
+        yield("/wait 1")
+    elseif not IsInZone(SolutionNineZoneId) then
+        TeleportTo("Solution Nine")
+        yield("/echo teleported ")
+    elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > (DistanceBetween(Npcs.aethernetShortcut.x, Npcs.aethernetShortcut.y, Npcs.aethernetShortcut.z, Npcs.x, Npcs.y, Npcs.z) + 10) then
+        yield("/li nexus arcade")
+        yield("/wait 1") -- give it a moment to register
+    elseif IsAddonVisible("TelepotTown") then
+        LogInfo("TelepotTown open")
+        yield("/callback TelepotTown false -1")
+    elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
+        if not (PathfindInProgress() or PathIsRunning()) then
+            LogInfo("Path not running")
+            PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
+        end
+    else
+        State = CharacterState.turnIn
+        LogInfo("State Change: TurnIn")
+    end
+end
+
 function TurnIn()
     AtInn = false
 
     if IsAddonVisible("RecipeNote") then
         yield("/callback RecipeNote true -1")
-    elseif not IsInZone(SolutionNineZoneId) then
-        TeleportTo("Solution Nine")
+    elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
+        State = CharacterState.goToSolutionNine
+        LogInfo("State Change: Go to Solution Nine")
     elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
@@ -192,10 +225,9 @@ function ScripExchange()
             State = CharacterState.crafting
             LogInfo("State Change: Crafting")
         end
-    elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
-        end
+    elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
+        State = CharacterState.goToSolutionNine
+        LogInfo("State Change: Go to Solution Nine")
     elseif IsAddonVisible("ShopExchangeItemDialog") then
         yield("/callback ShopExchangeItemDialog true 0")
         yield("/wait 1")
@@ -218,11 +250,16 @@ end
 CharacterState =
 {
     crafting = Crafting,
+    goToSolutionNine = GoToSolutionNine,
     turnIn = TurnIn,
     scripExchange = ScripExchange
 }
 
-State = CharacterState.crafting
+if GetInventoryFreeSlotCount() > 0 then
+    State = CharacterState.crafting
+else
+    State = CharacterState.turnIn
+end
 local classId = GetClassJobId()
 ItemId = 0
 RecipeId = 0
@@ -236,6 +273,14 @@ end
 AtInn = false
 
 while true do
-    State()
+    if not (
+        IsPlayerCasting() or
+        GetCharacterCondition(CharacterCondition.betweenAreas) or
+        GetCharacterCondition(CharacterCondition.beingMoved) or
+        GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
+        LifestreamIsBusy())
+    then
+        State()
+    end
     yield("/wait 0.1")
 end
