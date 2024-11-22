@@ -80,7 +80,9 @@ function Crafting()
             LogInfo("State Change: TurnIn")
         end
     elseif IsAddonVisible("RecipeNote") and OutOfMaterials() then
+        yield("/echo out of materials")
         if GetItemCount(ItemId) == 0 then
+            yield("/echo crafting intermediates")
             yield("/artisan lists "..ArtisanIntermediatesListId.." start")
         elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
             yield("/echo out of materials, turnin")
@@ -91,6 +93,7 @@ function Crafting()
     elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
         yield("/e not in crafting mode")
         ArtisanCraftItem(RecipeId, slots)
+        yield("/echo recipeid: "..RecipeId)
         yield("/wait 5")
     end
 end
@@ -138,26 +141,27 @@ end
 
 function ScripExchange()
     if GetItemCount(OrangeCrafterScripId) < 125 then
-        State = CharacterState.crafting
-        LogInfo("State Change: Crafting")
+        if IsAddonVisible("InclusionShop") then
+            yield("/callback InclusionShop true -1")
+        else
+            State = CharacterState.crafting
+            LogInfo("State Change: Crafting")
+        end
     elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
         end
     elseif IsAddonVisible("ShopExchangeItemDialog") then
         yield("/callback ShopExchangeItemDialog true 0")
+        yield("/wait 1")
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("InclusionShop") then
-        if GetItemCount(OrangeCrafterScripId) >= 125 then
-            yield("/callback InclusionShop true 12 1")
-            yield("/wait 1")
-            yield("/callback InclusionShop true 13 10")
-            yield("/wait 1")
-            yield("/callback InclusionShop true 14 0 "..GetItemCount(OrangeCrafterScripId)//125)
-        else
-            yield("/callback InclusionShop true -1")
-        end
+        yield("/callback InclusionShop true 12 1")
+        yield("/wait 1")
+        yield("/callback InclusionShop true 13 10")
+        yield("/wait 1")
+        yield("/callback InclusionShop true 14 0 "..GetItemCount(OrangeCrafterScripId)//125)
     else
         yield("/wait 1")
         yield("/target "..Npcs.scripExchangeNpc)
