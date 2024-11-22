@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.0.0                                 *
+*                                Version 0.1.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -23,7 +23,24 @@ Plugins that are needed for it to work:
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 ]]
 
-ArtisanIntermediatesListId = "42199"
+--#region Settings
+
+--[[
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
+
+ArtisanIntermediatesListId = "42199"    --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
+HomeCommand = "/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+
+--#region Settings
+
+--[[
+********************************************************************************
+*            Code: Don't touch this unless you know what you're doing          *
+********************************************************************************
+]]
 
 OrangeScripRecipes =
 {
@@ -38,6 +55,7 @@ OrangeScripRecipes =
 }
 
 OrangeCrafterScripId = 41784
+SolutionNineZoneId = 1186
 
 local Npcs =
 {
@@ -54,6 +72,21 @@ CharacterCondition =
     craftingModeIdle = 41
 }
 
+function TeleportTo(aetheryteName)
+    yield("/tp "..aetheryteName)
+    yield("/wait 1") -- wait for casting to begin
+    while GetCharacterCondition(CharacterCondition.casting) do
+        LogInfo("[FATE] Casting teleport...")
+        yield("/wait 1")
+    end
+    yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
+    while GetCharacterCondition(CharacterCondition.betweenAreas) do
+        LogInfo("[FATE] Teleporting...")
+        yield("/wait 1")
+    end
+    yield("/wait 1")
+end
+
 function OutOfMaterials()
     for i=0,5 do
         local materialCount = GetNodeText("RecipeNote", 18 + i, 8)
@@ -68,6 +101,14 @@ function OutOfMaterials()
 end
 
 function Crafting()
+    if LifestreamIsBusy() then
+        return
+    elseif not AtInn and HomeCommand ~= "" then
+        yield(HomeCommand)
+        AtInn = true
+        return
+    end
+
     local slots = GetInventoryFreeSlotCount()
     if ArtisanIsListRunning() then
         yield("/wait 1")
@@ -99,8 +140,12 @@ function Crafting()
 end
 
 function TurnIn()
+    AtInn = false
+
     if IsAddonVisible("RecipeNote") then
         yield("/callback RecipeNote true -1")
+    elseif not IsInZone(SolutionNineZoneId) then
+        TeleportTo("Solution Nine")
     elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
@@ -187,6 +232,9 @@ for _, data in ipairs(OrangeScripRecipes) do
         RecipeId = data.recipeId
     end
 end
+
+AtInn = false
+
 while true do
     State()
     yield("/wait 0.1")
