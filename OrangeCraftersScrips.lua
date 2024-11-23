@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.2.0                                 *
+*                                Version 0.2.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 Condensed Solution, repeat.
 
-    -> 0.2.0    Fixed some bugs related to /li inn
+    -> 0.2.1    Stops script when you're out of mats
+                Fixed some bugs related to /li inn
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -32,6 +33,8 @@ Plugins that are needed for it to work:
 ********************************************************************************
 *                                   Settings                                   *
 ********************************************************************************
+
+IMPORTANT: Make sure this box is checked: /artisan -> Endurance -> Max Quantity Mode
 ]]
 
 ArtisanIntermediatesListId = "42199"    --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
@@ -95,6 +98,21 @@ function TeleportTo(aetheryteName)
     yield("/wait 1")
 end
 
+function OutOfCrystals()
+    local crystalsRequired1 = tonumber(GetNodeText("RecipeNote", 28, 4))
+    local crystalsInInventory1 = tonumber(GetNodeText("RecipeNote", 28, 3))
+    if crystalsRequired1 > crystalsInInventory1 then
+        return true
+    end
+
+    local crystalsRequired2 = tonumber(GetNodeText("RecipeNote", 29, 4))
+    local crystalsInInventory2 = tonumber(GetNodeText("RecipeNote", 29, 3))
+    if crystalsRequired2> crystalsInInventory2 then
+        return true
+    end
+    return false
+end
+
 function OutOfMaterials()
     for i=0,5 do
         local materialCount = GetNodeText("RecipeNote", 18 + i, 8)
@@ -104,6 +122,12 @@ function OutOfMaterials()
                 return true
             end
         end
+    end
+
+    if OutOfCrystals() then
+        yield("/echo Out of crystals. Stopping script.")
+        StopFlag = true
+        return true
     end
     return false
 end
@@ -125,25 +149,27 @@ function Crafting()
         if IsAddonVisible("RecipeNote") then
             yield("/callback RecipeNote true -1")
         elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
-            yield("/echo no inventory slots left, not in crafting mode")
             State = CharacterState.turnIn
             LogInfo("State Change: TurnIn")
         end
     elseif IsAddonVisible("RecipeNote") and OutOfMaterials() then
-        yield("/echo out of materials")
-        if GetItemCount(ItemId) == 0 then
-            yield("/echo crafting intermediates")
-            yield("/artisan lists "..ArtisanIntermediatesListId.." start")
-        elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
-            yield("/echo out of materials, turnin")
-            yield("/callback RecipeNote true -1")
-            State = CharacterState.turnIn
-            LogInfo("State Change: TurnIn")
+        if not StopFlag then
+            if GetItemCount(ItemId) == 0 and not ArtisanTimeoutStartTime then
+                yield("/artisan lists "..ArtisanIntermediatesListId.." start")
+                ArtisanTimeoutStartTime = os.clock()
+            elseif GetItemCount > 0 then
+                yield("/callback RecipeNote true -1")
+                State = CharacterState.turnIn
+                LogInfo("State Change: TurnIn")
+            elseif ArtisanTimeoutStartTime > 15 then
+                -- if artisan has not entered crafting mode within 15s of being called,
+                -- then you're probably out of mats so just stop the script
+                StopFlag = true
+            end
         end
     elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
-        yield("/e not in crafting mode")
+        ArtisanTimeoutStartTime = false
         ArtisanCraftItem(RecipeId, slots)
-        yield("/echo recipeid: "..RecipeId)
         yield("/wait 5")
     end
 end
@@ -271,8 +297,8 @@ for _, data in ipairs(OrangeScripRecipes) do
 end
 
 AtInn = false
-
-while true do
+StopFlag = false
+while not StopFlag do
     if not (
         IsPlayerCasting() or
         GetCharacterCondition(CharacterCondition.betweenAreas) or
