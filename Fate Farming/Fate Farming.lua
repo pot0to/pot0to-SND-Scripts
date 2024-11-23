@@ -2,13 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.18.0                                 *
+*                               Version 2.18.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.18.0   Updated rotation plugins stuff
+    -> 2.18.1   Changed RSR auto settings to remember what auto type you were
+                    already on
+                Updated rotation plugins stuff
                 Fixed typo
                 Substituted empty zone names for unsupported zones
                 Updated index for bicolor vouchers
@@ -85,14 +87,16 @@ CompletionToJoinBossFate = 0        --If the boss fate has less than this much p
     ClassForBossFates = ""              --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                         --for the class. Ex: "PLD"
 JoinCollectionsFates = true         --Set to false if you never want to do collections fates
-RSRAoeType = "Full"               --Options: Cleave/Full/Off
-RSRAutoType = "HighHP"               --Options: LowHP/HighHP/Big/Small/HighMaxHP/LowMaxHP/Nearest/Farthest.
+
+MeleeDist = 2.5                     --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
+RangedDist = 20                     --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
 
 RotationPlugin = "RSR"              --Options: RSR/BMR/VBM/Wrath/None
-    RotationSingleTargetPreset = ""     --For BMR/VBM only. Preset name for aoe mode.
+    RSRAoeType = "Full"                 --Options: Cleave/Full/Off
+
+    -- For BMR/VBM only
+    RotationSingleTargetPreset = ""     --Preset name for aoe mode.
     RotationAoePreset = ""              --For BMR/VBM only. Prset name for single target mode (for forlorns).
-    MeleeDist = 2.5                     --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
-    RangedDist = 20                     --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
 
 IgnoreForlorns = false
     IgnoreBigForlornOnly = false
@@ -1681,18 +1685,18 @@ end
 function TurnOnAoes()
     if not AoesOn then
         if RotationPlugin == "RSR" then
-            if rotationMode == "manual" then
-                yield("/rotation manual")
-            else
-                yield("/rotation auto on")
-            end
+            yield("/rotation off")
+            yield("/rotation auto on")
+            LogInfo("[FATE] TurnOnAoes /rotation auto on")
 
-            if RSRAoeType == "Cleave" then
+            if RSRAoeType == "Off" then
+                yield("/rotation settings aoetype 0")
+            elseif RSRAoeType == "Cleave" then
                 yield("/rotation settings aoetype 1")
             elseif RSRAoeType == "Full" then
                 yield("/rotation settings aoetype 2")
             end
-        elseif RotationPlugin == "BMR" then
+        elseif RotationPlugin == "BMR" or RotationPlugin == "VBM" then
             yield("/bmrai setpresetname "..RotationAoePreset)
         end
         AoesOn = true
@@ -1704,6 +1708,7 @@ function TurnOffAoes()
         if RotationPlugin == "RSR" then
             yield("/rotation settings aoetype 0")
             yield("/rotation manual")
+            LogInfo("[FATE] TurnOffAoes /rotation manual")
         elseif RotationPlugin == "BMR" then
             yield("/bmrai setpresetname "..RotationSingleTargetPreset)
         end
@@ -1724,21 +1729,22 @@ function TurnOnCombatMods(rotationMode)
     if not CombatModsOn then
         CombatModsOn = true
         -- turn on RSR in case you have the RSR 30 second out of combat timer set
-        if RotationType == "RSR" then
+        if RotationPlugin == "RSR" then
             if rotationMode == "manual" then
                 yield("/rotation manual")
+                LogInfo("[FATE] TurnOnCombatMods /rotation manual")
             else
+                yield("/rotation off")
                 yield("/rotation auto on")
+                LogInfo("[FATE] TurnOnCombatMods /rotation auto on")
             end
-        elseif RotationType == "BMR" or RotationType == "VBM" then
+        elseif RotationPlugin == "BMR" or RotationPlugin == "VBM" then
             yield("/bmrai setpresetname "..RotationAoePreset)
-        elseif RotationType == "Wrath" then
+        elseif RotationPlugin == "Wrath" then
             yield("/wrath toggle")
         end
 
         local class = GetClassJobTableFromId(GetClassJobId())
-
-        TurnOnAoes()
         
         if not AiDodgingOn then
             SetMaxDistance()
@@ -1759,7 +1765,8 @@ function TurnOffCombatMods()
         CombatModsOn = false
 
         if RotationPlugin == "RSR" then
-            yield("/rotation manual")
+            yield("/rotation off")
+            LogInfo("[FATE] TurnOffCombatMods /rotation off")
         elseif RotationPlugin == "BMR" or RotationPlugin == "VBM" then
             yield("/bmrai setpresetname null")
         elseif RotationPlugin == "Wrath" then
