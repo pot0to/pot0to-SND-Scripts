@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.18.1                                 *
+*                               Version 2.18.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.18.1   Changed RSR auto settings to remember what auto type you were
+    -> 2.18.2   Made fixes to aetheryteY location
+                Changed RSR auto settings to remember what auto type you were
                     already on
                 Updated rotation plugins stuff
                 Fixed typo
@@ -123,9 +124,9 @@ CompanionScriptMode = false                      --Set to true if you are using 
 ------------------------------------------------------------------------------------------------------------------------------------------------------
 
 --[[
-**************************************************************
-*  Code: Don't touch this unless you know what you're doing  *
-**************************************************************
+********************************************************************************
+*           Code: Don't touch this unless you know what you're doing           *
+********************************************************************************
 ]]
 
 --#region Plugin Checks and Setting Init
@@ -824,7 +825,7 @@ function SelectNextZone()
             aetheryteName = GetAetheryteName(aetheryteIds[i]),
             aetheryteId = aetheryteIds[i],
             x = aetherytePos.Item1,
-            y = 0,
+            y = QueryMeshPointOnFloorY(aetherytePos.Item1, 1024, aetherytePos.Item2, true, 50),
             z = aetherytePos.Item2
         }
         table.insert(nextZone.aetheryteList, aetheryteTable)
@@ -1246,7 +1247,10 @@ function FlyBackToAetheryte()
     end
     
     if not (PathfindInProgress() or PathIsRunning()) then
+        yield("/echo a")
         local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
+        yield("/echo b")
+        LogInfo("[FATE] ClosestAetheryte.y: "..closestAetheryte.y)
         if closestAetheryte ~= nil then
             SetMapFlag(SelectedZone.zoneId, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z)
             PathfindAndMoveTo(closestAetheryte.x, closestAetheryte.y, closestAetheryte.z, GetCharacterCondition(CharacterCondition.flying) and SelectedZone.flying)
