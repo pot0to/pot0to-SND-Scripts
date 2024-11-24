@@ -354,7 +354,7 @@ function Ready()
         State = CharacterState.fireCannon
         LogInfo("State Change: Fire Cannon")
     else
-        State = CharacterState.moving
+        State = CharacterState.goToFishingHole
         LogInfo("State Change: MoveToNextNode")
     end
 end
@@ -422,7 +422,7 @@ end
 
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
-        State = CharacterState.moving
+        State = CharacterState.goToFishingHole
         LogInfo("[FATE] State Change: MoveToNextNode")
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
@@ -730,7 +730,7 @@ function BuyFishingBait()
         if IsAddonVisible("Shop") then
             yield("/callback Shop true -1")
         else
-            State = CharacterState.moving
+            State = CharacterState.goToFishingHole
             LogInfo("State Change: MoveToNextNode")
         end
         return
@@ -796,7 +796,7 @@ function FireCannon()
             end
         end
         
-        State = CharacterState.moving
+        State = CharacterState.goToFishingHole
         LogInfo("State Change: MoveToNextNode")
         return
     end
@@ -959,7 +959,7 @@ CharacterState = {
     diademEntry = EnterDiadem,
     mounting = Mount,
     dismounting = Dismount,
-    moving = MoveToNextNode,
+    goToFishingHole = MoveToNextNode,
     gathering = Gather,
     fishing = Fish,
     fireCannon = FireCannon,
