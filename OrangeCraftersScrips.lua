@@ -62,7 +62,7 @@ OrangeScripRecipes =
     { className="Culinarian", classId=15, itemId=44232, recipeId=35829 }
 }
 
-OrangeGathererScripId = 41784
+OrangeCrafterScripId = 41784
 SolutionNineZoneId = 1186
 
 local Npcs =
@@ -215,7 +215,7 @@ function TurnIn()
     elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
         State = CharacterState.goToSolutionNine
         LogInfo("State Change: Go to Solution Nine")
-    elseif GetItemCount(OrangeGathererScripId) >= 3800 then
+    elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
         else
@@ -238,7 +238,7 @@ function TurnIn()
             yield("/wait 1")
         elseif GetItemCount(ItemId) == 0 then
             yield("/callback CollectablesShop true -1")
-            if GetItemCount(OrangeGathererScripId) >= 3800 then
+            if GetItemCount(OrangeCrafterScripId) >= 3800 then
                 State = CharacterState.scripExchange
                 LogInfo("State Change: ScripExchange")
             else
@@ -254,7 +254,7 @@ function TurnIn()
 end
 
 function ScripExchange()
-    if GetItemCount(OrangeGathererScripId) < 3800 then
+    if GetItemCount(OrangeCrafterScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
         else
@@ -279,7 +279,7 @@ function ScripExchange()
         yield("/wait 1")
         yield("/callback InclusionShop true 13 2")
         yield("/wait 1")
-        yield("/callback InclusionShop true 14 2 "..GetItemCount(OrangeGathererScripId)//500)
+        yield("/callback InclusionShop true 14 2 "..GetItemCount(OrangeCrafterScripId)//500)
     else
         yield("/wait 1")
         yield("/target "..Npcs.scripExchangeNpc)
