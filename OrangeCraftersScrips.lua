@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.2.2                                 *
+*                                Version 0.2.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 Condensed Solution, repeat.
 
-    -> 0.2.2    Fixed some bugs with stop condition
+    -> 0.2.3    Added check for ArtisanX crafting
+                Fixed some bugs with stop condition
                 Stops script when you're out of mats
                 Fixed some bugs related to /li inn
 
@@ -39,7 +40,7 @@ IMPORTANT: Make sure this box is checked: /artisan -> Endurance -> Max Quantity 
 ]]
 
 ArtisanIntermediatesListId = "42199"    --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-HomeCommand = "/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+HomeCommand = "" --"/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 
 --#region Settings
 
@@ -145,9 +146,10 @@ function Crafting()
     end
 
     local slots = GetInventoryFreeSlotCount()
-    if ArtisanIsListRunning() then
+    if ArtisanIsListRunning() or IsAddonVisible("Synthesis") then
         yield("/wait 1")
     elseif slots == 0 then
+        LogInfo("[OrangeCrafters] Out of inventory space")
         if IsAddonVisible("RecipeNote") then
             yield("/callback RecipeNote true -1")
         elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
@@ -155,21 +157,27 @@ function Crafting()
             LogInfo("State Change: TurnIn")
         end
     elseif IsAddonVisible("RecipeNote") and OutOfMaterials() then
+        LogInfo("[OrangeCrafters] Out of materials")
         if not StopFlag then
             if (GetItemCount(ItemId) == 0) and (ArtisanTimeoutStartTime == 0) then
+                LogInfo("[OrangeCrafters] Attempting to craft intermediate materials")
                 yield("/artisan lists "..ArtisanIntermediatesListId.." start")
                 ArtisanTimeoutStartTime = os.clock()
             elseif GetItemCount(ItemId) > 0 then
+                LogInfo("[OrangeCrafters] Turning In")
                 yield("/callback RecipeNote true -1")
                 State = CharacterState.turnIn
-                LogInfo("State Change: TurnIn")
-            elseif ArtisanTimeoutStartTime > 5 then
+                LogInfo("[OrangeCrafters] State Change: TurnIn")
+            elseif os.clock() - ArtisanTimeoutStartTime > 5 then
+                LogInfo("[OrangeCrafters] Artisan not starting, StopFlag = true")
                 -- if artisan has not entered crafting mode within 15s of being called,
                 -- then you're probably out of mats so just stop the script
+                yield("/echo Artisan took too long to start. Are you out of intermediate mat materials?")
                 StopFlag = true
             end
         end
     elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
+        LogInfo("[OrangeCrafters] Attempting to craft "..slots.." of recipe #"..RecipeId)
         ArtisanTimeoutStartTime = 0
         ArtisanCraftItem(RecipeId, slots)
         yield("/wait 5")
@@ -246,7 +254,7 @@ function TurnIn()
 end
 
 function ScripExchange()
-    if GetItemCount(OrangeCrafterScripId) < 125 then
+    if GetItemCount(OrangeCrafterScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
         else
@@ -262,11 +270,16 @@ function ScripExchange()
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("InclusionShop") then
-        yield("/callback InclusionShop true 12 1")
+        -- yield("/callback InclusionShop true 12 1")
+        -- yield("/wait 1")
+        -- yield("/callback InclusionShop true 13 10")
+        -- yield("/wait 1")
+        -- yield("/callback InclusionShop true 14 0 "..GetItemCount(OrangeCrafterScripId)//125)
+        yield("/callback InclusionShop true 12 2")
         yield("/wait 1")
-        yield("/callback InclusionShop true 13 10")
+        yield("/callback InclusionShop true 13 2")
         yield("/wait 1")
-        yield("/callback InclusionShop true 14 0 "..GetItemCount(OrangeCrafterScripId)//125)
+        yield("/callback InclusionShop true 14 2 "..GetItemCount(OrangeCrafterScripId)//500)
     else
         yield("/wait 1")
         yield("/target "..Npcs.scripExchangeNpc)
