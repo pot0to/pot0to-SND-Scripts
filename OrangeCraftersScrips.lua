@@ -184,7 +184,7 @@ function Crafting()
     end
 end
 
-function GoToSolutionNine()
+function GoToHubCity()
     if not IsPlayerAvailable() then
         yield("/wait 1")
     elseif not IsInZone(SolutionNineZoneId) then
@@ -213,7 +213,7 @@ function TurnIn()
     if IsAddonVisible("RecipeNote") then
         yield("/callback RecipeNote true -1")
     elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
-        State = CharacterState.goToSolutionNine
+        State = CharacterState.goToHubCity
         LogInfo("State Change: Go to Solution Nine")
     elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
@@ -262,7 +262,7 @@ function ScripExchange()
             LogInfo("State Change: Crafting")
         end
     elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
-        State = CharacterState.goToSolutionNine
+        State = CharacterState.goToHubCity
         LogInfo("State Change: Go to Solution Nine")
     elseif IsAddonVisible("ShopExchangeItemDialog") then
         yield("/callback ShopExchangeItemDialog true 0")
@@ -291,7 +291,7 @@ end
 CharacterState =
 {
     crafting = Crafting,
-    goToSolutionNine = GoToSolutionNine,
+    goToHubCity = GoToHubCity,
     turnIn = TurnIn,
     scripExchange = ScripExchange
 }
