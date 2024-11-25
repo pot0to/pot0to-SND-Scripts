@@ -1247,9 +1247,7 @@ function FlyBackToAetheryte()
     end
     
     if not (PathfindInProgress() or PathIsRunning()) then
-        yield("/echo a")
         local closestAetheryte = GetClosestAetheryte(GetPlayerRawXPos(), GetPlayerRawYPos(), GetPlayerRawZPos(), 0)
-        yield("/echo b")
         LogInfo("[FATE] ClosestAetheryte.y: "..closestAetheryte.y)
         if closestAetheryte ~= nil then
             SetMapFlag(SelectedZone.zoneId, closestAetheryte.x, closestAetheryte.y, closestAetheryte.z)
