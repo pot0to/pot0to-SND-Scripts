@@ -8,7 +8,8 @@
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.18.2   Made fixes to aetheryteY location
+    -> 2.18.3   Added chocobo stance
+                Made fixes to aetheryteY location
                 Changed RSR auto settings to remember what auto type you were
                     already on
                 Updated rotation plugins stuff
@@ -76,7 +77,8 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 Food = ""                           --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                         --Leave "" Blank if you don't want to use any potions.
 ShouldSummonChocobo = true          --Summon chocobo?
-    ResummonChocoboTimeLeft = 3 * 60            --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
+    ResummonChocoboTimeLeft = 3 * 60    --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
+    ChocoboStance = "Healer"            --Options: Follow/Free/Defender/Healer/Attacker
     ShouldAutoBuyGysahlGreens = true    --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
 MountToUse = "mount roulette"       --The mount you'd like to use when flying between fates
 
@@ -1616,6 +1618,8 @@ function SummonChocobo()
     if ShouldSummonChocobo and GetBuddyTimeRemaining() <= ResummonChocoboTimeLeft then
         if GetItemCount(4868) > 0 then
             yield("/item Gysahl Greens")
+            yield("/wait 3")
+            yield('/cac "'..ChocoboStance..' stance"')
         elseif ShouldAutoBuyGysahlGreens then
             State = CharacterState.autoBuyGysahlGreens
             LogInfo("[State] State Change: AutoBuyGysahlGreens")

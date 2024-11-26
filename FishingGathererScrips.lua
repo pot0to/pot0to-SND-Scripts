@@ -434,12 +434,9 @@ function TurnIn()
             yield("/target Collectable Appraiser")
             yield("/wait 0.5")
             yield("/interact")
-            repeat
-                yield("/wait 1")
-            until IsAddonVisible("CollectablesShop")
-            yield("/callback CollectablesShop true 12 "..SelectedFish.collectiblesTurnInListIndex)
-            LogInfo("/callback CollectablesShop true 12 "..SelectedFish.collectiblesTurnInListIndex)
         else
+            yield("/callback CollectablesShop true 12 "..SelectedFish.collectiblesTurnInListIndex)
+            yield("/wait 0.1")
             yield("/callback CollectablesShop true 15 0")
             yield("/wait 1")
         end
