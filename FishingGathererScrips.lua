@@ -336,18 +336,6 @@ function GetClosestAetheryte(x, y, z, zoneId, teleportTimePenalty)
     return closestAetheryte
 end
 
-function Mount()
-    if GetCharacterCondition(CharacterCondition.flying) then
-        State = CharacterState.goToFishingHole
-        LogInfo("[FATE] State Change: GoToFishingHole")
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
-        yield("/gaction jump")
-    else
-        yield('/gaction "mount roulette"')
-    end
-    yield("/wait 1")
-end
-
 function TeleportTo(aetheryteName)
     yield("/tp "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
@@ -359,6 +347,18 @@ function TeleportTo(aetheryteName)
     while GetCharacterCondition(CharacterCondition.betweenAreas) do
         LogInfo("[FATE] Teleporting...")
         yield("/wait 1")
+    end
+    yield("/wait 1")
+end
+
+function Mount()
+    if GetCharacterCondition(CharacterCondition.flying) then
+        State = CharacterState.goToFishingHole
+        LogInfo("[FATE] State Change: GoToFishingHole")
+    elseif GetCharacterCondition(CharacterCondition.mounted) then
+        yield("/gaction jump")
+    else
+        yield('/gaction "mount roulette"')
     end
     yield("/wait 1")
 end

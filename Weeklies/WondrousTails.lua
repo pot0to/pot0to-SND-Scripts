@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                             Wondrous Tails Doer                              *
-*                                Version 0.1.0                                 *
+*                                Version 0.2.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -22,6 +22,9 @@ each one once anyways
 
 Alliance Raids/PVP/Treasure Maps/Palace of the Dead
 - Skips them all
+
+
+    -> 0.2.0    Update for patch 7.1
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -71,12 +74,12 @@ WonderousTailsDuties = {
         { instanceId=20090, dutyId=1141, dutyName="The Voidcast Dais (Extreme)", minLevel=90 },
         { instanceId=20092, dutyId=1169, dutyName="The Abyssal Fracture (Extreme)", minLevel=90 }
     },
-    1,
-    2,
-    { -- type 3: special content
-        -- { dutyName="Deep Dungeons" }
+    { -- type 1: expansion cap dungeons
+        { dutyName="High-level Dungeons (Lv. 100)", dutyId=1199, minLevel=100 } --Alexandria
     },
-    { -- type 4: raids
+    2,
+    3,
+    { -- type 4: normal raids
         { dutyName="Binding Coil of Bahamut", dutyId=241, minLevel=50 },
         { dutyName="Second Coil of Bahamut", dutyId=355, minLevel=50 },
         { dutyName="Final Coil of Bahamut", dutyId=193, minLevel=50 },
@@ -91,44 +94,49 @@ WonderousTailsDuties = {
         { dutyName="Eden's Promise", dutyId=942, minLevel=80 },
     },
     { -- type 5: leveling dungeons
-        { dutyName="Leveling Dungeons (Lv. 1-49)", dutyId=172 }, --The Aurum Vale
-        { dutyName="Leveling Dungeons (Lv. 51-59)", dutyId=434 }, --The Dusk Vigil
-        { dutyName="Leveling Dungeons (Lv. 61-69)", dutyId=1142 }, --The Sirensong Sea
-        { dutyName="Leveling Dungeons (Lv. 71-79)", dutyId=837 }, --Holminster Switch
-        { dutyName="Leveling Dungeons (Lv. 81-89)", dutyId=952 }, --The Tower of Zot
-        { dutyName="Leveling Dungeons (Lv. 91-99)", dutyId=1167 } --Ihuykatumu
+        { dutyName="Leveling Dungeons (Lv. 1-49)", dutyId=172, minLevel=15 }, --The Aurum Vale
+        { dutyName="Leveling Dungeons (Lv. 51-79)", dutyId=434, minLevel=51 }, --The Dusk Vigil
+        { dutyName="Leveling Dungeons (Lv. 81-99)", dutyId=952, minLevel=81 }, --The Tower of Zot
     },
     { -- type 6: expansion cap dungeons
-        { dutyName="High-level Dungeons (Lv. 50)", dutyId=362 }, --Brayflox Longstop (Hard)
-        { dutyName="High-level Dungeons (Lv. 60)", dutyId=1111 }, --The Antitower
-        { dutyName="High-level Dungeons (Lv. 70-80)", dutyId=1146 }, --Ala Mhigo
-        { dutyName="High-level Dungeons (Lv. 80)", dutyId=838 }, --Amaurot
-        { dutyName="High-level Dungeons (Lv. 90)", dutyId=973 }, --The Dead Ends
-        { dutyName="High-level Dungeons (Lv. 100)", dutyId=1199 } --Alexandria
+        { dutyName="High-level Dungeons (Lv. 50-60)", dutyId=362, minLevel=50 }, --Brayflox Longstop (Hard)
+        { dutyName="High-level Dungeons (Lv. 70-80)", dutyId=1146, minLevel=70 }, --Ala Mhigo
+        { dutyName="High-level Dungeons (Lv. 90)", dutyId=973, minLevel=90 }, --The Dead Ends
+        
+    },
+    { -- type 7: ex trials
+        {
+            { instanceId=20008, dutyId=295, dutyName="Trials (Lv. 50-60)", minLevel=50 }, -- Bowl of Embers
+            { instanceId=20049, dutyId=720, dutyName="Trials (Lv. 70-100)", minLevel=70 }
+        }
+    },
+    { -- type 8: alliance raids
+
+    },
+    { -- type 9: normal raids
+        { dutyName="Normal Raids (Lv. 50-60)", dutyId=241, minLevel=50 },
+        { dutyName="Normal Raids (Lv. 70-80)", dutyId=693, minLevel=70 },
     },
     Blacklisted= {
-        {
+        { -- 0
             { instanceId=20052, dutyId=758, dutyName="The Jade Stoa (Extreme)", minLevel=70 }, -- cannot solo double tankbuster vuln
             { instanceId=20047, dutyId=677, dutyName="The Pool of Tribute (Extreme)", minLevel=70 }, -- cannot solo active time maneuver
             { instanceId=20056, dutyId=779, dutyName="The Minstrel's Ballad: Tsukuyomi's Pain", minLevel=70 } -- cannot solo meteors
         },
-        {},
-        {},
-        {
+        {}, -- 1
+        {}, -- 2
+        { -- 3
             { dutyName="Treasure Dungeons" }
         },
-        {
+        { -- 4
             { dutyName="Alliance Raids (A Realm Reborn)", dutyId=174 },
             { dutyName="Alliance Raids (Heavensward)", dutyId=508 },
             { dutyName="Alliance Raids (Stormblood)", dutyId=734 },
             { dutyName="Alliance Raids (Shadowbringers)", dutyId=882 },
             { dutyName="Alliance Raids (Endwalker)", dutyId=1054 },
-            { dutyName="Asphodelos= First or Second Circles", dutyId=1002 },
-            { dutyName="Asphodelos= Third or Fourth Circles", dutyId=1006 },
-            { dutyName="Abyssos= Fifth or Sixth Circles", dutyId=1081 },
-            { dutyName="Abyssos= Seventh or Eighth Circles", dutyId=1085 },
-            { dutyName="Anabaseios= Ninth or Tenth Circles", dutyId=1147 },
-            { dutyName="Anabaseios= Eleventh or Twelfth Circles", dutyId=1151 }
+            { dutyName="Asphodelos= First to Fourth Circles", dutyId=1002 },
+            { dutyName="Abyssos= Fifth to Eighth Circles", dutyId=1081 },
+            { dutyName="Anabaseios= Ninth to Twelfth Circles", dutyId=1147 }
         }
     }
 }
@@ -143,27 +151,19 @@ Khloe = {
 -- Region: Functions ---------------------------------------------------------------------------------
 
 function SearchWonderousTailsTable(type, data, text)
-    if type == 0 then -- trials are indexed by instance#
+    if type == 7 then -- ex trials are indexed by instance#
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.instanceId == data then
                 return duty
             end
         end
-    elseif type == 5 then
+    elseif type == 1 or type == 5 or type == 6 or type == 7 then -- dungeons
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.dutyName == text then
-                duty.minLevel = data
                 return duty
             end
         end
-    elseif type == 6 then
-        for _, duty in ipairs(WonderousTailsDuties[type+1]) do
-            if duty.dutyName == text then
-                duty.minLevel = data - 9
-                return duty
-            end
-        end
-    elseif type == 3 or type == 4 then
+    elseif type == 4 or type == 8 then -- normal raids
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.dutyName == text then
                 return duty
