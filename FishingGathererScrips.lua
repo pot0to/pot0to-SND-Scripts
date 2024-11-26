@@ -232,8 +232,8 @@ function Fishing()
             end
         else
             SelectNewFishingHole()
-            State = CharacterState.goToFishingHole
-            LogInfo("State Change: GoToFishingHole")
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
         end
         return
     end
