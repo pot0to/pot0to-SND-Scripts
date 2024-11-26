@@ -408,7 +408,9 @@ function TurnIn()
         TeleportTo(SelectedHubCity.aetheryte)
     elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
-        yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        if not LifestreamIsBusy() then
+            yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        end
         yield("/wait 1")
     elseif IsAddonVisible("TelepotTown") then
         LogInfo("TelepotTown open")
@@ -458,7 +460,9 @@ function ScripExchange()
         TeleportTo(SelectedHubCity.aetheryte)
     elseif not LogInfo("[FishingGatherer] /li aethernet") and SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
-        yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        if not LifestreamIsBusy() then
+            yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        end
         yield("/wait 1")
     elseif not LogInfo("[FishingGatherer] close telepottown") and IsAddonVisible("TelepotTown") then
         LogInfo("TelepotTown open")
@@ -509,8 +513,9 @@ function ProcessRetainers()
         SelectedHubCity.retainerBell.requiresAethernet and not LogInfo("abc") and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         (GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > (DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) + 10)))
     then
-        yield("/echo try")
-        yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        if not LifestreamIsBusy() then
+            yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        end
         yield("/wait 1")
     elseif not LogInfo("[FishingGatherer] close telepot town") and IsAddonVisible("TelepotTown") then
         LogInfo("TelepotTown open")
@@ -800,7 +805,8 @@ SelectedFish.closestAetheryte = GetClosestAetheryte(
             SelectedFish.zoneId,
             0)
 yield("/ahon")
-UseAutoHookAnonymousPreset(SelectedFish.autohookPreset)
+--UseAutoHookAnonymousPreset(SelectedFish.autohookPreset)
+SetAutoHookPreset(SelectedFish.authookPreset)
 
 for _, city in ipairs(HubCities) do
     if city.zoneName == HubCity then

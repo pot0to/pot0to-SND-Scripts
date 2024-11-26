@@ -2,16 +2,19 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.2.3                                 *
+*                                Version 0.2.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
-Condensed Solution, repeat.
+stuff, repeat.
 
-    -> 0.2.3    Added check for ArtisanX crafting
+    -> 0.2.4    Fixed out of crystals check if recipe only needs one type of
+                    crystal, added option to select what you wannt to buy with
+                    scrips
+                Added check for ArtisanX crafting
                 Fixed some bugs with stop condition
                 Stops script when you're out of mats
                 Fixed some bugs related to /li inn
@@ -40,6 +43,7 @@ IMPORTANT: Make sure this box is checked: /artisan -> Endurance -> Max Quantity 
 ]]
 
 ArtisanIntermediatesListId = "42199"    --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
+ItemToBuy = "Condensed Solution"
 HomeCommand = "" --"/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 
 --#region Settings
@@ -69,6 +73,22 @@ local Npcs =
 {
     turnInNpc = "Collectable Appraiser",
     scripExchangeNpc = "Scrip Exchange",
+    scripExchangeItems = {
+        {
+            itemName = "Condensed Solution",
+            menu1 = 1,
+            menu2 = 10,
+            listIndex = 0,
+            price = 125
+        },
+        {
+            itemName = "Crafter's Command Materia XII",
+            menu1 = 2,
+            menu2 = 2,
+            listIndex = 2,
+            price = 500
+        }
+    },
     x=-157.96, y=0.92, z=-38.06,
     aethernetShortcut = { x=-157.74, y=0.29, z=17.43 }
 }
@@ -103,13 +123,13 @@ end
 function OutOfCrystals()
     local crystalsRequired1 = tonumber(GetNodeText("RecipeNote", 28, 4))
     local crystalsInInventory1 = tonumber(GetNodeText("RecipeNote", 28, 3))
-    if crystalsRequired1 > crystalsInInventory1 then
+    if crystalsRequired1 ~= nil and crystalsInInventory1 ~= nil and crystalsRequired1 > crystalsInInventory1 then
         return true
     end
 
     local crystalsRequired2 = tonumber(GetNodeText("RecipeNote", 29, 4))
     local crystalsInInventory2 = tonumber(GetNodeText("RecipeNote", 29, 3))
-    if crystalsRequired2> crystalsInInventory2 then
+    if crystalsRequired2 ~= nil and crystalsInInventory2 ~= nil and crystalsRequired2> crystalsInInventory2 then
         return true
     end
 
@@ -275,11 +295,11 @@ function ScripExchange()
         -- yield("/callback InclusionShop true 13 10")
         -- yield("/wait 1")
         -- yield("/callback InclusionShop true 14 0 "..GetItemCount(OrangeCrafterScripId)//125)
-        yield("/callback InclusionShop true 12 2")
+        yield("/callback InclusionShop true 12 "..SelectedItemToBuy.menu1)
         yield("/wait 1")
-        yield("/callback InclusionShop true 13 2")
+        yield("/callback InclusionShop true 13 "..SelectedItemToBuy.menu2)
         yield("/wait 1")
-        yield("/callback InclusionShop true 14 2 "..GetItemCount(OrangeCrafterScripId)//500)
+        yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..GetItemCount(OrangeCrafterScripId)//SelectedItemToBuy.price)
     else
         yield("/wait 1")
         yield("/target "..Npcs.scripExchangeNpc)
@@ -309,6 +329,16 @@ for _, data in ipairs(OrangeScripRecipes) do
         ItemId = data.itemId
         RecipeId = data.recipeId
     end
+end
+
+for _, item in ipairs(Npcs.scripExchangeItems) do
+    if item.itemName == ItemToBuy then
+        SelectedItemToBuy = item
+    end
+end
+if SelectedItemToBuy == nil then
+    yield("/echo Could not find "..ItemToBuy.." on the list of scrip exchange items.")
+    StopFlag = true
 end
 
 AtInn = false
