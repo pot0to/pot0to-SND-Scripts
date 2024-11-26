@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                             Wondrous Tails Doer                              *
-*                                Version 0.2.0                                 *
+*                                Version 0.2.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -14,7 +14,8 @@ For dungeons:
 Support is available
 
 For EX Trials:
-- Attempts any duty unsynced if it is 20 levels below you
+- Attempts any duty unsynced if it is 20 levels below you and skips any that are
+within 20 levels
 - Note: Not all EX trials have BossMod support, but this script will attempt
 each one once anyways
 - Some EX trials are blacklisted due to mechanics that cannot be done solo
@@ -24,7 +25,8 @@ Alliance Raids/PVP/Treasure Maps/Palace of the Dead
 - Skips them all
 
 
-    -> 0.2.0    Update for patch 7.1
+    -> 0.2.0    Fixes for ex trials
+                Update for patch 7.1
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -151,13 +153,13 @@ Khloe = {
 -- Region: Functions ---------------------------------------------------------------------------------
 
 function SearchWonderousTailsTable(type, data, text)
-    if type == 7 then -- ex trials are indexed by instance#
+    if type == 0 then -- ex trials are indexed by instance#
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.instanceId == data then
                 return duty
             end
         end
-    elseif type == 1 or type == 5 or type == 6 or type == 7 then -- dungeons
+    elseif type == 1 or type == 5 or type == 6 or type == 7 then -- dungeons, level range ex trials
         for _, duty in ipairs(WonderousTailsDuties[type+1]) do
             if duty.dutyName == text then
                 return duty
