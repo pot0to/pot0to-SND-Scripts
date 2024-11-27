@@ -77,7 +77,7 @@ WonderousTailsDuties = {
         { instanceId=20092, dutyId=1169, dutyName="The Abyssal Fracture (Extreme)", minLevel=90 }
     },
     { -- type 1: expansion cap dungeons
-        { dutyName="High-level Dungeons (Lv. 100)", dutyId=1199, minLevel=100 } --Alexandria
+        { dutyName="Dungeons (Lv. 100)", dutyId=1199, minLevel=100 } --Alexandria
     },
     2,
     3,
