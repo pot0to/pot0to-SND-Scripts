@@ -805,8 +805,8 @@ SelectedFish.closestAetheryte = GetClosestAetheryte(
             SelectedFish.zoneId,
             0)
 yield("/ahon")
---UseAutoHookAnonymousPreset(SelectedFish.autohookPreset)
-SetAutoHookPreset(SelectedFish.authookPreset)
+DeleteAllAutoHookAnonymousPresets()
+UseAutoHookAnonymousPreset(SelectedFish.autohookPreset)
 
 for _, city in ipairs(HubCities) do
     if city.zoneName == HubCity then
