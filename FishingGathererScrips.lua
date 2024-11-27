@@ -28,8 +28,8 @@ GrandCompanyTurnIn                  = true      --If true, will do GC deliveries
 ReturnToGCTown                      = true      --if true will use fast return to GC town for retainers and scrip exchange (that assumes you set return location to your gc town else turn it false), else falase
 --needs a yesalready set up like "/Return to New Gridania/"
 
-Food                            = ""            --what food to eat (false if none)
-Potion                          = "Superior Spiritbond Potion <hq>"     --what potion to use (false if none)
+Food                                = ""        --what food to eat (false if none)
+Potion                              = "Superior Spiritbond Potion <hq>"     --what potion to use (false if none)
 
 --things you want to enable
 ExtractMateria                      = true      --If true, will extract materia if possible
@@ -50,11 +50,11 @@ HubCity                             = "Solution Nine"   --options:Limsa/Gridania
 HubCities =
 {
     {
-        zoneName="Limsa Lominsa",
+        zoneName="Limsa",
         zoneId = 129,
         aethernet = {
             aethernetZoneId = 129,
-            aethernetName = "Hawker's Alley",
+            aethernetName = "Hawkers' Alley",
             x=-213.61108, y=16.739136, z=51.80432
         },
         retainerBell = { x=-123.88806, y=17.990356, z=21.469421, requiresAethernet=false },
@@ -96,7 +96,6 @@ HubCities =
 }
 
 OrangeGathererScripId = 41785
-SolutionNineZoneId = 1186
 
 FishTable =
 {
@@ -384,8 +383,8 @@ end
 function GoToHubCity()
     if not IsPlayerAvailable() then
         yield("/wait 1")
-    elseif not IsInZone(SelectedHubCity.zone) then
-        TeleportTo("Solution Nine")
+    elseif not IsInZone(SelectedHubCity.zoneId) then
+        TeleportTo(SelectedHubCity.aetheryte)
     else
         State = CharacterState.ready
         LogInfo("State Change: Ready")
@@ -404,8 +403,9 @@ function TurnIn()
             State = CharacterState.ready
             LogInfo("[FishingGatherer] State Change: Ready")
         end
-    elseif not (IsInZone(SelectedHubCity.zoneId) or IsInZone(SelectedHubCity.aethernet.aethernetZoneId)) then
-        TeleportTo(SelectedHubCity.aetheryte)
+    elseif not IsInZone(SelectedHubCity.zoneId) then
+        State = CharacterState.goToHubCity
+        LogInfo("State Change: GoToHubCity")
     elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
         if not LifestreamIsBusy() then
@@ -456,8 +456,9 @@ function ScripExchange()
             State = CharacterState.ready
             LogInfo("State Change: Ready")
         end
-    elseif not LogInfo("[FishingGatherer] tp to zone") and not (IsInZone(SelectedHubCity.zoneId) or IsInZone(SelectedHubCity.aethernet.aethernetZoneId)) then
-        TeleportTo(SelectedHubCity.aetheryte)
+    elseif not IsInZone(SelectedHubCity.zoneId) then
+        State = CharacterState.goToHubCity
+        LogInfo("State Change: GoToHubCity")
     elseif not LogInfo("[FishingGatherer] /li aethernet") and SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
         if not LifestreamIsBusy() then

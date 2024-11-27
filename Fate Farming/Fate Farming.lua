@@ -101,7 +101,7 @@ RotationPlugin = "RSR"              --Options: RSR/BMR/VBM/Wrath/None
     -- For BMR/VBM only
     RotationSingleTargetPreset = ""     --Preset name for aoe mode.
     RotationAoePreset = ""              --For BMR/VBM only. Prset name for single target mode (for forlorns).
-DodgingPlugin = "BMR"               --Options: BMR/VBM. If your RotationPlugin is BMR/VBM, then this will be overriden.
+DodgingPlugin = "BMR"               --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden.
 
 IgnoreForlorns = false
     IgnoreBigForlornOnly = false
@@ -168,7 +168,9 @@ if ShouldExtractMateria then
         yield("/echo [FATE] Please install YesAlready")
     end
 end
-if RotationPlugin == "BMR" and DodgingPlugin ~= "BMR" then
+if DodgingPlugin == "None" then
+    -- do nothing
+elseif RotationPlugin == "BMR" and DodgingPlugin ~= "BMR" then
     DodgingPlugin = "BMR"
 elseif RotationPlugin == "VBM" and DodgingPlugin ~= "VBM"  then
     DodgingPlugin = "VBM"
@@ -1721,7 +1723,7 @@ end
 function TurnOffAoes()
     if AoesOn then
         if RotationPlugin == "RSR" then
-            yield("/rotation settings aoetype 0")
+            yield("/rotation settings aoetype 1")
             yield("/rotation manual")
             LogInfo("[FATE] TurnOffAoes /rotation manual")
         elseif RotationPlugin == "BMR" then
@@ -1772,7 +1774,7 @@ function TurnOnCombatMods(rotationMode)
                 yield("/bmrai followcombat on")
                 -- yield("/bmrai followoutofcombat on")
                 yield("/bmrai maxdistancetarget " .. MaxDistance)
-            else
+            elseif DodgingPlugin == "VBM" then
                 yield("/vbmai on")
                 yield("/vbmai followtarget on") -- overrides navmesh path and runs into walls sometimes
                 yield("/vbmai followcombat on")
@@ -1805,7 +1807,7 @@ function TurnOffCombatMods()
                 yield("/bmrai followtarget off")
                 yield("/bmrai followcombat off")
                 yield("/bmrai followoutofcombat off")
-            else
+            elseif DodgingPlugin == "VBM" then
                 yield("/vbmai off")
                 yield("/vbmai followtarget off")
                 yield("/vbmai followcombat off")

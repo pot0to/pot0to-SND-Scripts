@@ -39,14 +39,35 @@ Plugins that are needed for it to work:
 *                                   Settings                                   *
 ********************************************************************************
 
-IMPORTANT: Make sure this box is checked: /artisan -> Endurance -> Max Quantity Mode
 ]]
 
-ArtisanIntermediatesListId = "42199"    --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy = "Condensed Solution"
-HomeCommand = "" --"/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+ArtisanIntermediatesListId  = "42199"                   --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
+ItemToBuy                   = "Condensed Solution"
+HomeCommand                 = "" --"/li inn"            --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+HubCity                     = "Solution Nine"           --options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
---#region Settings
+
+-- IMPORTANT: Your scrip exchange list may be different depending on whether
+-- you've unlocked Skystell tools. Please make sure the menu item #s match what
+-- you have in game.
+ScripExchangeItems = {
+    {
+        itemName = "Condensed Solution",
+        categoryMenu = 1,
+        subcategoryMenu = 9,
+        listIndex = 0,
+        price = 125
+    },
+    {
+        itemName = "Crafter's Command Materia XII",
+        categoryMenu = 2,
+        subcategoryMenu = 2,
+        listIndex = 2,
+        price = 500
+    }
+}
+
+--#endregion Settings
 
 --[[
 ********************************************************************************
@@ -69,28 +90,52 @@ OrangeScripRecipes =
 OrangeCrafterScripId = 41784
 SolutionNineZoneId = 1186
 
-local Npcs =
+HubCities =
 {
-    turnInNpc = "Collectable Appraiser",
-    scripExchangeNpc = "Scrip Exchange",
-    scripExchangeItems = {
-        {
-            itemName = "Condensed Solution",
-            menu1 = 1,
-            menu2 = 10,
-            listIndex = 0,
-            price = 125
+    {
+        zoneName="Limsa Lominsa",
+        zoneId = 129,
+        aethernet = {
+            aethernetZoneId = 129,
+            aethernetName = "Hawkers' Alley",
+            x=-213.61108, y=16.739136, z=51.80432
         },
-        {
-            itemName = "Crafter's Command Materia XII",
-            menu1 = 2,
-            menu2 = 2,
-            listIndex = 2,
-            price = 500
-        }
+        retainerBell = { x=-123.88806, y=17.990356, z=21.469421, requiresAethernet=false },
+        scripExchange = { x=-258.52585, y=16.2, z=40.65883, requiresAethernet=true }
     },
-    x=-157.96, y=0.92, z=-38.06,
-    aethernetShortcut = { x=-157.74, y=0.29, z=17.43 }
+    {
+        zoneName="Gridania",
+        zoneId = 132,
+        aethernet = {
+            aethernetZoneId = 133,
+            aethernetName = "Sapphire Avenue Exchange",
+            x=131.9447, y=4.714966, z=-29.800903
+        },
+        retainerBell = { x=168.72, y=15.5, z=-100.06, requiresAethernet=true },
+        scripExchange = { x=142.15, y=13.74, z=-105.39, requiresAethernet=true },
+    },
+    {
+        zoneName="Ul'dah",
+        zoneId = 130,
+        aethernet = {
+            aethernetZoneId = 131,
+            aethernetName = "Leatherworkers' Guild & Shaded Bower",
+            x=101, y=9, z=-112
+        },
+        retainerBell = { x=171, y=15, z=-102, requiresAethernet=true },
+        scripExchange = { x=142.68, y=13.75, z=-104.59, requiresAethernet=true },
+    },
+    {
+        zoneName="Solution Nine",
+        zoneId = 1186,
+        aethernet = {
+            aethernetZoneId = 1186,
+            aethernetName = "Nexus Arcade",
+            x=-161, y=-1, z=21
+        },
+        retainerBell = { x=-152.465, y=0.660, z=-13.557, requiresAethernet=true },
+        scripExchange = { x=-158.019, y=0.922, z=-37.884, requiresAethernet=true }
+    }
 }
 
 CharacterCondition =
@@ -207,44 +252,40 @@ end
 function GoToHubCity()
     if not IsPlayerAvailable() then
         yield("/wait 1")
-    elseif not IsInZone(SolutionNineZoneId) then
-        TeleportTo("Solution Nine")
-        yield("/echo teleported ")
-    elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > (DistanceBetween(Npcs.aethernetShortcut.x, Npcs.aethernetShortcut.y, Npcs.aethernetShortcut.z, Npcs.x, Npcs.y, Npcs.z) + 10) then
-        yield("/li nexus arcade")
-        yield("/wait 1") -- give it a moment to register
-    elseif IsAddonVisible("TelepotTown") then
-        LogInfo("TelepotTown open")
-        yield("/callback TelepotTown false -1")
-    elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
-        if not (PathfindInProgress() or PathIsRunning()) then
-            LogInfo("Path not running")
-            PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
-        end
+    elseif not IsInZone(SelectedHubCity.zoneId) then
+        TeleportTo(SelectedHubCity.aetheryte)
     else
-        State = CharacterState.turnIn
-        LogInfo("State Change: TurnIn")
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
     end
 end
 
 function TurnIn()
     AtInn = false
 
-    if IsAddonVisible("RecipeNote") then
-        yield("/callback RecipeNote true -1")
-    elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
-        State = CharacterState.goToHubCity
-        LogInfo("State Change: Go to Solution Nine")
-    elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
+    if GetItemCount(ItemId) == 0 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
         else
-            State = CharacterState.scripExchange
-            LogInfo("State Change: ScripExchange")
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
         end
-    elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
+    elseif not IsInZone(SolutionNineZoneId) then
+        State = CharacterState.goToHubCity
+        LogInfo("State Change: GoToHubCity")
+    elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
+        GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
+        if not LifestreamIsBusy() then
+            yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        end
+        yield("/wait 1")
+    elseif IsAddonVisible("TelepotTown") then
+        LogInfo("TelepotTown open")
+        yield("/callback TelepotTown false -1")
+    elseif GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > 1 then
+        if not (PathfindInProgress() or PathIsRunning()) then
+            LogInfo("Path not running")
+            PathfindAndMoveTo(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z)
         end
     else
         if PathfindInProgress() or PathIsRunning() then
@@ -252,20 +293,13 @@ function TurnIn()
         end
 
         if not IsAddonVisible("CollectablesShop") then
-            yield("/target "..Npcs.turnInNpc)
+            yield("/target Collectable Appraiser")
             yield("/wait 0.5")
             yield("/interact")
             yield("/wait 1")
-        elseif GetItemCount(ItemId) == 0 then
-            yield("/callback CollectablesShop true -1")
-            if GetItemCount(OrangeCrafterScripId) >= 3800 then
-                State = CharacterState.scripExchange
-                LogInfo("State Change: ScripExchange")
-            else
-                State = CharacterState.crafting
-                LogInfo("State Change: Crafting")
-            end
-            LogInfo("State Change: Crafting")
+        elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
+            State = CharacterState.scripExchange
+            LogInfo("State Change: ScripExchange")
         else
             yield("/callback CollectablesShop true 15 0")
             yield("/wait 1")
@@ -277,32 +311,36 @@ function ScripExchange()
     if GetItemCount(OrangeCrafterScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
+        elseif GetItemCount(ItemId) > 0 then
+            State = CharacterState.turnIn
+            LogInfo("State Change: TurnIn")
         else
             State = CharacterState.crafting
             LogInfo("State Change: Crafting")
         end
-    elseif not IsInZone(SolutionNineZoneId) or GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 1 then
+    elseif not IsInZone(SelectedHubCity.zoneId) then
         State = CharacterState.goToHubCity
-        LogInfo("State Change: Go to Solution Nine")
+        LogInfo("State Change: GoToHubCity")
+    elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
+        GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
+        if not LifestreamIsBusy() then
+            yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        end
+        yield("/wait 1")
     elseif IsAddonVisible("ShopExchangeItemDialog") then
         yield("/callback ShopExchangeItemDialog true 0")
         yield("/wait 1")
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("InclusionShop") then
-        -- yield("/callback InclusionShop true 12 1")
-        -- yield("/wait 1")
-        -- yield("/callback InclusionShop true 13 10")
-        -- yield("/wait 1")
-        -- yield("/callback InclusionShop true 14 0 "..GetItemCount(OrangeCrafterScripId)//125)
-        yield("/callback InclusionShop true 12 "..SelectedItemToBuy.menu1)
+        yield("/callback InclusionShop true 12 "..SelectedItemToBuy.categoryMenu)
         yield("/wait 1")
-        yield("/callback InclusionShop true 13 "..SelectedItemToBuy.menu2)
+        yield("/callback InclusionShop true 13 "..SelectedItemToBuy.subcategoryMenu)
         yield("/wait 1")
         yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..GetItemCount(OrangeCrafterScripId)//SelectedItemToBuy.price)
     else
         yield("/wait 1")
-        yield("/target "..Npcs.scripExchangeNpc)
+        yield("/target ScripExchange")
         yield("/wait 0.5")
         yield("/interact")
     end
@@ -331,7 +369,7 @@ for _, data in ipairs(OrangeScripRecipes) do
     end
 end
 
-for _, item in ipairs(Npcs.scripExchangeItems) do
+for _, item in ipairs(ScripExchangeItems) do
     if item.itemName == ItemToBuy then
         SelectedItemToBuy = item
     end
@@ -339,6 +377,17 @@ end
 if SelectedItemToBuy == nil then
     yield("/echo Could not find "..ItemToBuy.." on the list of scrip exchange items.")
     StopFlag = true
+end
+
+for _, city in ipairs(HubCities) do
+    if city.zoneName == HubCity then
+        SelectedHubCity = city
+        SelectedHubCity.aetheryte = GetAetheryteName(GetAetherytesInZone(city.zoneId)[0])
+    end
+end
+if SelectedHubCity == nil then
+    yield("/echo Could not find hub city: "..HubCity)
+    yield("/vnav stop")
 end
 
 AtInn = false
