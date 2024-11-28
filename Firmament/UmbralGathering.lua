@@ -8,13 +8,14 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.1                                  *
+*                               Version 0.1.2                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.1   Added wait for vnav to be ready
-        0.0.0   First release
+    ->  0.1.2   Logging for mender?
+                Added wait for vnav to be ready
+                First release
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -355,7 +356,7 @@ function Ready()
         State = CharacterState.fireCannon
         LogInfo("State Change: Fire Cannon")
     else
-        State = CharacterState.goToFishingHole
+        State = CharacterState.moveToNextNode
         LogInfo("State Change: MoveToNextNode")
     end
 end
@@ -380,14 +381,14 @@ end
 
 function EnterDiadem()
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
-        if NavIsReady() then
+        if NavIsReady() and not IsPlayerOccupied() then
             LastStuckCheckTime = os.clock()
             LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
             State = CharacterState.ready
             LogInfo("State Change: Ready")
         else
             yield("/echo Waiting for navmesh...")
-            yield("/wait 5")
+            yield("/wait 1")
         end
         return
     end
@@ -428,7 +429,7 @@ end
 
 function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
-        State = CharacterState.goToFishingHole
+        State = CharacterState.moveToNextNode
         LogInfo("[FATE] State Change: MoveToNextNode")
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
@@ -736,7 +737,7 @@ function BuyFishingBait()
         if IsAddonVisible("Shop") then
             yield("/callback Shop true -1")
         else
-            State = CharacterState.goToFishingHole
+            State = CharacterState.moveToNextNode
             LogInfo("State Change: MoveToNextNode")
         end
         return
@@ -746,6 +747,7 @@ function BuyFishingBait()
         yield("/target "..Mender.npcName)
         yield("/wait 1")
         if not HasTarget() or GetTargetName() ~= Mender.npcName then
+            yield("/echo Cannot find "..Mender.npcName..". Re-entering duty.")
             LeaveDuty()
         end
         return
@@ -802,7 +804,7 @@ function FireCannon()
             end
         end
         
-        State = CharacterState.goToFishingHole
+        State = CharacterState.moveToNextNode
         LogInfo("State Change: MoveToNextNode")
         return
     end
@@ -965,7 +967,7 @@ CharacterState = {
     diademEntry = EnterDiadem,
     mounting = Mount,
     dismounting = Dismount,
-    goToFishingHole = MoveToNextNode,
+    moveToNextNode = MoveToNextNode,
     gathering = Gather,
     fishing = Fish,
     fireCannon = FireCannon,

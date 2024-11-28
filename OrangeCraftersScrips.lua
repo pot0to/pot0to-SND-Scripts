@@ -211,7 +211,7 @@ function Crafting()
     end
 
     local slots = GetInventoryFreeSlotCount()
-    if ArtisanIsListRunning() or IsAddonVisible("Synthesis") then
+    if (ArtisanIsListRunning() and not ArtisanIsListPaused()) or IsAddonVisible("Synthesis") then
         yield("/wait 1")
     elseif slots == 0 then
         LogInfo("[OrangeCrafters] Out of inventory space")
@@ -267,8 +267,8 @@ function TurnIn()
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
         else
-            State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            State = CharacterState.crafting
+            LogInfo("State Change: Crafting")
         end
     elseif not IsInZone(SolutionNineZoneId) then
         State = CharacterState.goToHubCity
