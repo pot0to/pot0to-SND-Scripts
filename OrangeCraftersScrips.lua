@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.2.4                                 *
+*                                Version 0.3.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -41,11 +41,16 @@ Plugins that are needed for it to work:
 
 ]]
 
-ArtisanIntermediatesListId  = "42199"                   --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
+ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
 ItemToBuy                   = "Condensed Solution"
 HomeCommand                 = "" --"/li inn"            --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
+Potion                      = "Superior Spiritbond Potion <hq>"     -- WARNING: This will overwrite any crafter's pots you have.
+
+Retainers                   = true
+GrandCompanyTurnIn          = true
+MinInventoryFreeSlots       = 1
 
 -- IMPORTANT: Your scrip exchange list may be different depending on whether
 -- you've unlocked Skystell tools. Please make sure the menu item #s match what
@@ -147,6 +152,7 @@ CharacterCondition =
     executingCraftingSkill = 40,
     craftingModeIdle = 41,
     betweenAreas=45,
+    occupiedSummoningBell=50,
     beingMoved=70,
 }
 
@@ -263,12 +269,12 @@ end
 function TurnIn()
     AtInn = false
 
-    if GetItemCount(ItemId) == 0 then
+    if GetItemCount(ItemId) == 0 or GetItemCount(OrangeCrafterScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
         else
-            State = CharacterState.crafting
-            LogInfo("State Change: Crafting")
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
         end
     elseif not IsInZone(SolutionNineZoneId) then
         State = CharacterState.goToHubCity
@@ -297,9 +303,6 @@ function TurnIn()
             yield("/wait 0.5")
             yield("/interact")
             yield("/wait 1")
-        elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
-            State = CharacterState.scripExchange
-            LogInfo("State Change: ScripExchange")
         else
             yield("/callback CollectablesShop true 15 0")
             yield("/wait 1")
@@ -311,12 +314,9 @@ function ScripExchange()
     if GetItemCount(OrangeCrafterScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
-        elseif GetItemCount(ItemId) > 0 then
-            State = CharacterState.turnIn
-            LogInfo("State Change: TurnIn")
         else
-            State = CharacterState.crafting
-            LogInfo("State Change: Crafting")
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
         end
     elseif not IsInZone(SelectedHubCity.zoneId) then
         State = CharacterState.goToHubCity
@@ -346,19 +346,120 @@ function ScripExchange()
     end
 end
 
+function ProcessRetainers()
+    CurrentFate = nil
+    
+    LogInfo("[OrangeCrafters] Handling retainers...")
+    if not LogInfo("[OrangeCrafters] check retainers ready") and not ARRetainersWaitingToBeProcessed() or GetInventoryFreeSlotCount() <= 1 then
+        if IsAddonVisible("RetainerList") then
+            yield("/callback RetainerList true -1")
+        elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
+        end
+    elseif not LogInfo("[OrangeCrafters] is in hub city zone?") and
+        not (IsInZone(SelectedHubCity.zoneId) or IsInZone(SelectedHubCity.aethernet.aethernetZoneId))
+    then
+        TeleportTo(SelectedHubCity.aetheryte)
+    elseif not LogInfo("[OrangeCrafters] use aethernet?") and
+        SelectedHubCity.retainerBell.requiresAethernet and not LogInfo("abc") and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
+        (GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > (DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) + 10)))
+    then
+        if not LifestreamIsBusy() then
+            yield("/li "..SelectedHubCity.aethernet.aethernetName)
+        end
+        yield("/wait 1")
+    elseif not LogInfo("[OrangeCrafters] close telepot town") and IsAddonVisible("TelepotTown") then
+        LogInfo("TelepotTown open")
+        yield("/callback TelepotTown false -1")
+    elseif not LogInfo("[OrangeCrafters] move to summoning bell") and GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > 1 then
+        if not (PathfindInProgress() or PathIsRunning()) then
+            LogInfo("Path not running")
+            PathfindAndMoveTo(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z)
+        end
+    elseif PathfindInProgress() or PathIsRunning() then
+        return
+    elseif not HasTarget() or GetTargetName() ~= "Summoning Bell" then
+        yield("/target Summoning Bell")
+        return
+    elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
+        yield("/interact")
+    elseif IsAddonVisible("RetainerList") then
+        yield("/ays e")
+        if Echo == "All" then
+            yield("/echo [FATE] Processing retainers")
+        end
+        yield("/wait 1")
+    end
+end
+
+function ExecuteGrandCompanyTurnIn()
+    if GetInventoryFreeSlotCount() < MinInventoryFreeSlots then
+        local playerGC = GetPlayerGC()
+        local gcZoneIds = {
+            129, --Limsa Lominsa
+            132, --New Gridania
+            130 --"Ul'dah - Steps of Nald"
+        }
+        if not IsInZone(gcZoneIds[playerGC]) then
+            yield("/li gc")
+            yield("/wait 1")
+        elseif DeliverooIsTurnInRunning() then
+            return
+        else
+            yield("/deliveroo enable")
+        end
+    else
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
+    end
+end
+
+function PotionCheck()
+    --pot usage
+    if not HasStatusId(49) and Potion ~= "" then
+        yield("/item " .. Potion)
+    end
+end
+
+function Ready()
+    PotionCheck()
+
+    if not IsPlayerAvailable() then
+        -- do nothing
+    elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1
+    then
+        State = CharacterState.retainers
+        LogInfo("[OrangeCrafters] State Change: ProcessingRetainers")
+    elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(ItemId) > 0 then
+        State = CharacterState.turnIn
+        LogInfo("State Change: TurnIn")
+    elseif not LogInfo("[OrangeCrafters] Ready -> GC TurnIn") and GrandCompanyTurnIn and
+        GetInventoryFreeSlotCount() < MinInventoryFreeSlots
+    then
+        State = CharacterState.gcTurnIn
+        LogInfo("[OrangeCrafters] State Change: GCTurnIn")
+    elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(SelectedFish.fishId) > 0 then
+        State = CharacterState.goToHubCity
+        LogInfo("[OrangeCrafters] State Change: GoToHubCity")
+    else
+        State = CharacterState.crafting
+        LogInfo("[OrangeCrafters] State Change: Crafting")
+    end
+end
+
 CharacterState =
 {
+    ready = Ready,
     crafting = Crafting,
     goToHubCity = GoToHubCity,
     turnIn = TurnIn,
-    scripExchange = ScripExchange
+    scripExchange = ScripExchange,
+    retainers = ProcessRetainers,
+    gcTurnIn = ExecuteGrandCompanyTurnIn
 }
 
-if GetInventoryFreeSlotCount() > 0 then
-    State = CharacterState.crafting
-else
-    State = CharacterState.turnIn
-end
+State = CharacterState.ready
 local classId = GetClassJobId()
 ItemId = 0
 RecipeId = 0
@@ -393,6 +494,7 @@ end
 AtInn = false
 StopFlag = false
 ArtisanTimeoutStartTime = 0
+LogInfo("[OrangeCrafters] Start")
 while not StopFlag do
     if not (
         IsPlayerCasting() or
