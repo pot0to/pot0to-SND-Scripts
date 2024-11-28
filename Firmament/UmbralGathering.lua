@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.0.0                                  *
+*                               Version 0.1.1                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    -> 0.0.0    First release
+    ->  0.1.1   Added wait for vnav to be ready
+        0.0.0   First release
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -379,10 +380,15 @@ end
 
 function EnterDiadem()
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
-        LastStuckCheckTime = os.clock()
-        LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
-        State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        if NavIsReady() then
+            LastStuckCheckTime = os.clock()
+            LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
+            State = CharacterState.ready
+            LogInfo("State Change: Ready")
+        else
+            yield("/echo Waiting for navmesh...")
+            yield("/wait 5")
+        end
         return
     end
 
