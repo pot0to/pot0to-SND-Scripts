@@ -119,11 +119,6 @@ debug = false
 ********************************************************************************
 ]]
 
---script Started echo for debug
-if debug then
-    yield("/e ------------STARTED------------")
-end
-
 --#region Gathering Nodes
 
 UmbralWeatherNodes = {
@@ -346,7 +341,6 @@ CharacterCondition = {
 }
 
 function Ready()
-    yield("/echo ready")
     if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: BuyFishingBait")
@@ -441,26 +435,21 @@ function Mount()
 end
 
 function Dismount()
-    yield("/e dismount")
     if PathIsRunning() or PathfindInProgress() then
-        yield("/e stop")
         yield("/vnav stop")
         return
     end
 
     if GetCharacterCondition(CharacterCondition.flying) then
-        yield("/e is flying")
         yield('/ac dismount')
 
         local now = os.clock()
         if now - LastStuckCheckTime > 1 then
-            yield("/e awhile since last stuck check")
             local x = GetPlayerRawXPos()
             local y = GetPlayerRawYPos()
             local z = GetPlayerRawZPos()
 
             if GetCharacterCondition(CharacterCondition.flying) and GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 2 then
-                yield("/e in same spot")
                 LogInfo("Unable to dismount here. Moving to another spot.")
                 local random_x, random_y, random_z = RandomAdjustCoordinates(x, y, z, 10)
                 local nearestPointX = QueryMeshNearestPointX(random_x, random_y, random_z, 100, 100)
@@ -471,17 +460,13 @@ function Dismount()
                     yield("/wait 1")
                 end
             end
-            yield("/e continue")
 
             LastStuckCheckTime = now
             LastStuckCheckPosition = {x=x, y=y, z=z}
         end
     elseif GetCharacterCondition(CharacterCondition.mounted) then
-        yield("/e is mounted")
-        yield("/e actual dismount")
         yield('/ac dismount')
     else
-        yield("/e state transition")
         if NextNode.isFishingNode then
             State = CharacterState.fishing
             LogInfo("State Change: Fishing")
@@ -533,7 +518,6 @@ function SelectNextNode()
         LogInfo("Selected regular gathering node :"..GatheringRoute[RouteType][NextNodeId].nodeName)
         return GatheringRoute[RouteType][NextNodeId]
     end
-    yield("/echo NextNodeCandidate is nil WHY???")
 end
 
 function MoveToNextNode()
