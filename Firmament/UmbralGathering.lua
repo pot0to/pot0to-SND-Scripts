@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.2                                  *
+*                               Version 0.1.3                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.2   Logging for mender?
+    ->  0.1.3   Fixed name for merchant & mender
+                Logging for mender?
                 Added wait for vnav to be ready
                 First release
 
@@ -315,7 +316,7 @@ spawnisland_table =
 }
 
 local Mender = {
-    npcName = "Mender",
+    npcName = "Merchant & Mender",
     x = -639.8871, y = 285.3894, z = -136.52252
 }
 
@@ -743,13 +744,13 @@ function BuyFishingBait()
         return
     end
 
+    if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 100 then
+        LeaveDuty()
+        return
+    end
+
     if not HasTarget() or GetTargetName() ~= Mender.npcName then
         yield("/target "..Mender.npcName)
-        yield("/wait 1")
-        if not HasTarget() or GetTargetName() ~= Mender.npcName then
-            yield("/echo Cannot find "..Mender.npcName..". Re-entering duty.")
-            LeaveDuty()
-        end
         return
     end
 
