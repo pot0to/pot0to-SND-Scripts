@@ -2003,7 +2003,7 @@ function DoFate()
             end
         else
             if not (PathfindInProgress() or PathIsRunning()) then
-                yield("/wait 1")
+                yield("/wait 5")
                 local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
                 if x ~= 0 and z~=0 then
                     PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying) and SelectedZone.flying)

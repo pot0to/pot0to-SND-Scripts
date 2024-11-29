@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.3.2                                 *
+*                                Version 0.3.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.3.2    Fixed up some bugs
+    -> 0.3.2    Added HQ item count to out of materials check, continue turn in
+                    items after dumping scrips
+                Fixed up some bugs
                 Fixed out of crystals check if recipe only needs one type of
                     crystal, added option to select what you want to buy with
                     scrips
@@ -189,10 +191,11 @@ end
 
 function OutOfMaterials()
     for i=0,5 do
-        local materialCount = GetNodeText("RecipeNote", 18 + i, 8)
+        local materialCountNQ = GetNodeText("RecipeNote", 18 + i, 8)
+        local materialCountHQ = GetNodeTest("RecipeNote", 18 + i, 5)
         local materialRequirement = GetNodeText("RecipeNote", 18 + i, 15)
-        if materialCount ~= "" and materialRequirement ~= "" then
-            if tonumber(materialCount) < tonumber(materialRequirement) then
+        if materialCountNQ ~= "" and materialCountHQ ~= "" and materialRequirement ~= "" then
+            if tonumber(materialCountNQ) + tonumber(materialCountHQ) < tonumber(materialRequirement) then
                 return true
             end
         end
@@ -317,6 +320,9 @@ function ScripExchange()
     if GetItemCount(OrangeCrafterScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
+        elseif GetItemCount(ItemId) > 0 then
+            State = CharacterState.turnIn
+            LogInfo("[OrangeCrafters] State Change: TurnIn")
         else
             State = CharacterState.ready
             LogInfo("[OrangeCrafters] State Change: Ready")
