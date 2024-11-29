@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.3                                  *
+*                               Version 0.1.4                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.3   Fixed name for merchant & mender
+    ->  0.1.4   Fixed mender name for repair function
+                Fixed name for merchant & mender
                 Logging for mender?
                 Added wait for vnav to be ready
                 First release
@@ -844,32 +845,27 @@ function Repair()
 
     -- if occupied by repair, then just wait
     if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
-        LogInfo("[FATE] Repairing...")
+        LogInfo("[UmbralGatherer] Repairing...")
         yield("/wait 1")
         return
     end
 
     if SelfRepair then
         if GetItemCount(33916) > 0 then
+            if GetCharacterCondition(CharacterCondition.mounted) then
+                Dismount()
+                LogInfo("[UmbralGatherer] State Change: Dismounting")
+                return
+            end
+
             if IsAddonVisible("Shop") then
                 yield("/callback Shop true -1")
                 return
             end
 
-            if not IsInZone(SelectedZone.zoneId) then
-                TeleportTo(SelectedZone.aetheryteList[1].aetheryteName)
-                return
-            end
-
-            if GetCharacterCondition(CharacterCondition.mounted) then
-                Dismount()
-                LogInfo("[FATE] State Change: Dismounting")
-                return
-            end
-
             if NeedsRepair(RepairAmount) then
                 if not IsAddonVisible("Repair") then
-                    LogInfo("[FATE] Opening repair menu...")
+                    LogInfo("[UmbralGatherer] Opening repair menu...")
                     yield("/generalaction repair")
                 end
             else
@@ -877,10 +873,10 @@ function Repair()
                 LogInfo("[FATE] State Change: Ready")
             end
         elseif ShouldAutoBuyDarkMatter then
-            if not HasTarget() or GetTargetName() ~= "Mender" then
-                yield("/target Mender")
+            if not HasTarget() or GetTargetName() ~= Mender.npcName then
+                yield("/target "..Mender.npcName)
                 yield("/wait 1")
-                if not HasTarget() or GetTargetName() ~= "Mender" then
+                if not HasTarget() or GetTargetName() ~= Mender.npcName then
                     LeaveDuty() -- leave and reenter next to mender
                 else
                     yield("/interact")
@@ -912,10 +908,10 @@ function Repair()
         end
     else
         if NeedsRepair(RepairAmount) then
-            if not HasTarget() or GetTargetName() ~= "Mender" then
-                yield("/target Mender")
+            if not HasTarget() or GetTargetName() ~= Mender.npcName then
+                yield("/target "..Mender.npcName)
                 yield("/wait 1")
-                if not HasTarget() or GetTargetName() ~= "Mender" then
+                if not HasTarget() or GetTargetName() ~= Mender.npcName then
                     LeaveDuty() -- leave and reenter next to mender
                 else
                     yield("/interact")

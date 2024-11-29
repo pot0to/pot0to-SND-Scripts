@@ -1397,9 +1397,7 @@ function MoveToFate()
     elseif CurrentFate == nil or NextFate.fateId ~= CurrentFate.fateId then
         yield("/vnav stop")
         CurrentFate = NextFate
-        if HasPlugin("ChatCoordinates") then
-            SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
-        end
+        SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
         return
     end
 
@@ -2110,9 +2108,7 @@ function Ready()
         return
     elseif not LogInfo("[FATE] Ready -> MovingToFate") then -- and ((CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil) then
         CurrentFate = NextFate
-        if HasPlugin("ChatCoordinates") then
-            SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
-        end
+        SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
         State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MovingtoFate "..CurrentFate.fateName)
     end
