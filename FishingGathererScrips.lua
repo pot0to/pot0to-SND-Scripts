@@ -543,7 +543,7 @@ function ProcessRetainers()
 end
 
 function ExecuteGrandCompanyTurnIn()
-    if GetInventoryFreeSlotCount() < MinInventoryFreeSlots then
+    if GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         local playerGC = GetPlayerGC()
         local gcZoneIds = {
             129, --Limsa Lominsa
