@@ -44,8 +44,8 @@ Plugins that are needed for it to work:
 
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
 ItemToBuy                   = "Condensed Solution"
-HomeCommand                 = "" --"/li inn"            --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
-HubCity                     = "Limsa"           --options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
+HomeCommand                 = "/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
 Potion                      = "Superior Spiritbond Potion <hq>"     -- WARNING: This will overwrite any crafter's pots you have.
 

@@ -2012,7 +2012,7 @@ function DoFate()
                 yield("/vnav stop")
             end
         else
-            if not (PathfindInProgress() or PathIsRunning()) and not UseBM then
+            if not (PathfindInProgress() or PathIsRunning()) then
                 yield("/wait 1")
                 local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
                 if x ~= 0 and z~=0 then
