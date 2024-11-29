@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.3.0                                 *
+*                                Version 0.3.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,8 +11,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.2.4    Fixed out of crystals check if recipe only needs one type of
-                    crystal, added option to select what you wannt to buy with
+    -> 0.3.2    Fixed up some bugs
+                Fixed out of crystals check if recipe only needs one type of
+                    crystal, added option to select what you want to buy with
                     scrips
                 Added check for ArtisanX crafting
                 Fixed some bugs with stop condition
@@ -44,7 +45,7 @@ Plugins that are needed for it to work:
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
 ItemToBuy                   = "Condensed Solution"
 HomeCommand                 = "" --"/li inn"            --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
-HubCity                     = "Solution Nine"           --options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
+HubCity                     = "Limsa"           --options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
 Potion                      = "Superior Spiritbond Potion <hq>"     -- WARNING: This will overwrite any crafter's pots you have.
 
@@ -59,7 +60,7 @@ ScripExchangeItems = {
     {
         itemName = "Condensed Solution",
         categoryMenu = 1,
-        subcategoryMenu = 9,
+        subcategoryMenu = 10,
         listIndex = 0,
         price = 125
     },
@@ -93,12 +94,11 @@ OrangeScripRecipes =
 }
 
 OrangeCrafterScripId = 41784
-SolutionNineZoneId = 1186
 
 HubCities =
 {
     {
-        zoneName="Limsa Lominsa",
+        zoneName="Limsa",
         zoneId = 129,
         aethernet = {
             aethernetZoneId = 129,
@@ -113,7 +113,7 @@ HubCities =
         zoneId = 132,
         aethernet = {
             aethernetZoneId = 133,
-            aethernetName = "Sapphire Avenue Exchange",
+            aethernetName = "Leatherworkers' Guild & Shaded Bower",
             x=131.9447, y=4.714966, z=-29.800903
         },
         retainerBell = { x=168.72, y=15.5, z=-100.06, requiresAethernet=true },
@@ -124,7 +124,7 @@ HubCities =
         zoneId = 130,
         aethernet = {
             aethernetZoneId = 131,
-            aethernetName = "Leatherworkers' Guild & Shaded Bower",
+            aethernetName = "Sapphire Avenue Exchange",
             x=101, y=9, z=-112
         },
         retainerBell = { x=171, y=15, z=-102, requiresAethernet=true },
@@ -219,7 +219,7 @@ function Crafting()
     local slots = GetInventoryFreeSlotCount()
     if (ArtisanIsListRunning() and not ArtisanIsListPaused()) or IsAddonVisible("Synthesis") then
         yield("/wait 1")
-    elseif slots == 0 then
+    elseif slots <= MinInventoryFreeSlots then
         LogInfo("[OrangeCrafters] Out of inventory space")
         if IsAddonVisible("RecipeNote") then
             yield("/callback RecipeNote true -1")
@@ -247,10 +247,10 @@ function Crafting()
                 StopFlag = true
             end
         end
-    elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
-        LogInfo("[OrangeCrafters] Attempting to craft "..slots.." of recipe #"..RecipeId)
+    elseif not IsAddonVisible("Synthesis") then -- GetCharacterCondition(CharacterCondition.craftingMode) then
+        LogInfo("[OrangeCrafters] Attempting to craft "..(slots - MinInventoryFreeSlots).." of recipe #"..RecipeId)
         ArtisanTimeoutStartTime = 0
-        ArtisanCraftItem(RecipeId, slots)
+        ArtisanCraftItem(RecipeId, slots - MinInventoryFreeSlots)
         yield("/wait 5")
     end
 end
@@ -276,15 +276,18 @@ function TurnIn()
             State = CharacterState.ready
             LogInfo("State Change: Ready")
         end
-    elseif not IsInZone(SolutionNineZoneId) then
+    elseif not IsInZone(SelectedHubCity.zoneId) and
+        (not SelectedHubCity.scripExchange.requiresAethernet or (SelectedHubCity.scripExchange.requiresAethernet and not IsInZone(SelectedHubCity.aethernet.aethernetZoneId)))
+    then
         State = CharacterState.goToHubCity
         LogInfo("State Change: GoToHubCity")
-    elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
+    elseif not LogInfo("Logging 1") and SelectedHubCity.scripExchange.requiresAethernet and not LogInfo("Logging 2") and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
         if not LifestreamIsBusy() then
+            LogInfo("[OrangeCrafters] /li "..SelectedHubCity.aethernet.aethernetName)
             yield("/li "..SelectedHubCity.aethernet.aethernetName)
         end
-        yield("/wait 1")
+        yield("/wait 3")
     elseif IsAddonVisible("TelepotTown") then
         LogInfo("TelepotTown open")
         yield("/callback TelepotTown false -1")
@@ -316,9 +319,11 @@ function ScripExchange()
             yield("/callback InclusionShop true -1")
         else
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[OrangeCrafters] State Change: Ready")
         end
-    elseif not IsInZone(SelectedHubCity.zoneId) then
+    elseif not IsInZone(SelectedHubCity.zoneId) and
+        (not SelectedHubCity.scripExchange.requiresAethernet or (SelectedHubCity.scripExchange.requiresAethernet and not IsInZone(SelectedHubCity.aethernet.aethernetZoneId)))
+    then
         State = CharacterState.goToHubCity
         LogInfo("State Change: GoToHubCity")
     elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
@@ -326,7 +331,14 @@ function ScripExchange()
         if not LifestreamIsBusy() then
             yield("/li "..SelectedHubCity.aethernet.aethernetName)
         end
-        yield("/wait 1")
+        yield("/wait 3")
+    elseif IsAddonVisible("TelepotTown") then
+        yield("/callback TelepotTown true -1")
+    elseif GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > 1 then
+        if not (PathfindInProgress() or PathIsRunning()) then
+            LogInfo("[OrangeCrafters] Path not running")
+            PathfindAndMoveTo(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z)
+        end
     elseif IsAddonVisible("ShopExchangeItemDialog") then
         yield("/callback ShopExchangeItemDialog true 0")
         yield("/wait 1")
@@ -340,7 +352,7 @@ function ScripExchange()
         yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..GetItemCount(OrangeCrafterScripId)//SelectedItemToBuy.price)
     else
         yield("/wait 1")
-        yield("/target ScripExchange")
+        yield("/target Scrip Exchange")
         yield("/wait 0.5")
         yield("/interact")
     end
@@ -357,44 +369,68 @@ function ProcessRetainers()
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
         end
-    elseif not LogInfo("[OrangeCrafters] is in hub city zone?") and
-        not (IsInZone(SelectedHubCity.zoneId) or IsInZone(SelectedHubCity.aethernet.aethernetZoneId))
-    then
-        TeleportTo(SelectedHubCity.aetheryte)
-    elseif not LogInfo("[OrangeCrafters] use aethernet?") and
-        SelectedHubCity.retainerBell.requiresAethernet and not LogInfo("abc") and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
-        (GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > (DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) + 10)))
-    then
-        if not LifestreamIsBusy() then
-            yield("/li "..SelectedHubCity.aethernet.aethernetName)
-        end
-        yield("/wait 1")
-    elseif not LogInfo("[OrangeCrafters] close telepot town") and IsAddonVisible("TelepotTown") then
-        LogInfo("TelepotTown open")
-        yield("/callback TelepotTown false -1")
-    elseif not LogInfo("[OrangeCrafters] move to summoning bell") and GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > 1 then
-        if not (PathfindInProgress() or PathIsRunning()) then
-            LogInfo("Path not running")
-            PathfindAndMoveTo(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z)
-        end
-    elseif PathfindInProgress() or PathIsRunning() then
-        return
-    elseif not HasTarget() or GetTargetName() ~= "Summoning Bell" then
+    else
         yield("/target Summoning Bell")
-        return
-    elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
-        yield("/interact")
-    elseif IsAddonVisible("RetainerList") then
-        yield("/ays e")
-        if Echo == "All" then
-            yield("/echo [FATE] Processing retainers")
-        end
         yield("/wait 1")
+
+        if GetTargetName() == "Summoning Bell" then
+            if GetDistanceToTarget() > 5 then
+                if not PathIsRunning() and not PathfindInProgress() then
+                    PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+                end
+            else
+                if PathIsRunning() or PathfindInProgress() then
+                    yield("/vnav stop")
+                end
+                if not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
+                    yield("/interact")
+                elseif IsAddonVisible("RetainerList") then
+                    yield("/ays e")
+                    if Echo == "All" then
+                        yield("/echo [OrangeCrafters] Processing retainers")
+                    end
+                    yield("/wait 1")
+                end
+            end
+        elseif not LogInfo("[OrangeCrafters] is in hub city zone?") and not IsInZone(SelectedHubCity.zoneId) and
+            (not SelectedHubCity.scripExchange.requiresAethernet or (SelectedHubCity.scripExchange.requiresAethernet and not IsInZone(SelectedHubCity.aethernet.aethernetZoneId)))
+        then
+            TeleportTo(SelectedHubCity.aetheryte)
+        elseif not LogInfo("[OrangeCrafters] use aethernet?") and
+            SelectedHubCity.retainerBell.requiresAethernet and not LogInfo("abc") and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
+            (GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > (DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) + 10)))
+        then
+            if not LifestreamIsBusy() then
+                yield("/li "..SelectedHubCity.aethernet.aethernetName)
+            end
+            yield("/wait 3")
+        elseif not LogInfo("[OrangeCrafters] close telepot town") and IsAddonVisible("TelepotTown") then
+            LogInfo("TelepotTown open")
+            yield("/callback TelepotTown false -1")
+        elseif not LogInfo("[OrangeCrafters] move to summoning bell") and GetDistanceToPoint(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z) > 1 then
+            if not (PathfindInProgress() or PathIsRunning()) then
+                LogInfo("Path not running")
+                PathfindAndMoveTo(SelectedHubCity.retainerBell.x, SelectedHubCity.retainerBell.y, SelectedHubCity.retainerBell.z)
+            end
+        elseif PathfindInProgress() or PathIsRunning() then
+            return
+        elseif not HasTarget() or GetTargetName() ~= "Summoning Bell" then
+            yield("/target Summoning Bell")
+            return
+        elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
+            yield("/interact")
+        elseif IsAddonVisible("RetainerList") then
+            yield("/ays e")
+            if Echo == "All" then
+                yield("/echo [FATE] Processing retainers")
+            end
+            yield("/wait 1")
+        end
     end
 end
 
 function ExecuteGrandCompanyTurnIn()
-    if GetInventoryFreeSlotCount() < MinInventoryFreeSlots then
+    if GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         local playerGC = GetPlayerGC()
         local gcZoneIds = {
             129, --Limsa Lominsa
@@ -431,17 +467,17 @@ function Ready()
     then
         State = CharacterState.retainers
         LogInfo("[OrangeCrafters] State Change: ProcessingRetainers")
+    elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
+        State = CharacterState.scripExchange
+        LogInfo("[OrangeCrafters] State Change: ScripExchange")
     elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(ItemId) > 0 then
         State = CharacterState.turnIn
         LogInfo("State Change: TurnIn")
     elseif not LogInfo("[OrangeCrafters] Ready -> GC TurnIn") and GrandCompanyTurnIn and
-        GetInventoryFreeSlotCount() < MinInventoryFreeSlots
+        GetInventoryFreeSlotCount() <= MinInventoryFreeSlots
     then
         State = CharacterState.gcTurnIn
         LogInfo("[OrangeCrafters] State Change: GCTurnIn")
-    elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(SelectedFish.fishId) > 0 then
-        State = CharacterState.goToHubCity
-        LogInfo("[OrangeCrafters] State Change: GoToHubCity")
     else
         State = CharacterState.crafting
         LogInfo("[OrangeCrafters] State Change: Crafting")
