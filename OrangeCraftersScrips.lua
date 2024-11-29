@@ -192,7 +192,7 @@ end
 function OutOfMaterials()
     for i=0,5 do
         local materialCountNQ = GetNodeText("RecipeNote", 18 + i, 8)
-        local materialCountHQ = GetNodeTest("RecipeNote", 18 + i, 5)
+        local materialCountHQ = GetNodeText("RecipeNote", 18 + i, 5)
         local materialRequirement = GetNodeText("RecipeNote", 18 + i, 15)
         if materialCountNQ ~= "" and materialCountHQ ~= "" and materialRequirement ~= "" then
             if tonumber(materialCountNQ) + tonumber(materialCountHQ) < tonumber(materialRequirement) then
