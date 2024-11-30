@@ -713,7 +713,7 @@ function Fish()
         return
     end
 
-    yield("/bait "..NextNode.baitName)
+    yield("/ahbait "..NextNode.baitName)
     yield("/wait 0.1")
     yield("/ac Cast")
 end
