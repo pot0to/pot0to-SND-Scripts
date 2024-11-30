@@ -70,7 +70,7 @@ TimewornMapIds = {
     {itemId=6689, itemName="Timeworn Goatskin Map"},
     {itemId=6690, itemName="Timeworn Toadskin Map"},
     {itemId=6691, itemName="Timeworn Boarskin Map"},
-    {itemId=6692, itemName="Timeworn Piesteskin Map"},
+    {itemId=6692, itemName="Timeworn Peisteskin Map"},
 
     -- Heavensward Maps
     {itemId=12241, itemName="Timeworn Archaeoskin Map"},
