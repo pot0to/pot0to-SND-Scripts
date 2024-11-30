@@ -247,7 +247,7 @@ function Ready()
     end
 
     if GetItemCount(MapInfo.itemId) > 0 then
-        if RecipientName ~= GetCharacterName(false) then
+        if Mail and RecipientName ~= GetCharacterName(false) then
             MapAttached = false
             State = CharacterState.mailing
         end
@@ -279,5 +279,5 @@ else
     repeat
         State()
         yield("/wait 1")
-    until not Multimode and not HasMapAllowance()
+    until not Multimode and (not HasMapAllowance() or (GetItemCount(MapInfo.itemId) > 0 and not Mail))
 end
