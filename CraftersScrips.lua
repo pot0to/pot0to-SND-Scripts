@@ -26,11 +26,10 @@ stuff, repeat.
 *                               Required Plugins                               *
 ********************************************************************************
 
-Plugins that are needed for it to work:
-
-    -> Something Need Doing [Expanded Edition] : (Main Plugin for everything to work)   https://puni.sh/api/repository/croizat
-    -> Artisan
-    -> Vnavmesh for finding your way to the turn in npcs
+1. SND
+2. Artisan
+3. Vnavmesh
+4. Optional: Lifestream (for hiding in inn)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 ]]
@@ -44,8 +43,10 @@ Plugins that are needed for it to work:
 
 ]]
 
+CrafterClass                = "Carpenter"
+ScripColor                  = "Orange"
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy                   = "Condensed Solution"
+ItemToBuy                   = "Crafter's Command Materia XII"
 HomeCommand                 = "/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
@@ -83,19 +84,127 @@ ScripExchangeItems = {
 ********************************************************************************
 ]]
 
+OrangeCrafterScripId = 41784
 OrangeScripRecipes =
 {
-    { className="Carpenter", classId=8, itemId=44190, recipeId=35787 },
-    { className="Blacksmith", classId=9, itemId=44196, recipeId=35793 },
-    { className="Armorer", classId=10, itemId=44202, recipeId=35799 },
-    { className="Goldsmith", classId=11, itemId=44208, recipeId=35805 },
-    { className="Leatherworker", classId=12, itemId=44214, recipeId=35817 },
-    { className="Weaver", classId=13, itemId=44220, recipeId=35817 },
-    { className="Alchemist", classId=14, itemId=44226, recipeId=35823 },
-    { className="Culinarian", classId=15, itemId=44232, recipeId=35829 }
+    {
+        className="Carpenter",
+        classId=8,
+        itemName="Rarefied Claro Walnut Fishing Rod",
+        itemId=44190,
+        recipeId=35787
+    },
+    {
+        className="Blacksmith",
+        classId=9,
+        itemName="Rarefied Ra'Kaznar Round Knife",
+        itemId=44196,
+        recipeId=35793
+    },
+    {
+        className="Armorer",
+        classId=10,
+        itemName="Rarefied Ra'Kaznar Ring",
+        itemId=44202,
+        recipeId=35799
+    },
+    {
+        className="Goldsmith",
+        classId=11,
+        itemName="Rarefied Black Star Earrings",
+        itemId=44208,
+        recipeId=35805
+    },
+    {
+        className="Leatherworker",
+        classId=12,
+        itemName="Rarefied Gargantuaskin Hat",
+        itemId=44214,
+        recipeId=35817
+    },
+    {
+        className="Weaver",
+        classId=13,
+        itemName="Rarefied Thunderyard Silk Culottes",
+        itemId=44220,
+        recipeId=35817
+    },
+    {
+        className="Alchemist",
+        classId=14,
+        itemName="Rarefied Claro Walnut Flat Brush",
+        itemId=44226,
+        recipeId=35823
+    },
+    {
+        className="Culinarian",
+        classId=15,
+        itemName="Rarefied Tacos de Carne Asada",
+        itemId=44232,
+        recipeId=35829
+    }
 }
 
-OrangeCrafterScripId = 41784
+PurpleCrafterScripId = 33913
+PurpleScripRecipes =
+{
+    {
+        className="Carpenter",
+        classId=8,
+        itemName="Rarefied Claro Walnut Grinding Wheel",
+        itemId=44189,
+        recipeId=35786
+    },
+    {
+        className="Blacksmith",
+        classId=9,
+        itemName="Rarefied Ra'Kaznar War Scythe",
+        itemId=44195,
+        recipeId=35792
+    },
+    {
+        className="Armorer",
+        classId=10,
+        itemName="Rarefied Ra'Kaznar Greaves",
+        itemId=44201,
+        recipeId=35798
+    },
+    {
+        className="Goldsmith",
+        classId=11,
+        itemName="Rarefied Ra'Kaznar Orrery",
+        itemId=44207,
+        recipeId=35804
+    },
+    {
+        className="Leatherworker",
+        classId=12,
+        itemName="Rarefied Gargantuaskin Trouser",
+        itemId=44213,
+        recipeId=35816
+    },
+    {
+        className="Weaver",
+        classId=13,
+        itemName="Rarefied Thunderyards Silk Gloves",
+        itemId=44219,
+        recipeId=35816
+    },
+    {
+        className="Alchemist",
+        classId=14,
+        itemName="Rarefied Gemdraught of Vitality",
+        itemId=44225,
+        recipeId=35822
+    },
+    {
+        className="Culinarian",
+        classId=15,
+        itemName="Rarefied Stuffed Peppers",
+        itemId=44231,
+        recipeId=35828
+    }
+}
 
 HubCities =
 {
@@ -143,6 +252,18 @@ HubCities =
         retainerBell = { x=-152.465, y=0.660, z=-13.557, requiresAethernet=true },
         scripExchange = { x=-158.019, y=0.922, z=-37.884, requiresAethernet=true }
     }
+}
+
+ClassList =
+{
+    crp = { classId=8, className="Carpenter" },
+    bsm = { classId=9, className="Blacksmith" },
+    arm = { classId=10, className="Armorer" },
+    gsm = { classId=11, className="Goldsmith" },
+    ltw = { classId=12, className="Leatherworker" },
+    wvr = { classId=13, className="Weaver" },
+    alc = { classId=14, className="Alchemist" },
+    cul = { classId=15, className="Culinarian"}
 }
 
 CharacterCondition =
@@ -210,11 +331,14 @@ function OutOfMaterials()
 end
 
 function Crafting()
-    if LifestreamIsBusy() then
+    if HasPlugin("Lifestream") and LifestreamIsBusy() then
         yield("/wait 1")
         return
     elseif not AtInn and HomeCommand ~= "" then
         yield(HomeCommand)
+        while LifestreamIsBusy() do
+            yield("/wait 1")
+        end
         AtInn = true
         return
     end
@@ -272,7 +396,7 @@ end
 function TurnIn()
     AtInn = false
 
-    if GetItemCount(ItemId) == 0 or GetItemCount(OrangeCrafterScripId) >= 3800 then
+    if GetItemCount(ItemId) == 0 or GetItemCount(CrafterScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
         else
@@ -317,7 +441,7 @@ function TurnIn()
 end
 
 function ScripExchange()
-    if GetItemCount(OrangeCrafterScripId) < 3800 then
+    if GetItemCount(CrafterScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
         elseif GetItemCount(ItemId) > 0 then
@@ -355,7 +479,7 @@ function ScripExchange()
         yield("/wait 1")
         yield("/callback InclusionShop true 13 "..SelectedItemToBuy.subcategoryMenu)
         yield("/wait 1")
-        yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..GetItemCount(OrangeCrafterScripId)//SelectedItemToBuy.price)
+        yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..GetItemCount(CrafterScripId)//SelectedItemToBuy.price)
     else
         yield("/wait 1")
         yield("/target Scrip Exchange")
@@ -473,7 +597,7 @@ function Ready()
     then
         State = CharacterState.retainers
         LogInfo("[OrangeCrafters] State Change: ProcessingRetainers")
-    elseif GetItemCount(OrangeCrafterScripId) >= 3800 then
+    elseif GetItemCount(CrafterScripId) >= 3800 then
         State = CharacterState.scripExchange
         LogInfo("[OrangeCrafters] State Change: ScripExchange")
     elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(ItemId) > 0 then
@@ -502,10 +626,30 @@ CharacterState =
 }
 
 State = CharacterState.ready
-local classId = GetClassJobId()
+local classId = 0
+for _, class in pairs(ClassList) do
+    if CrafterClass == class.className then
+        classId = class.classId
+    end
+end
+if classId == 0 then
+    yield("/echo Could not find crafter class: "..CrafterClass)
+    yield("/snd stop")
+end
+
+if ScripColor == "Orange" then
+    CrafterScripId = OrangeCrafterScripId
+    ScripRecipes = OrangeScripRecipes
+elseif ScripColor == "Purple" then
+    CrafterScripId = PurpleScripRecipes
+    ScripRecipes = PurpleScripRecipes
+else
+    yield("/echo Cannot recognize crafter scrip color: "..ScripColor)
+    yield("/snd stop")
+end
 ItemId = 0
 RecipeId = 0
-for _, data in ipairs(OrangeScripRecipes) do
+for _, data in ipairs(ScripRecipes) do
     if data.classId == classId then
         ItemId = data.itemId
         RecipeId = data.recipeId
