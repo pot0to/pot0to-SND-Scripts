@@ -1748,7 +1748,7 @@ function TurnOnCombatMods(rotationMode)
         elseif RotationPlugin == "BMR" or RotationPlugin == "VBM" then
             yield("/bmrai setpresetname "..RotationAoePreset)
         elseif RotationPlugin == "Wrath" then
-            yield("/wrath toggle")
+            yield("/wrath auto on")
         end
 
         local class = GetClassJobTableFromId(GetClassJobId())
@@ -1785,7 +1785,7 @@ function TurnOffCombatMods()
         elseif RotationPlugin == "BMR" or RotationPlugin == "VBM" then
             yield("/bmrai setpresetname null")
         elseif RotationPlugin == "Wrath" then
-            yield("/wrath toggle")
+            yield("/wrath auto off")
         end
 
         -- turn off BMR so you don't start following other mobs
