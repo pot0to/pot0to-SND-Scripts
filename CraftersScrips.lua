@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.3.3                                 *
+*                                Version 0.4.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.3.2    Added HQ item count to out of materials check, continue turn in
+    -> 0.4.0    Added purple scrips, fixed /li inn
+                Added HQ item count to out of materials check, continue turn in
                     items after dumping scrips
                 Fixed up some bugs
                 Fixed out of crystals check if recipe only needs one type of
@@ -331,7 +332,7 @@ function OutOfMaterials()
 end
 
 function Crafting()
-    if HasPlugin("Lifestream") and LifestreamIsBusy() then
+    if (HasPlugin("Lifestream") and LifestreamIsBusy()) or GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
         yield("/wait 1")
         return
     elseif not AtInn and HomeCommand ~= "" then
@@ -357,7 +358,7 @@ function Crafting()
     elseif IsAddonVisible("RecipeNote") and OutOfMaterials() then
         LogInfo("[OrangeCrafters] Out of materials")
         if not StopFlag then
-            if (GetItemCount(ItemId) == 0) and (ArtisanTimeoutStartTime == 0) then
+            if slots > MinInventoryFreeSlots and (ArtisanTimeoutStartTime == 0) then
                 LogInfo("[OrangeCrafters] Attempting to craft intermediate materials")
                 yield("/artisan lists "..ArtisanIntermediatesListId.." start")
                 ArtisanTimeoutStartTime = os.clock()
