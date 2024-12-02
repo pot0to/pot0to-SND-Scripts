@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.4                                  *
+*                               Version 0.1.5                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.4   Fixed mender name for repair function
+    ->  0.1.5   Fixed bug with repairing via mender
+                Fixed mender name for repair function
                 Fixed name for merchant & mender
                 Logging for mender?
                 Added wait for vnav to be ready
@@ -930,11 +931,12 @@ function Repair()
                 end
             end
 
-            if not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
-                yield("/interact")
-            elseif IsAddonVisible("SelectIconString") then
+            if IsAddonVisible("SelectIconString") then
                 yield("/callback SelectIconString true 1")
+                return
             end
+
+            yield("/interact")
         else
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
