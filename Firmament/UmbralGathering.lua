@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.5                                  *
+*                               Version 0.1.6                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.5   Fixed bug with repairing via mender
+    ->  0.1.6   Fixed it for autobuy dark matter too
+                Fixed bug with repairing via mender
                 Fixed mender name for repair function
                 Fixed name for merchant & mender
                 Logging for mender?
@@ -896,9 +897,7 @@ function Repair()
                 end
             end
 
-            if not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
-                yield("/interact")
-            elseif IsAddonVisible("SelectIconString") then
+            if IsAddonVisible("SelectIconString") then
                 yield("/callback SelectIconString true 0")
             elseif IsAddonVisible("Shop") then
                 yield("/callback Shop true 0 14 99")
