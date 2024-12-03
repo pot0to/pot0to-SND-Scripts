@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.0.1                                 *
+*                                Version 1.2.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -107,9 +107,11 @@ FishTable =
         zoneName = "Shaaloani",
         autohookPreset = "AH4_H4sIAAAAAAAACu1Yy27jNhT9FVfrsNCD1CM7j5ukKfLCOG2BDrqgyCtbiCx6KGqSdDD/3kvJSiRbTpCBF+0gO+ny8tyHDg9JfXWmtVEzXplqli2c46/OScnTAqZF4RwbXcORYwcv8hKeB2U3dI5PfpwcOTc6Vzo3j86xh9bq5EEUtQT5bLb+31qsS6XE0oI1D759anDC+Mg5W98uNVRLVaDFc90B8svQDUYSDWa4ryYzW9arLgPqufSVFLpZqihAmD0dQRyvP8t/PQulZc6LPXihRwd4dDPrNK+WJ49Q9fJnW/kzNsg/7D4Bv4P5Ms/MB543VVhD1Rnmhos7REWwzYfZxe2jJhvUG25yKAX08gm354XDfvrdVJ3/AzNuWmKMsQyT2Abztz5OsAG7XfIi53fVKf+itMUbGLrqgqOh/SMI9QXQ37M925MCHQTs2vkhX5zxVVP3tFwUoKsuiN9ODSKX7mQ/gIq/IdbJg9F8swzth7hV83u+Pi9NnZtclWc8L7veEmTERa3hEqqKLzC04xw5V00SzpXCxXrUIjyu0WIbM4J3oSrz3Xg3WAiMZ+gQZ894G7EZf85nvsalpHkxq7WG0hyoyi3Ug9U6mu1OxaPRG69TpQU0qwzdOno1RmmtGxXzUMdaKs2NWtuFnpeLuQGc4fWr3NBtqg9TXB+uyfb3Mv9cg8V1PD+mSZBIkgZhRCi4PkkBXEIz4FkQJ9wD30G8i7wy15mNgfz/1BLZFvCk8211+3L8A+OjjhQwsR4W8ErpFS9+VerOQnQi8yfw5t3aMf+n9ZrxosKOtu+bwX6rN6a2fupFVrw6zLnRquxtgnum3+Yr0FsCcZmXT0P4jZKf3Z1QbtALdQELKCXXjweooQH+RdXovNWV1sMPkyeH5xL3uoyl1ve61fl6X6SI+cGTy75YA6cXom387AqYZgb0jNeLJR5FVnbPQpqPLY3msILEaTZF+9CT+xnHxhdTY2C1Nl0vrc8t1wtoMa/L4rHBsKbOZ2QzCCKW7B4WXtjo7Qmlk8GOyx/hc51rkJijqe2Ga49Aewj+CmHfyrV37ryNOweiQE9PwQWRMghJwiMgNBAe4TRKiZ/4WZrEwuehi/K3K6A0iFmwX0BnXJia68lv+eJ/rZ6X/KFnC+i7or4r6rui/ji78QEkNGR+knLwiQSXEyokJzwVLuEMhTRG6ChACf27O5Nufjx8ejK0qopn1KG8YlL75fUvpRdKT+ZC6TVu5YPjtPdSf84lXgRygXcCbIoN1jpMV6ouB26YAku2b4vB8CIf20i1zjjKbmH1dfxHBEvYK3dmhkD/mR8yz/ea777N2MnWMrNdbRrav99sbjX2sTU/u43Rt0c1EaWSutIjLk9iQmkMhMs0JOBJxqQrMoCo2a23qBTuFDCd3GMMkJNqyaW6n+i8gmqSabXCAYPxJ2YJkxUS9Kcd1s1UKfGXxqE5N06dt1PwnXMH5VzMQgEgGGFuEhDqUUYSwVwSBowlQZoETMpRzrkvXK/5QvPSTJAQgsvh+nmXrx9WvgIuaCQTICkubEKlZISHCSdZTLPIozJMXNHslC3umOpMyOQaqbMA3PvwrFAN/w7FMfViDpTEIqaERjQiCUsF/iIKYg/vK6EfIVf/BUp1IuxuGAAA",
         fishingSpots = {
-            { waypointX=2.41, waypointY=-6.40, waypointZ=750.26, x=5.5, y=-7.51, z=759.7 },
-            { waypointX=122.05, waypointY=5.66, waypointZ=717.14, x=124.53, y=5.12, z=723.18 },
-            { waypointX=15.18, waypointY=-5.01, waypointZ=744.49, x=16.91, y=-6.04, z=752.58 }
+            waypoints = {
+                { x=-97.73, y=-26.45, z=701.98 },
+                { x=219.42, y=12.25, z=737.8 }
+            },
+            direction = { x=0, y=0, z=100}
         },
         collectiblesTurnInListIndex = 6,
         collectiblesTurnInScripId = 39
@@ -175,10 +177,58 @@ CharacterCondition = {
 }
 
 --#region Fishing
+function InterpolateCoordinates(startCoords, endCoords, n)
+    local x = startCoords.x + n * (endCoords.x - startCoords.x)
+    local y = startCoords.y + n * (endCoords.y - startCoords.y)
+    local z = startCoords.z + n * (endCoords.z - startCoords.z)
+    return {waypointX=x, waypointY=y, waypointZ=z}
+end
+
+function GetWaypoint(coords, n)
+    local total_distance = 0
+    local distances = {}
+
+    -- Calculate distances between each pair of coordinates
+    for i = 1, #coords - 1 do
+        local dx = coords[i + 1].x - coords[i].x
+        local dy = coords[i + 1].y - coords[i].y
+        local dz = coords[i + 1].z - coords[i].z
+        local distance = math.sqrt(dx * dx + dy * dy + dz * dz)
+        table.insert(distances, distance)
+        total_distance = total_distance + distance
+    end
+
+    -- Find the target distance
+    local target_distance = n * total_distance
+
+    -- Walk through the coordinates to find the target coordinates
+    local accumulated_distance = 0
+    for i = 1, #coords - 1 do
+        if accumulated_distance + distances[i] >= target_distance then
+            local remaining_distance = target_distance - accumulated_distance
+            local t = remaining_distance / distances[i]
+            return InterpolateCoordinates(coords[i], coords[i + 1], t)
+        end
+        accumulated_distance = accumulated_distance + distances[i]
+    end
+
+    -- If n is 1 (100%), return the last coordinate
+    return { waypointX=coords[#coords].x, waypointY=coords[#coords].y, waypointZ=coords[#coords].z }
+end
 
 function SelectNewFishingHole()
-    local n = math.random(1, #SelectedFish.fishingSpots)
-    SelectedFishingSpot = SelectedFish.fishingSpots[n]
+
+    if SelectedFish.fishingSpots.waypoints ~= nil then
+        SelectedFishingSpot = GetWaypoint(SelectedFish.fishingSpots.waypoints, math.random())
+        SelectedFishingSpot.waypointY = QueryMeshPointOnFloorY(SelectedFishingSpot.waypointX, 1024, SelectedFishingSpot.waypointZ, false, 50)
+
+        SelectedFishingSpot.x = SelectedFishingSpot.waypointX + SelectedFish.fishingSpots.direction.x
+        SelectedFishingSpot.y = SelectedFishingSpot.waypointY + SelectedFish.fishingSpots.direction.y
+        SelectedFishingSpot.z = SelectedFishingSpot.waypointZ + SelectedFish.fishingSpots.direction.z
+    else
+        local n = math.random(1, #SelectedFish.fishingSpots)
+        SelectedFishingSpot = SelectedFish.fishingSpots[n]
+    end
     SelectedFishingSpot.startTime = os.clock()
 end
 
@@ -236,14 +286,9 @@ function Fishing()
         return
     end
 
-    if GetDistanceToPoint(SelectedFishingSpot.x, SelectedFishingSpot.y, SelectedFishingSpot.z) > 1 then
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(SelectedFishingSpot.x, SelectedFishingSpot.y, SelectedFishingSpot.z)
-        end
-        return
-    end
+    yield("/ahbait "..SelectedFish.baitName)
 
-    if GetCharacterCondition(CharacterCondition.fishing) then
+    if GetCharacterCondition(CharacterCondition.gathering) then
         if (PathfindInProgress() or PathIsRunning()) then
             yield("/vnav stop")
         end
@@ -251,9 +296,14 @@ function Fishing()
         return
     end
 
-    yield("/bait "..SelectedFish.baitName)
-    yield("/wait 0.1")
-    yield("/ac Cast")
+    if GetDistanceToPoint(SelectedFishingSpot.x, SelectedFishingSpot.y, SelectedFishingSpot.z) > 1 then
+        if not PathfindInProgress() and not PathIsRunning() then
+            PathMoveTo(SelectedFishingSpot.x, SelectedFishingSpot.y, SelectedFishingSpot.z)
+        end
+        yield("/ac Cast")
+        yield("/wait 0.5")
+        return
+    end
 end
 
 function BuyFishingBait()
@@ -368,7 +418,6 @@ function Dismount()
     end
 
     if GetCharacterCondition(CharacterCondition.flying) then
-        yield("/e is flying")
         yield('/ac dismount')
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
@@ -535,7 +584,7 @@ function ProcessRetainers()
     elseif IsAddonVisible("RetainerList") then
         yield("/ays e")
         if Echo == "All" then
-            yield("/echo [FATE] Processing retainers")
+            yield("/echo [FishingGatherer] Processing retainers")
         end
         yield("/wait 1")
     end
@@ -798,10 +847,11 @@ if SelectedFish == nil then
     yield("/echo Cannot find data for "..FishToFarm)
     StopMain = true
 end
+SelectNewFishingHole()
 SelectedFish.closestAetheryte = GetClosestAetheryte(
-            SelectedFish.fishingSpots[1].x,
-            SelectedFish.fishingSpots[1].y,
-            SelectedFish.fishingSpots[1].z,
+            SelectedFishingSpot.waypointX,
+            SelectedFishingSpot.waypointY,
+            SelectedFishingSpot.waypointZ,
             SelectedFish.zoneId,
             0)
 yield("/ahon")
@@ -824,7 +874,6 @@ if GetClassJobId() ~= 18 then
     yield("/wait 1")
 end
 
-SelectNewFishingHole()
 State = CharacterState.ready
 while not StopMain do
     State()
