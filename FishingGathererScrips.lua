@@ -7,6 +7,9 @@
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
+    -> 1.2.0    Updated algorithm to randomly choose any fishing spot in a line
+                    along the coast, fixed self repair
+
 ********************************************************************************
 *                               Required Plugins                               *
 ********************************************************************************
@@ -34,7 +37,7 @@ Potion                              = "Superior Spiritbond Potion <hq>"     --wh
 --things you want to enable
 ExtractMateria                      = true      --If true, will extract materia if possible
 ReduceEphemerals                    = true      --If true, will reduce ephemerals if possible
-Repair                              = true      --If true, will do repair if possible set repair amount below
+SelfRepair                          = true      --If true, will do repair if possible set repair amount below
 RepairAmount                        = 1         --repair threshold, adjust as needed
 
 MinInventoryFreeSlots               = 1           --set !!!carefully how much inventory before script stops gathering and does additonal tasks!!!
@@ -109,6 +112,7 @@ FishTable =
         fishingSpots = {
             waypoints = {
                 { x=-97.73, y=-26.45, z=701.98 },
+                { x=134.07, y=6.07, z=708.82 },
                 { x=219.42, y=12.25, z=737.8 }
             },
             direction = { x=0, y=0, z=100}
@@ -235,6 +239,9 @@ end
 function GoToFishingHole()
     if not IsInZone(SelectedFish.zoneId) then
         TeleportTo(SelectedFish.closestAetheryte.aetheryteName)
+        if IsInZone(SelectedFish.zoneId) then
+            SelectNewFishingHole()
+        end
         return
     end
 
@@ -260,6 +267,12 @@ function GoToFishingHole()
 end
 
 function Fishing()
+    if GetItemCount(29717) == 0 then
+        State = CharacterState.buyFishingBait
+        LogInfo("State Change: Buy Fishing Bait")
+        return
+    end
+
     if GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         if GetCharacterCondition(CharacterCondition.fishing) then
             yield("/ac Quit")
@@ -306,29 +319,51 @@ function Fishing()
     end
 end
 
+FishingBaitMerchant =
+{
+    npcName = "Merchant & Mender",
+    x=-398, y=3, z=80,
+    zoneId = 129,
+    aetheryte = "Limsa Lominsa",
+    aethernet = {
+        name = "Arcanists' Guild",
+        x=-336, y=12, z=56
+    }
+}
 function BuyFishingBait()
-    if GetItemCount(30279) >= 30 and GetItemCount(30280) >= 30 and GetItemCount(30281) >= 30 then
+    if GetItemCount(29717) >= 1 then
         if IsAddonVisible("Shop") then
             yield("/callback Shop true -1")
         else
             State = CharacterState.goToFishingHole
-            LogInfo("State Change: MoveToNextNode")
+            LogInfo("State Change: GoToFishingHole")
         end
         return
     end
 
-    if not HasTarget() or GetTargetName() ~= Mender.npcName then
-        yield("/target "..Mender.npcName)
-        yield("/wait 1")
-        if not HasTarget() or GetTargetName() ~= Mender.npcName then
-            LeaveDuty()
+    if not IsInZone(FishingBaitMerchant.zoneId) then
+        TeleportTo(FishingBaitMerchant.aetheryte)
+        return
+    end
+
+    local distanceToMerchant = GetDistanceToPoint(FishingBaitMerchant.x, FishingBaitMerchant.y, FishingBaitMerchant.z)
+    local distanceViaAethernet = DistanceBetween(FishingBaitMerchant.aethernet.x, FishingBaitMerchant.aethernet.y, FishingBaitMerchant.aethernet.z, FishingBaitMerchant.x, FishingBaitMerchant.y, FishingBaitMerchant.z)
+
+    if distanceToMerchant > distanceViaAethernet + 20 then
+        if not LifestreamIsBusy() then
+            yield("/li "..FishingBaitMerchant.aethernet.name)
         end
         return
     end
 
-    if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 5 then
+    if IsAddonVisible("TelepotTown") then
+        yield("/callback TelepotTown true -1")
+        return
+    end
+    
+    if distanceToMerchant > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
+            PathfindAndMoveTo(FishingBaitMerchant.x, FishingBaitMerchant.y, FishingBaitMerchant.z)
         end
         return
     end
@@ -338,18 +373,17 @@ function BuyFishingBait()
         return
     end
 
+    if not HasTarget() or GetTargetName() ~= FishingBaitMerchant.npcName then
+        yield("/target "..FishingBaitMerchant.npcName)
+        return
+    end
+
     if IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
     elseif IsAddonVisible("Shop") then
-        if GetItemCount(30279) < 30 then
-            yield("/callback Shop true 0 4 99 0")
-        elseif GetItemCount(30280) < 30 then
-            yield("/callback Shop true 0 5 99 0")
-        elseif GetItemCount(30281) < 30 then
-            yield("/callback Shop true 0 6 99 0")
-        end
+        yield("/callback Shop true 0 3 99 0")
     else
         yield("/interact")
     end
@@ -816,6 +850,9 @@ function Ready()
     elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(SelectedFish.fishId) > 0 then
         State = CharacterState.goToHubCity
         LogInfo("[FishingGatherer] State Change: GoToSolutionNine")
+    elseif GetItemCount(29717) == 0 then
+        State = CharacterState.buyFishingBait
+        LogInfo("State Change: Buy Fishing Bait")
     else
         State = CharacterState.goToFishingHole
         LogInfo("State Change: MoveToWaypoint")
@@ -835,7 +872,8 @@ CharacterState = {
     fishing = Fishing,
     turnIn = TurnIn,
     scripExchange = ScripExchange,
-    goToHubCity = GoToHubCity
+    goToHubCity = GoToHubCity,
+    buyFishingBait = BuyFishingBait
 }
 
 StopMain = false
@@ -847,13 +885,27 @@ if SelectedFish == nil then
     yield("/echo Cannot find data for "..FishToFarm)
     StopMain = true
 end
-SelectNewFishingHole()
-SelectedFish.closestAetheryte = GetClosestAetheryte(
+
+if SelectedFish.fishingSpots.waypoints == nil then
+    SelectedFish.closestAetheryte = GetClosestAetheryte(
             SelectedFishingSpot.waypointX,
             SelectedFishingSpot.waypointY,
             SelectedFishingSpot.waypointZ,
             SelectedFish.zoneId,
             0)
+else
+    SelectedFish.closestAetheryte = GetClosestAetheryte(
+            SelectedFish.fishingSpots.waypoints[1].x,
+            SelectedFish.fishingSpots.waypoints[1].y,
+            SelectedFish.fishingSpots.waypoints[1].z,
+            SelectedFish.zoneId,
+            0)
+end
+
+if IsInZone(SelectedFish.zoneId) then
+    SelectNewFishingHole()
+end
+
 yield("/ahon")
 DeleteAllAutoHookAnonymousPresets()
 UseAutoHookAnonymousPreset(SelectedFish.autohookPreset)
