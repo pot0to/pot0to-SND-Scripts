@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.2                                 *
+*                                Version 1.2.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.2    Fixed purple scrips
+    -> 1.2.3    Fixed teleport errors
+                Fixed purple scrips
                 Fixed MinInventoryFreeSlots
                 Updated algorithm to randomly choose any fishing spot in a line
                     along the coast, fixed self repair
@@ -241,7 +242,8 @@ end
 function TeleportToFishingZone()
     if not IsInZone(SelectedFish.zoneId) then
         TeleportTo(SelectedFish.closestAetheryte.aetheryteName)
-    else
+    elseif not GetCharacterCondition(CharacterCondition.betweenAreas) then
+        yield("/wait 3")
         SelectNewFishingHole()
         State = CharacterState.goToFishingHole
         LogInfo("[FishingGatherer] GoToFishingHole")
@@ -866,7 +868,7 @@ function Ready()
         LogInfo("State Change: Buy Fishing Bait")
     else
         State = CharacterState.goToFishingHole
-        LogInfo("State Change: MoveToWaypoint")
+        LogInfo("State Change: GoToFishingHole")
     end
 end
 
