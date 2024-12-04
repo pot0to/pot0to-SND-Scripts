@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.0                                 *
+*                                Version 1.2.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.0    Updated algorithm to randomly choose any fishing spot in a line
+    -> 1.2.0    Fixed MinInventoryFreeSlots
+                Updated algorithm to randomly choose any fishing spot in a line
                     along the coast, fixed self repair
 
 ********************************************************************************
@@ -40,7 +41,7 @@ ReduceEphemerals                    = true      --If true, will reduce ephemeral
 SelfRepair                          = true      --If true, will do repair if possible set repair amount below
 RepairAmount                        = 1         --repair threshold, adjust as needed
 
-MinInventoryFreeSlots               = 1           --set !!!carefully how much inventory before script stops gathering and does additonal tasks!!!
+MinInventoryFreeSlots               = 15           --set !!!carefully how much inventory before script stops gathering and does additonal tasks!!!
 
 HubCity                             = "Solution Nine"   --options:Limsa/Gridania/Ul'dah/Solution Nine
 
@@ -151,12 +152,6 @@ ScripExchangeItem =
     scripExchangePrice=1000
 }
 
-MinInventoryFreeSlots = 1
-TimeoutThreshold                 = 10  --certain functions timeout and close if they don't work as intended due to some reason, after this period
-FishingTimeoutThreshold          = 15  --how long to wait for current fishing attemp to be completed before trying to disable AH
-MinWaitTime                     = 400 --(in seconds) set a carefully min wait before to switch fishing spot, (its anti pool limit movement wait time, setting value as 60 is what what i tested (i.e 1min)) how frequently you want to swap fishing spots to avoid fish being aware of your presence
-MaxWaitTime                     = 900 --(in seconds) set a carefully max wait before to switch fishing spot
-
 CharacterCondition = {
     mounted=4,
     gathering=6,
@@ -221,6 +216,7 @@ function GetWaypoint(coords, n)
 end
 
 function SelectNewFishingHole()
+    LogInfo("[FishingGatherer] Selecting new fishing hole")
 
     if SelectedFish.fishingSpots.waypoints ~= nil then
         SelectedFishingSpot = GetWaypoint(SelectedFish.fishingSpots.waypoints, math.random())
@@ -274,7 +270,7 @@ function Fishing()
     end
 
     if GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
-        if GetCharacterCondition(CharacterCondition.fishing) then
+        if GetCharacterCondition(CharacterCondition.gathering) then
             yield("/ac Quit")
             yield("/wait 1")
             SelectNewFishingHole()
@@ -839,11 +835,11 @@ function Ready()
     then
         State = CharacterState.processRetainers
         LogInfo("[FishingGatherer] State Change: ProcessingRetainers")
-    elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(SelectedFish.fishId) > 0 then
+    elseif not LogInfo("GetInventoryFreeSlotCount() <= MinInventoryFreeSlots"..tostring(GetInventoryFreeSlotCount() <= MinInventoryFreeSlots)) and GetInventoryFreeSlotCount() <= MinInventoryFreeSlots and GetItemCount(SelectedFish.fishId) > 0 then
         State = CharacterState.turnIn
         LogInfo("State Change: TurnIn")
     elseif not LogInfo("[FishingGatherer] Ready -> GC TurnIn") and GrandCompanyTurnIn and
-        GetInventoryFreeSlotCount() < MinInventoryFreeSlots
+        GetInventoryFreeSlotCount() <= MinInventoryFreeSlots
     then
         State = CharacterState.gcTurnIn
         LogInfo("[FishingGatherer] State Change: GCTurnIn")
