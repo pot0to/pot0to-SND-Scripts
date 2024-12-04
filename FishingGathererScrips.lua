@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.1                                 *
+*                                Version 1.2.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.0    Fixed MinInventoryFreeSlots
+    -> 1.2.2    Fixed purple scrips
+                Fixed MinInventoryFreeSlots
                 Updated algorithm to randomly choose any fishing spot in a line
                     along the coast, fixed self repair
 
@@ -24,7 +25,7 @@ Lifestream
 ********************************************************************************
 ]]
 
-FishToFarm = "Zorgor Condor"
+ScripColorToFarm                    = "Orange"
 SwitchLocationsAfter                = 10        --Number of minutes to fish at this spot before changing spots.
 
 Retainers                           = true      --If true, will do AR (autoretainers)
@@ -111,15 +112,19 @@ FishTable =
         zoneName = "Shaaloani",
         autohookPreset = "AH4_H4sIAAAAAAAACu1Yy27jNhT9FVfrsNCD1CM7j5ukKfLCOG2BDrqgyCtbiCx6KGqSdDD/3kvJSiRbTpCBF+0gO+ny8tyHDg9JfXWmtVEzXplqli2c46/OScnTAqZF4RwbXcORYwcv8hKeB2U3dI5PfpwcOTc6Vzo3j86xh9bq5EEUtQT5bLb+31qsS6XE0oI1D759anDC+Mg5W98uNVRLVaDFc90B8svQDUYSDWa4ryYzW9arLgPqufSVFLpZqihAmD0dQRyvP8t/PQulZc6LPXihRwd4dDPrNK+WJ49Q9fJnW/kzNsg/7D4Bv4P5Ms/MB543VVhD1Rnmhos7REWwzYfZxe2jJhvUG25yKAX08gm354XDfvrdVJ3/AzNuWmKMsQyT2Abztz5OsAG7XfIi53fVKf+itMUbGLrqgqOh/SMI9QXQ37M925MCHQTs2vkhX5zxVVP3tFwUoKsuiN9ODSKX7mQ/gIq/IdbJg9F8swzth7hV83u+Pi9NnZtclWc8L7veEmTERa3hEqqKLzC04xw5V00SzpXCxXrUIjyu0WIbM4J3oSrz3Xg3WAiMZ+gQZ894G7EZf85nvsalpHkxq7WG0hyoyi3Ug9U6mu1OxaPRG69TpQU0qwzdOno1RmmtGxXzUMdaKs2NWtuFnpeLuQGc4fWr3NBtqg9TXB+uyfb3Mv9cg8V1PD+mSZBIkgZhRCi4PkkBXEIz4FkQJ9wD30G8i7wy15mNgfz/1BLZFvCk8211+3L8A+OjjhQwsR4W8ErpFS9+VerOQnQi8yfw5t3aMf+n9ZrxosKOtu+bwX6rN6a2fupFVrw6zLnRquxtgnum3+Yr0FsCcZmXT0P4jZKf3Z1QbtALdQELKCXXjweooQH+RdXovNWV1sMPkyeH5xL3uoyl1ve61fl6X6SI+cGTy75YA6cXom387AqYZgb0jNeLJR5FVnbPQpqPLY3msILEaTZF+9CT+xnHxhdTY2C1Nl0vrc8t1wtoMa/L4rHBsKbOZ2QzCCKW7B4WXtjo7Qmlk8GOyx/hc51rkJijqe2Ga49Aewj+CmHfyrV37ryNOweiQE9PwQWRMghJwiMgNBAe4TRKiZ/4WZrEwuehi/K3K6A0iFmwX0BnXJia68lv+eJ/rZ6X/KFnC+i7or4r6rui/ji78QEkNGR+knLwiQSXEyokJzwVLuEMhTRG6ChACf27O5Nufjx8ejK0qopn1KG8YlL75fUvpRdKT+ZC6TVu5YPjtPdSf84lXgRygXcCbIoN1jpMV6ouB26YAku2b4vB8CIf20i1zjjKbmH1dfxHBEvYK3dmhkD/mR8yz/ea777N2MnWMrNdbRrav99sbjX2sTU/u43Rt0c1EaWSutIjLk9iQmkMhMs0JOBJxqQrMoCo2a23qBTuFDCd3GMMkJNqyaW6n+i8gmqSabXCAYPxJ2YJkxUS9Kcd1s1UKfGXxqE5N06dt1PwnXMH5VzMQgEgGGFuEhDqUUYSwVwSBowlQZoETMpRzrkvXK/5QvPSTJAQgsvh+nmXrx9WvgIuaCQTICkubEKlZISHCSdZTLPIozJMXNHslC3umOpMyOQaqbMA3PvwrFAN/w7FMfViDpTEIqaERjQiCUsF/iIKYg/vK6EfIVf/BUp1IuxuGAAA",
         fishingSpots = {
+            maxHeight = 1024,
             waypoints = {
-                { x=-97.73, y=-26.45, z=701.98 },
-                { x=134.07, y=6.07, z=708.82 },
-                { x=219.42, y=12.25, z=737.8 }
+                { x=-115.85, y=-27.7, z=723.95 },
+                { x=-11.04, y=-7.64, z=746.06 },
+                { x=63, y=-2, z=723 }, -- tree
+                { x=135.71, y=6.12, z=715.0 },
+                { x=212.5, y=12.2, z=739.26 },
             },
             pointToFace = { x=134.07, y=6.07, z=800 }
         },
-        collectiblesTurnInListIndex = 6,
-        collectiblesTurnInScripId = 39
+        scripColor = "Orange",
+        scripId = 39,
+        collectiblesTurnInListIndex = 6
     },
     {
         fishName = "Fleeting Brand",
@@ -129,18 +134,18 @@ FishTable =
         zoneName = "Mare Lamentorum",
         autohookPreset = "AH4_H4sIAAAAAAAACu1YTVPjOBD9Kymf4yl/f3ALGWCpCgxFwu5hag+y3U5UOFZGllmyU/z3adlWYicOmZoiFAculGlJr59aT63u/NRGpWBjUohinM61s5/aRU6iDEZZpp0JXsJQk4MTmsN2MFFD1/hlBeFQu+OUcSrW2pmJ1uLiOc7KBJKtWc5/qbFuGIsXEqz6sORXheMFQ+1qNVtwKBYsQ4tpGB3k16ErjNDvrDCOkhkvyqVi4JiGc4SCWsWyDGJxICKIY7ZXWcdZMJ5QklVE8ifgytCdPOxzZlqeF+6wdrqsu5saRewJzzIlWaHcX9JicbGGohUIdwfSdTuQnjpL8gjTBU3FOaFVOKShUIapIPEjoiJYc8L7uG3UsEG9I4JCHh9SHNLzdmG87jlZConT/2FMRC04RWJ3tbVzynazerYgGSWPxSV5YlwCdAxqd/awa7+HGCOM800Zs74bgxR2hWZ3CKjwntP5FVlWcRjl8wx4oZxKTcllvuHs7aYDFbwg1sWz4KS53/JgZmz6H1ld56KkgrL8itBcxUdH6U5KDjdQFGSOrjVtqN1WJLRbhllgWCOsV2iRgerBm7BC/DHeHW4E+hlqunZgvPZYjW/5TFd4RznJxiXnkIs32uUO6pvttZft3o57vVezaoFMBVvJ60zz+VTAqsrHW+6NiEb8bSi34SoODzn9UYLE1dIoiAkEhm7GIdEdN0j00I4iPTUAwtBMzBBsDfEmtBDfUukDVf29lqfcwOa+hr7pH+b4N/rHbJHBQM6QgLeML0n2F2OPEkKlkn+AVP9LO/Lf3MoqDapb2gzKran7Kk0zugS+c49vaL4Zkk/TF+R4Q57btvALXv8Gso6fY/oyxSlOU8FZ3npzT+/esFvuJzCHPCF8/QHiUhH7ykqEOnJSb+rY8sKN3+1pnMzF70T8BM5nnK7eOa6+a9kbz6eKbMfJ+8e2cS8z7igVwMeknC+wUl7KSgjTal8qrmppTFRVqSU/WkVE/Z674X4N2n3QX6kmZRmsnkSVAe/hR0k5JOhJlLIYk3V2X1o8fZp712z2mZ0+s9Nndvpg2alVIAYGpF5CUt02A093jNjUie/HumcHsW8Zielaifbyr6oQm18Nvm8MdZGIFWO7WrQ9x7cPV4uXGYDAHQ/OOcmTTm1rHgyW7OKuEyy2aYx1N4ZIOvuWZ+uHAh7yBPi2XVU/mMjVoyUr81bA+xpZN9xt3mzp7SvLxZggYtbsunm/tvEMJNuSpwTTayarsqZxd0P3SG/r4soP8wvMtjP5435ELpaWsYx2Feh2h9L0JfKzNm+n7V8Ao6NPK3LtwLAsPY3sQHcSYuhR4Nq6ZXmuATZxIyPCfmNff+7hHdzDnAlGC/hN6Zk9yutX12tyelU2/bLsVdFxWX6q67C6OuJyIhL6jk/0xI8c3Qk90EmCMkvD1DNMMwwTB5tZzHW1anvT10Af3JUcS9/BNMYSuOj234GUrRekOknNSHeISzC9Ehf/uIGTgOO4JNZefgEjD0ty/xUAAA==",
         fishingSpots = {
-            {waypointX = 15.25, waypointY = 23.72, waypointZ = 459.84, x = 13.53, y = 22.93, z = 463.75},
-            {waypointX = 26.27, waypointY = 22.11, waypointZ = 468.88, x = 23.14, y = 21.73, z = 472.73},
-            {waypointX = 34.51, waypointY = 21.7, waypointZ = 481.15, x = 30.27, y = 21.69, z = 482.1},
-            {waypointX = 44.03, waypointY = 21.75, waypointZ = 482.86, x = 45.16, y = 21.64, z = 487.06}
+            maxHeight = 35,
+            waypoints = {
+                { x=10.05, y=26.89, z=448.99 },
+                { x=37.71, y=22.36, z=481.05 },
+                { x=58.87, y=22.22, z=487.95 }, --orange balls
+                { x=71.79, y=22.39, z=477.65 },
+            },
+            pointToFace = { x=37.71, y=22.36, z=600 }
         },
-        collectiblesTurnInListIndex = 10,
-        collectiblesTurnInScripId = 38
-    },
-    {
-        fishName = "Goldgrouper",
-        fishId = 43775,
-        collectiblesTurnInScripId = 39
+        scripColor = "Purple",
+        scripId = 38,
+        collectiblesTurnInListIndex = 10
     }
 }
 
@@ -219,12 +224,13 @@ function SelectNewFishingHole()
     LogInfo("[FishingGatherer] Selecting new fishing hole")
 
     if SelectedFish.fishingSpots.waypoints ~= nil then
+        
         SelectedFishingSpot = GetWaypoint(SelectedFish.fishingSpots.waypoints, math.random())
-        SelectedFishingSpot.waypointY = QueryMeshPointOnFloorY(SelectedFishingSpot.waypointX, 1024, SelectedFishingSpot.waypointZ, false, 50)
+        SelectedFishingSpot.waypointY = QueryMeshPointOnFloorY(SelectedFishingSpot.waypointX, SelectedFish.fishingSpots.maxHeight, SelectedFishingSpot.waypointZ, false, 50)
 
-        SelectedFishingSpot.x = SelectedFishingSpot.fishingSpots.pointToFace.x
-        SelectedFishingSpot.y = SelectedFishingSpot.fishingSpots.pointToFace.y
-        SelectedFishingSpot.z = SelectedFishingSpot.fishingSpots.pointToFace.z
+        SelectedFishingSpot.x = SelectedFish.fishingSpots.pointToFace.x
+        SelectedFishingSpot.y = SelectedFish.fishingSpots.pointToFace.y
+        SelectedFishingSpot.z = SelectedFish.fishingSpots.pointToFace.z
     else
         local n = math.random(1, #SelectedFish.fishingSpots)
         SelectedFishingSpot = SelectedFish.fishingSpots[n]
@@ -232,12 +238,20 @@ function SelectNewFishingHole()
     SelectedFishingSpot.startTime = os.clock()
 end
 
-function GoToFishingHole()
+function TeleportToFishingZone()
     if not IsInZone(SelectedFish.zoneId) then
         TeleportTo(SelectedFish.closestAetheryte.aetheryteName)
-        if IsInZone(SelectedFish.zoneId) then
-            SelectNewFishingHole()
-        end
+    else
+        SelectNewFishingHole()
+        State = CharacterState.goToFishingHole
+        LogInfo("[FishingGatherer] GoToFishingHole")
+    end
+end
+
+function GoToFishingHole()
+    if not IsInZone(SelectedFish.zoneId) then
+        State = CharacterState.teleportToFishingZone
+        LogInfo("[FishingGatherer] TeleportToFishingZone")
         return
     end
 
@@ -673,7 +687,8 @@ function ExecuteRepair()
             end
 
             if not IsInZone(SelectedFish.zoneId) then
-                TeleportTo(SelectedFish.aetheryteList[1].aetheryteName)
+                State = CharacterState.teleportToFishingZone
+                LogInfo("[FishingGatherer] TeleportToFishingZone")
                 return
             end
 
@@ -811,7 +826,7 @@ end
 
 function SelectFishTable()
     for _, fishTable in ipairs(FishTable) do
-        if FishToFarm == fishTable.fishName then
+        if ScripColorToFarm == fishTable.scripColor then
             return fishTable
         end
     end
@@ -859,6 +874,7 @@ CharacterState = {
     ready = Ready,
     mounting = Mount,
     dismounting = Dismount,
+    teleportToFishingZone = TeleportToFishingZone,
     goToFishingHole = GoToFishingHole,
     extractMateria = ExecuteExtractMateria,
     repair = ExecuteRepair,
@@ -877,10 +893,6 @@ LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
 
 SelectedFish = SelectFishTable()
-if SelectedFish == nil then
-    yield("/echo Cannot find data for "..FishToFarm)
-    StopMain = true
-end
 
 if SelectedFish.fishingSpots.waypoints == nil then
     SelectedFish.closestAetheryte = GetClosestAetheryte(
