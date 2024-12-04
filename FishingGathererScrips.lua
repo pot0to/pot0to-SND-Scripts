@@ -43,7 +43,7 @@ ReduceEphemerals                    = true      --If true, will reduce ephemeral
 SelfRepair                          = true      --If true, will do repair if possible set repair amount below
 RepairAmount                        = 1         --repair threshold, adjust as needed
 
-MinInventoryFreeSlots               = 15           --set !!!carefully how much inventory before script stops gathering and does additonal tasks!!!
+MinInventoryFreeSlots               = 1         --set !!!carefully how much inventory before script stops gathering and does additonal tasks!!!
 
 HubCity                             = "Solution Nine"   --options:Limsa/Gridania/Ul'dah/Solution Nine
 
