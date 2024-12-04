@@ -6,11 +6,11 @@
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
-Gathers a map, relogs as the next character in the list, rinse and repeat.
-You will need to install Gather Buddy Reborn and add your desired map to the
-auto gather list. This plugin only kicks off the gather list and waits for the
-map to drop in your inventory, then stops the gathering and relogs as the next
-character.
+Gathers a map, relogs as the next character in the list, mails them all to your
+"friend", rinse and repeat. You will need to install Gather Buddy Reborn and add
+your desired map to the auto gather list. This plugin only kicks off the gather
+list and waits for the map to drop in your inventory, then stops the gathering
+and relogs as the next character.
 
 ********************************************************************************
 *                                    Version                                   *

@@ -116,7 +116,7 @@ FishTable =
                 { x=134.07, y=6.07, z=708.82 },
                 { x=219.42, y=12.25, z=737.8 }
             },
-            direction = { x=0, y=0, z=100}
+            pointToFace = { x=134.07, y=6.07, z=800 }
         },
         collectiblesTurnInListIndex = 6,
         collectiblesTurnInScripId = 39
@@ -222,9 +222,9 @@ function SelectNewFishingHole()
         SelectedFishingSpot = GetWaypoint(SelectedFish.fishingSpots.waypoints, math.random())
         SelectedFishingSpot.waypointY = QueryMeshPointOnFloorY(SelectedFishingSpot.waypointX, 1024, SelectedFishingSpot.waypointZ, false, 50)
 
-        SelectedFishingSpot.x = SelectedFishingSpot.waypointX + SelectedFish.fishingSpots.direction.x
-        SelectedFishingSpot.y = SelectedFishingSpot.waypointY + SelectedFish.fishingSpots.direction.y
-        SelectedFishingSpot.z = SelectedFishingSpot.waypointZ + SelectedFish.fishingSpots.direction.z
+        SelectedFishingSpot.x = SelectedFishingSpot.fishingSpots.pointToFace.x
+        SelectedFishingSpot.y = SelectedFishingSpot.fishingSpots.pointToFace.y
+        SelectedFishingSpot.z = SelectedFishingSpot.fishingSpots.pointToFace.z
     else
         local n = math.random(1, #SelectedFish.fishingSpots)
         SelectedFishingSpot = SelectedFish.fishingSpots[n]
