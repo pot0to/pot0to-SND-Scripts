@@ -2,13 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.18.6                                 *
+*                               Version 2.18.7                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.18.6   Added check to stop /vnav if you die
+    -> 2.18.7   Added extra check for chocobo healer stance if you start script
+                    with chocobo already out
+                Added check to stop /vnav if you die
                 Fixed bug that causes you to dodge back and forth too much
                 Added setting for dodging plugin
                 Added chocobo stance
@@ -2527,6 +2529,10 @@ State = CharacterState.ready
 CurrentFate = nil
 if IsInFate() and GetFateProgress(GetNearestFate()) < 100 then
     CurrentFate = BuildFateTable(GetNearestFate())
+end
+
+if ShouldSummonChocobo and GetBuddyTimeRemaining() > 0 then
+    yield('/cac "'..ChocoboStance..' stance"')
 end
 
 StopScript = false
