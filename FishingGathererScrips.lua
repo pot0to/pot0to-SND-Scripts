@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.6                                 *
+*                                Version 1.2.8                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.6    Fixed materia extraction bug p2
+    -> 1.2.8    Tree
+                Fixed materia extraction bug p2
                 Fixed repair
                 Fixed teleport errors
                 Fixed purple scrips
@@ -119,7 +120,7 @@ FishTable =
             waypoints = {
                 { x=-115.85, y=-27.7, z=723.95 },
                 { x=-11.04, y=-7.64, z=746.06 },
-                { x=63, y=-2, z=723 }, -- tree
+                { x=64.24, y=1.78, z=729.25 }, -- tree
                 { x=135.71, y=6.12, z=715.0 },
                 { x=212.5, y=12.2, z=739.26 },
             },
