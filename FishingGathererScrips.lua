@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.4                                 *
+*                                Version 1.2.5                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.4    Fixed repair
+    -> 1.2.5    Fixed materia extraction bug
+                Fixed repair
                 Fixed teleport errors
                 Fixed purple scrips
                 Fixed MinInventoryFreeSlots
@@ -772,7 +773,7 @@ function ExecuteExtractMateria()
     end
 
     if CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
-        if not IsAddonVisible("Materialize") then
+        if IsAddonVisible("Materialize") then
             yield("/generalaction \"Materia Extraction\"")
             return
         end
