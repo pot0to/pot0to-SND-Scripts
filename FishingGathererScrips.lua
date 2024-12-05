@@ -121,7 +121,7 @@ FishTable =
                 { x=135.71, y=6.12, z=715.0 },
                 { x=212.5, y=12.2, z=739.26 },
             },
-            pointToFace = { x=134.07, y=6.07, z=1500 }
+            pointToFace = { x=134.07, y=6.07, z=10000 }
         },
         scripColor = "Orange",
         scripId = 39,
