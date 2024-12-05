@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.3                                 *
+*                                Version 1.2.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.3    Fixed teleport errors
+    -> 1.2.4    Fixed repair
+                Fixed teleport errors
                 Fixed purple scrips
                 Fixed MinInventoryFreeSlots
                 Updated algorithm to randomly choose any fishing spot in a line
@@ -683,23 +684,6 @@ function ExecuteRepair()
     local hawkersAlleyAethernetShard = { x=-213.95, y=15.99, z=49.35 }
     if SelfRepair then
         if GetItemCount(33916) > 0 then
-            if IsAddonVisible("Shop") then
-                yield("/callback Shop true -1")
-                return
-            end
-
-            if not IsInZone(SelectedFish.zoneId) then
-                State = CharacterState.teleportToFishingZone
-                LogInfo("[FishingGatherer] TeleportToFishingZone")
-                return
-            end
-
-            if GetCharacterCondition(CharacterCondition.mounted) then
-                Dismount()
-                LogInfo("[FishingGatherer] State Change: Dismounting")
-                return
-            end
-
             if NeedsRepair(RepairAmount) then
                 if not IsAddonVisible("Repair") then
                     LogInfo("[FishingGatherer] Opening repair menu...")
