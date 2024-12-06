@@ -1,16 +1,61 @@
+--[[
+
+********************************************************************************
+*                            Treasure Hunt Helper                              *
+********************************************************************************
+
+You must start with an open map in your inventory. This script will
+automatically teleport you to the correct zone, fly over, dig, kill enemies,
+and open the chest. It will NOT do portals for you.
+
+********************************************************************************
+*                               Version 1.0.0                                  *
+********************************************************************************
+
+Created by: pot0to (https://ko-fi.com/pot0to)
+        
+    ->  1.0.0   First release
+
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
+
+Plugins that are needed for it to work:
+
+    -> Something Need Doing [Expanded Edition] : Main Plugin for everything to work   (https://puni.sh/api/repository/croizat)
+    -> Globetrotter :   For finding the treasure map spot
+    -> VNavmesh :       For Pathing/Moving    (https://puni.sh/api/repository/veyn)
+    -> RSR :            For fighting things
+
+********************************************************************************
+*                                Optional Plugins                              *
+********************************************************************************
+
+This Plugins are optional and not needed unless you have it enabled in the settings:
+
+    -> Teleporter :  (for Teleporting to Ishgard/Firmament if you're not already in that zone)
+
+]]
+
+--#region Settings
+
+--[[
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
+
 CharacterCondition = {
     dead=2,
     mounted=4,
     inCombat=26,
     casting=27,
     occupied31=31,
-    occupiedShopkeeper=32,
     occupied=33,
-    occupiedMateriaExtractionAndRepair=39,
+    boundByDuty34=34,
     betweenAreas=45,
     jumping48=48,
     jumping61=61,
-    occupiedSummoningBell=50,
     mounting57=57,
     mounting64=64,
     beingmoved70=70,
@@ -95,11 +140,10 @@ function Main()
     end
 
     if not GetCharacterCondition(CharacterCondition.inCombat) then
-        yield("/interact")
-        if not HasOpenMap then
-            yield("/echo stopflag true")
+        if GetCharacterCondition(CharacterCondition.boundByDuty34) then
             StopFlag = true
         end
+        yield("/interact")
         return
     end
     
@@ -118,7 +162,6 @@ repeat
         GetCharacterCondition(CharacterCondition.mounting64) or
         GetCharacterCondition(CharacterCondition.beingmoved70) or
         GetCharacterCondition(CharacterCondition.beingmoved75) or
-        GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
         LifestreamIsBusy())
     then
         Main()
