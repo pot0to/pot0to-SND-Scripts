@@ -72,6 +72,8 @@ RouteType = "RedRoute"
         -- "RedRoute"     -> MIN perception route, 8 node loop
         -- "PinkRoute"    -> BTN perception route, 8 node loop
         -- "MinerIslands" -> MIN
+        -- "BotanistIslands" -> BTN
+        -- "Random" -> Randomizes the route each time
 
 GatheringSlot = 4
 -- This will let you tell the script WHICH item you want to gather. (So if I was gathering the 4th item from the top, I would input 4)
@@ -256,6 +258,48 @@ GatheringRoute =
             {x = -577.23, y = 331.88, z = 519.38, nodeName = "Mineral Deposit"},
             {x = -558.09, y = 334.52, z = 448.38, nodeName = "Mineral Deposit"}, -- End of Island #7
             {x = -729.13, y = 272.73, z = -62.52, nodeName = "Mineral Deposit"}
+        },
+
+    BotanistIslands = 
+        {
+            {x = -202, y = -2, z = -310, nodeName = "Mature Tree"}, 
+            {x = -262, y = -2, z = -346, nodeName = "Mature Tree"}, 
+            {x = -323, y = -5, z = -322, nodeName = "Mature Tree"}, 
+            {x = -372, y = 16, z = -290, nodeName = "Lush Vegetation Patch"}, 
+            {x = -421, y = 23, z = -201, nodeName = "Lush Vegetation Patch"}, 
+            {x = -471, y = 28, z = -193, nodeName = "Mature Tree"}, 
+            {x = -549, y = 29, z = -211, nodeName = "Mature Tree"},
+            {x = -627, y = 285, z = -141, nodeName = "Lush Vegetation Patch"}, 
+            {x = -715, y = 271, z = -49, nodeName = "Mature Tree"}, 
+
+            {x = -45, y = -48, z = -501, nodeName = "Lush Vegetation Patch"},
+            {x = -63, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
+            {x = -137, y = -7, z = -481, nodeName = "Lush Vegetation Patch"},
+            {x = -191, y = -2, z = -422, nodeName = "Mature Tree"},
+            {x = -149, y = -5, z = -389, nodeName = "Mature Tree"},
+            {x = 114, y = -49, z = -515, nodeName = "Mature Tree"},
+            {x = 46, y = -47, z = -500, nodeName = "Mature Tree"},
+
+            {x = 101, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
+            {x = 58, y = -37, z = -577, nodeName = "Lush Vegetation Patch"},
+            {x = -6, y = -20, z = -641, nodeName = "Lush Vegetation Patch"},
+            {x = -65, y = -19, z = -610, nodeName = "Mature Tree"},
+            {x = -125, y = -19, z = -621, nodeName = "Mature Tree"},
+            {x = -169, y = -7, z = -550, nodeName = "Lush Vegetation Patch"},
+
+            {x = 454, y = 207, z = -615, nodeName = "Lush Vegetation Patch"},
+            {x = 573, y = 191, z = -513, nodeName = "Mature Tree"},
+            {x = 584, y = 191, z = -557, nodeName = "Lush Vegetation Patch"},
+            {x = 540, y = 199, z = -617, nodeName = "Lush Vegetation Patch"},
+            {x = 482, y = 192, z = -674, nodeName = "Lush Vegetation Patch"},
+
+            {x = 433, y = -15, z = 274, nodeName = "Mature Tree"},
+            {x = 467, y = -13, z = 268, nodeName = "Lush Vegetation Patch"},
+            {x = 440, y = -25, z = 208, nodeName = "Mature Tree"},
+            {x = 553, y = -32, z = 419, nodeName = "Lush Vegetation Patch"},
+            {x = 564, y = -31, z = 339, nodeName = "Lush Vegetation Patch"},
+            {x = 529, y = -10, z = 279, nodeName = "Lush Vegetation Patch"},
+            {x = 474, y = -24, z = 197, nodeName = "Lush Vegetation Patch"},
         },
     RedRoute =
         {
@@ -498,6 +542,27 @@ function RandomAdjustCoordinates(x, y, z, maxDistance)
     return randomX, randomY, randomZ
 end
 
+function getRandomRoute()
+    local routeNames = {}
+    for routeName, _ in pairs(GatheringRoute) do
+        table.insert(routeNames, routeName)
+    end
+    local randomIndex = math.random(#routeNames) 
+    
+    return routeNames[randomIndex] 
+end
+
+if SelectedRoute == "random" then
+    RouteType = getRandomRoute()
+    yield("/echo RouteType : " .. RouteType .. "")
+
+elseif GatheringRoute[RouteType] then
+    RouteType = RouteType  
+    yield("/echo RouteType : " .. RouteType .. "")
+else
+    yield("/echo Invalid RouteType : " .. RouteType)
+end
+
 function SelectNextNode()
     local weather = GetActiveWeatherID()
     if PrioritizeUmbral and not UmbralGathered and (weather >= 133 and weather <= 136) then
@@ -554,7 +619,7 @@ function MoveToNextNode()
     elseif not NextNode.isUmbralNode and (RouteType == "RedRoute" or RouteType == "MinerIslands") and GetClassJobId() ~= 16 then
         yield("/gs change Miner")
         yield("/wait 3")
-    elseif not NextNode.isUmbralNode and RouteType == "PinkRoute" and GetClassJobId() ~= 17 then
+    elseif not NextNode.isUmbralNode and (RouteType == "PinkRoute" or RouteType == "BotanistIslands") and GetClassJobId() ~= 17 then
         yield("/gs change Botanist")
         yield("/wait 3")
     elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) <= 5 then
@@ -610,15 +675,22 @@ function Gather()
     
     if not HasTarget() or GetTargetName() ~= NextNode.nodeName then
         yield("/target "..NextNode.nodeName)
-        
-
         yield("/wait 1")
         if not HasTarget() then
             yield("/echo Could not find "..NextNode.nodeName)
             if NextNode.nodeName:sub(1, 7) == "Clouded" then
                 UmbralGathered = true
             else
-                NextNodeId = (NextNodeId % #GatheringRoute[RouteType]) + 1
+                if NextNodeId >= #GatheringRoute[RouteType] then
+                    if SelectedRoute == "random" then
+                        RouteType = getRandomRoute()
+                        yield("/echo New random route selected : "..RouteType)
+                    end
+                    NextNodeId = 1
+                else
+                    NextNodeId = NextNodeId + 1
+                end
+                NextNode = GatheringRoute[RouteType][NextNodeId]
             end
             State = CharacterState.ready
             LogInfo("State Change: Ready")
