@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.6                                  *
+*                               Version 0.1.7                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.6   Fixed it for autobuy dark matter too
+    ->  0.1.7   SetSNDProperty("StopMacroIfTargetNotFound", "false")
+                Fixed it for autobuy dark matter too
                 Fixed bug with repairing via mender
                 Fixed mender name for repair function
                 Fixed name for merchant & mender
@@ -961,6 +962,7 @@ FoundationZoneId = 418
 FirmamentZoneId = 886
 DiademZoneId = 939
 
+SetSNDProperty("StopMacroIfTargetNotFound", "false")
 if not (IsInZone(FoundationZoneId) or IsInZone(FirmamentZoneId) or IsInZone(DiademZoneId)) then
     TeleportTo("Foundation")
 end
