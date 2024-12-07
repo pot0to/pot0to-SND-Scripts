@@ -23,6 +23,7 @@ Loosely based on Ahernika's NonStopFisher
 AutoHook
 VnavMesh
 Lifestream
+Teleporter
 
 ********************************************************************************
 *                                   Settings                                   *
@@ -542,7 +543,7 @@ function TurnIn()
     end
 end
 
-function ScripExchange()
+function KupoVoucherLottery()
     if GetItemCount(OrangeGathererScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
@@ -872,7 +873,7 @@ CharacterState = {
     gcTurnIn = ExecuteGrandCompanyTurnIn,
     fishing = Fishing,
     turnIn = TurnIn,
-    scripExchange = ScripExchange,
+    scripExchange = KupoVoucherLottery,
     goToHubCity = GoToHubCity,
     buyFishingBait = BuyFishingBait
 }

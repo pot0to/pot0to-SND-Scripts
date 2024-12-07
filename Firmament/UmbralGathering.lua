@@ -141,7 +141,8 @@ UmbralWeatherNodes = {
             baitName = "Diadem Crane Fly",
             baitId = 30280,
             x = 370.88373, y = 255.67848, z = 525.73334,
-            fishingX = 372.32, fishingY = 254.9, fishingZ = 521.2
+            fishingX = 372.32, fishingY = 254.9, fishingZ = 521.2,
+            autohookPreset = ""
         }
     },
     duststorms = {
@@ -159,7 +160,8 @@ UmbralWeatherNodes = {
             baitName = "Diadem Hoverworm",
             baitId = 30281,
             x = 589.74, y = 188.42, z = -591.81,
-            fishingX=593.08, fishingY=187.17, fishingZ=-594.61
+            fishingX=593.08, fishingY=187.17, fishingZ=-594.61,
+            autohookPreset = ""
         }
     },
     levin = {
@@ -177,7 +179,8 @@ UmbralWeatherNodes = {
             baitName = "Diadem Red Balloon", -- mooched from Grade 4 Skybuilders' Ghost Faerie
             baitId = 30279,
             x = 365.84, y = -193.35, z = -222.72,
-            fishingX = 369.91, fishingY = -195.22, fishingZ = -209.88
+            fishingX = 369.91, fishingY = -195.22, fishingZ = -209.88,
+            autohookPreset = "AH4_H4sIAAAAAAAACu1YS2/jNhD+K4YuvViAqLdyc7yJG8BJgziLHooeRhJlE5ZFL0Wl6y7y3zuUxFiy5Xizm/bS3IjRzDcPDb8h+c2YVJJPoZTlNFsaF98MtZ6zgqr1VQFxTlPjQoqKjo0bXNlhNDbuBeOCyZ1xQVBaXn1N8iql6V6s9J/HNdYt58lKgdULW61qHD8cG7Pt40rQcsVzlBDL6iG/Dl1jREHPwjobzHRVbXQELrHcMyFoK57nNJEdQ9JVs8+75SJlkGsAn7g9ALdVu2bl6mpHy44j7yBCz+tF6Osiw5ouViyTl8DqOJWg1IKFhGSNqAjWlv4Yt4sataj3IBktEtqJxz+08/sVs7WpYH/TKcjm12uvh9b2Qb2d1vpxBTmDdXkNT1wogJ5Ap+OM+/IHmvAnivpEFUn7dHsedMEu2XIGmzqzSbHMqSg1qt2YOoHlHoXbgwqfEevqqxTQ7hxV6ke++Au2N4WsmGS8mAErdAFM/OfzStBbWpawRNeGMTbu6iCMO44bbtwg7LYoUZUYwJvzUv4w3j0mQocjNEzjxPfGY/19H89ii9tBQD6thKCFfKcsD1DfLdfBaI8yHvReazUNspB8qzYoK5YLSbc19e1jb5toIt4n5C5cHcPngn2pqMI1fBol1PVik0Dimm5qO2bkeLaZZrEDlgWxY1ED8easlL9lygd29R9Ne6oEdIDEDqzwdIwPNB1dQp5zXii0Oy42kP/K+VrZa2b4ncJ6PyjUV0xBJaBHRitqsnRJoKhFGy+k4EW9c1qtl3GTQV6i8feiWk4HdU6XtEhB7N4SV43wiVeorFPqadh+9KJwFPaxSi+GAa1HwbanPAWe7byonPLVU3rFW6uneneSSSqmUC1XON43akpggw41dX0AwKaox5BadPi2YUYvOh6cr8xANa01negGeqBfKiZoitiyUqNJHQcOu+pNzXO+GT7++X/6zzuUFdshTcGxzTAJQ6QsEpuQea4JDqGR72ShFWTG85+as9oj4wBnOXj8dE9z1kxASkfuaLHexRXLU6TQX0azFVL56BqoYH3SJWdp7Sd56YPtPtjug+3+d2wHOIQgIaFJUpeYbuBZZhT6nhmltpf4gWuTwO2wXcNvSHb/KtGdLNBNiqddluDBF6vSPAAohcmGV0VPDRnNiw6vRE7/PhoqT5XIAAd0rnixvTh6kXfm6ueh5cBTwdALxE++HAxBvukhYX/q/+GzvjJWkqkqcl3f7um/PfOrZSPeqw21c/dukIRRGFixGWQRDlorjMzYCUIzCUmG8zcBG/BugK3X4LYhft7EePEZzekTK0bmSDcX3j5YCQV+6bXZLV1CQSsB/WuJZRMaU9s2Hdd1cMaHmRlDGOC1JPGjhER+6uOM/wf4PtTxcBIAAA=="
         }
     },
     tempest = {
@@ -195,7 +198,8 @@ UmbralWeatherNodes = {
             baitName = "Diadem Hoverworm", -- mooched from Grade 4 Skybuilders' Ghost Faerie
             baitId = 30281,
             x = -417.17, y = -206.7, z = 165.31,
-            fishingX = -411.73, fishingY = -207.15, fishingZ = 166.06
+            fishingX = -411.73, fishingY = -207.15, fishingZ = 166.06,
+            autohookPreset = "AH4_H4sIAAAAAAAACu1YTXObSBD9KyouexFVfAww+KYotuIqxeuKlNrDVg4DNNKUECjDkESb8n9PDzAWSMiKE+9e1r541HS/7ml6Xvfw3ZhUspiyUpbTdGVcfTfUes5zUOvrnEUZJMaVFBWMjVtcOTQcG/eCF4LLvXFlo7S8/hZnVQLJQaz0H8Y11vuiiNcKrF44alXj+HRszHbLtYByXWQosS2rh/w0dI0RBj0L62Iw03W11REQ2yIXQtBWRZZBLDuGdlfNuey2EAlnmQbwbdIDIK3aDS/X13soO468owg9rxehr5PMNrBY81S+YbyOUwlKLVhIFm8QFcHa1J/idlHDFvWeSQ55DJ14/GM7v58xR5sK/g9MmWxevfZ6bO0c5dttrZdrlnG2KW/Yl0IogJ5Ab8cd9+UfIC6+AOrbKknaJ+l50Al7w1cztq13NslXGYhSozqNqRtY5CTcHhR9QKzrb1Kw9uSoVC+LxVe2u81lxSUv8hnjuU6Aie98Xgl4D2XJVujaMMbGXR2EcVfggRs3CPsdSlQmBvDmRSl/Ge8eNwLDERqmceZ547F+fohnscPjIFg2rYSAXL7QLo9QX2yvg9Ge7HjQe63VFMhCFjt1QHm+WkjY1dR3iL0tool4mZC7cHUMH3P+uQKFa1hhkCQ+Tc0AQt8kxLPMkIUh/nQoZZbrJ6lrIN6cl/LPVPnAqv67KU+1AR2gazn0iRjfcpbAdvROHamvhdgqyDv8z7J3RbFRIJoe/gK2OXQL9RT3oXah+0YrarZK7EDxizZeSFHk9fFptR57TsqyEo1/FtVyO6hzWEGeMLF/Tlw1wtuiQmW9pZ6G44ePCidhn6r0YhjQWgq+O+cp8Bz3UeWcr57SE95aPVXAk1SCmLJqtcYev1WtAitgqLLrKQAro+5FatEh3YYevfC0ez7RCFXL1pyiC+gDfK64gASxZaX6k5oJjqvqWcVzuRhe3/l/+s47vEVJmqYRJKbvuNQkth+aNPXAjCMCNnWQ02wwHj5p4mrnxiHiwhmUnCeumUDiGpHRYrOPKp4lyKN/jGZr5PPRDQPB+8xrX6S13+SlV7Z7ZbtXtvvfsR2jtgshzmYpiXFKSyAwQ0ojM/UIDe1YMZ7dYbuG35Ds/lWiO5ug2wRHXh7j9ItZab4CKIXJtqjynhoymhce34vc/qWUKk+VSBk26EzxYnt79ELvwv3PQ8uB7wVDnyF+8/PBEOSzviYcRv9fHviVsZJMVZLr/HavAO3gr5aN+KA2VM6d0rNdB/+CxCQA2GgtihcEiIhpM+KlqWWFUcLq0mtw2xA/biO8/YyWsN0BVpA50uWFlxBeshyf9QtN8DTFm1TPtRtHkRvYxExYANjjA8ekhKVmktCQxkHsecwyHn4ASILxv3USAAA="
         }
     }
 }
@@ -711,13 +715,14 @@ function Fish()
         return
     end
 
-    if not PathfindInProgress() and not PathIsRunning() then
+    if GetDistanceToPoint(NextNode.fishingX, NextNode.fishingY, NextNode.fishingZ) > 5 and not PathfindInProgress() and not PathIsRunning() then
         PathfindAndMoveTo(NextNode.fishingX, NextNode.fishingY, NextNode.fishingZ)
         return
     end
 
-    yield("/ahbait "..NextNode.baitName)
-    yield("/wait 0.1")
+    DeleteAllAutoHookAnonymousPresets()
+    UseAutoHookAnonymousPreset(NextNode.autohookPreset)
+    yield("/wait 1")
     yield("/ac Cast")
 end
 
