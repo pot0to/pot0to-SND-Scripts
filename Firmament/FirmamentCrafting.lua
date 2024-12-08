@@ -124,6 +124,9 @@ function TurnIn()
             State = CharacterState.crafting
             LogInfo("State Change: Crafting")
         end
+    elseif GetItemCount(28063) >= 9900 then
+        yield("/echo Almost capped on Skybuilders' Scrips! Stopping SND.")
+        yield("/snd stop")
     elseif GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
