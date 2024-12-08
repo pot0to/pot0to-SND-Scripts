@@ -431,14 +431,16 @@ end
 
 function EnterDiadem()
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
-        if NavIsReady() and not IsPlayerOccupied() then
+        if not NavIsReady() then
+            yield("/echo Waiting for navmesh...")
+            yield("/wait 1")
+        elseif GetCharacterCondition(CharacterCondition.betweenAreas) or GetCharacterCondition(CharacterCondition.beingMoved) then
+            -- wait to instance in
+        else
             LastStuckCheckTime = os.clock()
             LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
             State = CharacterState.ready
             LogInfo("State Change: Ready")
-        else
-            yield("/echo Waiting for navmesh...")
-            yield("/wait 1")
         end
         return
     end
@@ -592,7 +594,11 @@ end
 
 function MoveToNextNode()
     NextNodeCandidate = SelectNextNode()
-    if (NextNodeCandidate ~= nil and NextNodeCandidate.x ~= NextNode.x or NextNodeCandidate.y ~= NextNode.y or NextNodeCandidate.z ~= NextNode.z) then
+    if (NextNodeCandidate == nil) then
+        State = CharacterState.ready
+        LogInfo("State Change: Ready")
+        return
+    elseif (NextNodeCandidate.x ~= NextNode.x or NextNodeCandidate.y ~= NextNode.y or NextNodeCandidate.z ~= NextNode.z) then
         yield("/vnav stop")
         NextNode = NextNodeCandidate
         if NextNode.isUmbralNode then
@@ -674,7 +680,7 @@ function Gather()
         yield("/target "..NextNode.nodeName)
         yield("/wait 1")
         if not HasTarget() then
-            yield("/echo Could not find "..NextNode.nodeName)
+            -- yield("/echo Could not find "..NextNode.nodeName)
             if NextNode.nodeName:sub(1, 7) == "Clouded" then
                 UmbralGathered = true
             else
