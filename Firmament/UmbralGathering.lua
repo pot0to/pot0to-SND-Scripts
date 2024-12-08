@@ -85,6 +85,7 @@ TargetType = 1
 -- Options : 0 | 1 | 2 | 3 (Option: 0 is don't use cannon, Option: 1 is any target, Option: 2 only sprites, Option: 3 is don't include sprites)
 
 PrioritizeUmbral = true
+DoFish = false -- If false will continuously leave and re-enter the diadem when finishing an Umbral Node to take advantage of the node reset, if true will go fish after finishing an Umbral Node while the window is up
 
 CapGP = true 
 -- Bountiful Yield 2 (Min) | Bountiful Harvest 2 (Btn) [+x (based on gathering) to that hit on the node (only once)]
@@ -594,6 +595,11 @@ function SelectNextNode()
 end
 
 function MoveToNextNode()
+    local weather = GetActiveWeatherID()
+    if PrioritizeUmbral and (weather >= 133 and weather <= 136) and UmbralGathered and not Dofish then
+        UmbralGathered = false
+        LeaveDuty()
+    end
     NextNodeCandidate = SelectNextNode()
     if (NextNodeCandidate ~= nil and NextNodeCandidate.x ~= NextNode.x or NextNodeCandidate.y ~= NextNode.y or NextNodeCandidate.z ~= NextNode.z) then
         yield("/vnav stop")
