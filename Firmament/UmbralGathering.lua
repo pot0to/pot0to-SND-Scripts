@@ -430,6 +430,9 @@ function TeleportTo(aetheryteName)
 end
 
 function EnterDiadem()
+    UmbralGathered = false
+    NextNodeId = 0
+
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
         if not NavIsReady() then
             yield("/echo Waiting for navmesh...")
@@ -581,7 +584,6 @@ function SelectNextNode()
                 end
             end
         else
-            UmbralGathered = false
             LeaveDuty()
         end
     else
