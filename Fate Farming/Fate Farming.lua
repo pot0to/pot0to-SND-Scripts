@@ -2,13 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.19.0                                 *
+*                               Version 2.19.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.19.0   Added anti-botting changes:
+    -> 2.19.1   Added feature to walk towards center of fate if you are too far
+                    away to target the collections fate npc
+                Added anti-botting changes:
                     - /slightly/ smoother dismount (not by much tbh)
                     - added check to prevent vnav from interrupting casters
                     - turned off vnav pathing for boss fates while in combat
@@ -18,17 +20,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Fixed bug that causes you to dodge back and forth too much
                 Added setting for dodging plugin
                 Added chocobo stance
-                Made fixes to aetheryteY location
-                Changed RSR auto settings to remember what auto type you were
-                    already on
-                Updated rotation plugins stuff
-                Fixed typo
-                Substituted empty zone names for unsupported zones
-                Updated index for bicolor vouchers
-                Updated to support 2 instances, updated prints to use hardcoded
-                    zoneName
-                Released companion mode, banned flying in some ARR zones
-    -> 2.0.0    State system
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -1537,6 +1528,16 @@ function CollectionsFateTurnIn()
     if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
         TurnOffCombatMods()
         yield("/target "..CurrentFate.npcName)
+        yield("/wait 1")
+
+        -- if too far from npc to target, then head towards center of fate
+        if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
+            if not PathfindInProgress() and not PathIsRunning() then
+                PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
+            end
+        else
+            yield("/vnav stop")
+        end
         return
     end
 
