@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.0                                  *
+*                               Version 1.0.1                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.0   Added ability to leave and re-enter after gathering umbral nodes
+    ->  1.0.1   Added default change to miner to make sure you can queue in
+                Added ability to leave and re-enter after gathering umbral nodes
                     instead of fishing (credit: Estriam)
                 Added long route for botanist islands and added ability to
                     select random route after finishing previous route (credit: 
@@ -1035,6 +1036,16 @@ FoundationZoneId = 418
 FirmamentZoneId = 886
 DiademZoneId = 939
 
+if SelectedRoute == "Random" then
+    RouteType = GetRandomRouteType()
+elseif GatheringRoute[SelectedRoute] then
+    RouteType = SelectedRoute
+else
+    yield("/echo Invalid SelectedRoute : " .. RouteType)
+end
+yield("/echo SelectedRoute : " .. RouteType)
+yield("/gs change Miner")
+
 SetSNDProperty("StopMacroIfTargetNotFound", "false")
 if not (IsInZone(FoundationZoneId) or IsInZone(FirmamentZoneId) or IsInZone(DiademZoneId)) then
     TeleportTo("Foundation")
@@ -1056,15 +1067,6 @@ end
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
-
-if SelectedRoute == "Random" then
-    RouteType = GetRandomRouteType()
-elseif GatheringRoute[SelectedRoute] then
-    RouteType = SelectedRoute
-else
-    yield("/echo Invalid SelectedRoute : " .. RouteType)
-end
-yield("/echo SelectedRoute : " .. RouteType)
 
 State = CharacterState.ready
 NextNodeId = 1
