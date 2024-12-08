@@ -13,7 +13,12 @@ and goes fishing until umbral weather disappears.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  0.1.7   SetSNDProperty("StopMacroIfTargetNotFound", "false")
+    ->  1.0.0   Added ability to leave and re-enter after gathering umbral nodes
+                    instead of fishing (credit: Estriam)
+                Added long route for botanist islands and added ability to
+                    select random route after finishing previous route (credit: 
+                    Mars375)
+                SetSNDProperty("StopMacroIfTargetNotFound", "false")
                 Fixed it for autobuy dark matter too
                 Fixed bug with repairing via mender
                 Fixed mender name for repair function
@@ -66,13 +71,14 @@ FoodTimeout = 5
 -- How many attempts would you like it to try and food before giving up?
 -- The higher this is, the longer it's going to take. Don't set it below 5 for safety. 
 
-RouteType = "RedRoute"
+
+SelectedRoute = "Random"
 -- Select which route you would like to do. 
     -- Options are:
         -- "RedRoute"     -> MIN perception route, 8 node loop
         -- "PinkRoute"    -> BTN perception route, 8 node loop
-        -- "MinerIslands" -> MIN
-        -- "BotanistIslands" -> BTN
+        -- "MinerIslands" -> MIN, all the islands
+        -- "BotanistIslands" -> BTN, all the islands
         -- "Random" -> Randomizes the route each time
 
 GatheringSlot = 4
@@ -87,7 +93,7 @@ TargetType = 1
 PrioritizeUmbral = true
 DoFish = false -- If false will continuously leave and re-enter the diadem when finishing an Umbral Node to take advantage of the node reset, if true will go fish after finishing an Umbral Node while the window is up
 
-CapGP = true 
+CapGP = true
 -- Bountiful Yield 2 (Min) | Bountiful Harvest 2 (Btn) [+x (based on gathering) to that hit on the node (only once)]
 -- If you want this to let your gp cap between rounds, then true 
 -- If you would like it to use a skill on a node before getting to the final one, so you don't waste GP, set to false
@@ -106,14 +112,9 @@ SelfRepair = true                              --if false, will go to Limsa mend
 ShouldExtractMateria = true                           --should it Extract Materia
 --When do you want to repair your own gear? From 0-100 (it's in percentage, but enter a whole value
 
-PlayerWaitTime = true 
+PlayerWaitTime = true
 -- this is if you want to make it... LESS sus on you just jumping from node to node instantly/firing a cannon off at an enemy and then instantly flying off
--- default is true, just for safety. If you want to turn this off, do so at your own risk. 
-
-AntiStutterOpen = false
-AntiStutter = 2
--- default is 2 gathering loops this will execute the script again if you are having stutter issues 
--- WARNING your macro name should be DiademV2
+-- default is true, just for safety. If you want to turn this off, do so at your own risk.
 
 debug = false
 -- This is for debugging 
@@ -543,7 +544,7 @@ function RandomAdjustCoordinates(x, y, z, maxDistance)
     return randomX, randomY, randomZ
 end
 
-function getRandomRoute()
+function GetRandomRouteType()
     local routeNames = {}
     for routeName, _ in pairs(GatheringRoute) do
         table.insert(routeNames, routeName)
@@ -551,17 +552,6 @@ function getRandomRoute()
     local randomIndex = math.random(#routeNames) 
     
     return routeNames[randomIndex] 
-end
-
-if SelectedRoute == "random" then
-    RouteType = getRandomRoute()
-    yield("/echo RouteType : " .. RouteType .. "")
-
-elseif GatheringRoute[RouteType] then
-    RouteType = RouteType  
-    yield("/echo RouteType : " .. RouteType .. "")
-else
-    yield("/echo Invalid RouteType : " .. RouteType)
 end
 
 function SelectNextNode()
@@ -577,14 +567,19 @@ function SelectNextNode()
             end
         end
     elseif PrioritizeUmbral and UmbralGathered and (weather >= 133 and weather <= 136) then
-        for _, umbralWeather in pairs(UmbralWeatherNodes) do
-            if umbralWeather.weatherId == weather then
-                umbralWeather.fishingNode.isUmbralNode = true
-                umbralWeather.fishingNode.isFishingNode = true
-                umbralWeather.fishingNode.umbralWeatherName = umbralWeather.weatherName
-                LogInfo("Selected umbral fishing node for "..umbralWeather.weatherName)
-                return umbralWeather.fishingNode
+        if Dofish then
+            for _, umbralWeather in pairs(UmbralWeatherNodes) do
+                if umbralWeather.weatherId == weather then
+                    umbralWeather.fishingNode.isUmbralNode = true
+                    umbralWeather.fishingNode.isFishingNode = true
+                    umbralWeather.fishingNode.umbralWeatherName = umbralWeather.weatherName
+                    LogInfo("Selected umbral fishing node for "..umbralWeather.weatherName)
+                    return umbralWeather.fishingNode
+                end
             end
+        else
+            UmbralGathered = false
+            LeaveDuty()
         end
     else
         GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
@@ -595,11 +590,6 @@ function SelectNextNode()
 end
 
 function MoveToNextNode()
-    local weather = GetActiveWeatherID()
-    if PrioritizeUmbral and (weather >= 133 and weather <= 136) and UmbralGathered and not Dofish then
-        UmbralGathered = false
-        LeaveDuty()
-    end
     NextNodeCandidate = SelectNextNode()
     if (NextNodeCandidate ~= nil and NextNodeCandidate.x ~= NextNode.x or NextNodeCandidate.y ~= NextNode.y or NextNodeCandidate.z ~= NextNode.z) then
         yield("/vnav stop")
@@ -688,8 +678,8 @@ function Gather()
                 UmbralGathered = true
             else
                 if NextNodeId >= #GatheringRoute[RouteType] then
-                    if SelectedRoute == "random" then
-                        RouteType = getRandomRoute()
+                    if SelectedRoute == "Random" then
+                        RouteType = GetRandomRouteType()
                         yield("/echo New random route selected : "..RouteType)
                     end
                     NextNodeId = 1
@@ -1066,6 +1056,15 @@ end
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
+
+if SelectedRoute == "Random" then
+    RouteType = GetRandomRouteType()
+elseif GatheringRoute[SelectedRoute] then
+    RouteType = SelectedRoute
+else
+    yield("/echo Invalid SelectedRoute : " .. RouteType)
+end
+yield("/echo SelectedRoute : " .. RouteType)
 
 State = CharacterState.ready
 NextNodeId = 1
