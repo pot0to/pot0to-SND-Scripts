@@ -8,7 +8,7 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 0.1.7                                  *
+*                               Version 1.0.0                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -584,7 +584,7 @@ function SelectNextNode()
     else
         GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
         GatheringRoute[RouteType][NextNodeId].isFishingNode = false
-        LogInfo("Selected regular gathering node :"..GatheringRoute[RouteType][NextNodeId].nodeName)
+        LogInfo("Selected regular gathering node: "..GatheringRoute[RouteType][NextNodeId].nodeName)
         return GatheringRoute[RouteType][NextNodeId]
     end
 end
