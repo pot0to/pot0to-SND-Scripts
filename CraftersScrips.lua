@@ -69,11 +69,46 @@ ScripExchangeItems = {
         price = 125
     },
     {
+        itemName = "Crafter's Competence Materia XII",
+        categoryMenu = 2,
+        subcategoryMenu = 2,
+        listIndex = 0,
+        price = 500
+    },
+    {
+        itemName = "Crafter's Cunning Materia XII",
+        categoryMenu = 2,
+        subcategoryMenu = 2,
+        listIndex = 1,
+        price = 500
+    },
+    {
         itemName = "Crafter's Command Materia XII",
         categoryMenu = 2,
         subcategoryMenu = 2,
         listIndex = 2,
         price = 500
+    },
+    {
+        itemName = "Crafter's Competence Materia XI",
+        categoryMenu = 2,
+        subcategoryMenu = 1,
+        listIndex = 0,
+        price = 250
+    },
+    {
+        itemName = "Crafter's Cunning Materia XI",
+        categoryMenu = 2,
+        subcategoryMenu = 1,
+        listIndex = 1,
+        price = 250
+    },
+    {
+        itemName = "Crafter's Command Materia XI",
+        categoryMenu = 2,
+        subcategoryMenu = 1,
+        listIndex = 2,
+        price = 250
     }
 }
 
@@ -642,7 +677,7 @@ if ScripColor == "Orange" then
     CrafterScripId = OrangeCrafterScripId
     ScripRecipes = OrangeScripRecipes
 elseif ScripColor == "Purple" then
-    CrafterScripId = PurpleScripRecipes
+    CrafterScripId = PurpleCrafterScripId
     ScripRecipes = PurpleScripRecipes
 else
     yield("/echo Cannot recognize crafter scrip color: "..ScripColor)
