@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
-*                            Fishing Gatherer Scrips                            *
-*                                Version 1.2.8                                 *
+*                            Fishing Gatherer Scrips                           *
+*                                Version 1.2.9                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.8    Tree
+    -> 1.2.9    Added purple scrip exchange code bc i forgot lol
+                Tree
                 Fixed materia extraction bug p2
                 Fixed repair
                 Fixed teleport errors
@@ -31,6 +32,7 @@ Teleporter
 ]]
 
 ScripColorToFarm                    = "Orange"
+ItemToExchange                      = "Mount Token"
 SwitchLocationsAfter                = 10        --Number of minutes to fish at this spot before changing spots.
 
 Retainers                           = true      --If true, will do AR (autoretainers)
@@ -57,55 +59,25 @@ HubCity                             = "Solution Nine"   --options:Limsa/Gridania
 ********************************************************************************
 ]]
 
-HubCities =
-{
-    {
-        zoneName="Limsa",
-        zoneId = 129,
-        aethernet = {
-            aethernetZoneId = 129,
-            aethernetName = "Hawkers' Alley",
-            x=-213.61108, y=16.739136, z=51.80432
-        },
-        retainerBell = { x=-123.88806, y=17.990356, z=21.469421, requiresAethernet=false },
-        scripExchange = { x=-258.52585, y=16.2, z=40.65883, requiresAethernet=true }
-    },
-    {
-        zoneName="Gridania",
-        zoneId = 132,
-        aethernet = {
-            aethernetZoneId = 133,
-            aethernetName = "Sapphire Avenue Exchange",
-            x=131.9447, y=4.714966, z=-29.800903
-        },
-        retainerBell = { x=168.72, y=15.5, z=-100.06, requiresAethernet=true },
-        scripExchange = { x=142.15, y=13.74, z=-105.39, requiresAethernet=true },
-    },
-    {
-        zoneName="Ul'dah",
-        zoneId = 130,
-        aethernet = {
-            aethernetZoneId = 131,
-            aethernetName = "Leatherworkers' Guild & Shaded Bower",
-            x=101, y=9, z=-112
-        },
-        retainerBell = { x=171, y=15, z=-102, requiresAethernet=true },
-        scripExchange = { x=142.68, y=13.75, z=-104.59, requiresAethernet=true },
-    },
-    {
-        zoneName="Solution Nine",
-        zoneId = 1186,
-        aethernet = {
-            aethernetZoneId = 1186,
-            aethernetName = "Nexus Arcade",
-            x=-161, y=-1, z=21
-        },
-        retainerBell = { x=-152.465, y=0.660, z=-13.557, requiresAethernet=true },
-        scripExchange = { x=-158.019, y=0.922, z=-37.884, requiresAethernet=true }
-    }
-}
-
 OrangeGathererScripId = 41785
+PurpleGathererScripId = 33914
+
+ScripExchangeItems = {
+    {
+        itemName = "Mount Token",
+        categoryMenu = 4,
+        subcategoryMenu = 8,
+        listIndex = 6,
+        price = 1000
+    },
+    {
+        itemName = "Hi-Cordial",
+        categoryMenu = 4,
+        subcategoryMenu = 1,
+        listIndex = 0,
+        price = 1000
+    },
+}
 
 FishTable =
 {
@@ -154,12 +126,52 @@ FishTable =
     }
 }
 
-ScripExchangeItem =
+HubCities =
 {
-    scripExchangeMenu1=4,
-    scripExchangeMenu2=8,
-    scripExchangeRow=6,
-    scripExchangePrice=1000
+    {
+        zoneName="Limsa",
+        zoneId = 129,
+        aethernet = {
+            aethernetZoneId = 129,
+            aethernetName = "Hawkers' Alley",
+            x=-213.61108, y=16.739136, z=51.80432
+        },
+        retainerBell = { x=-123.88806, y=17.990356, z=21.469421, requiresAethernet=false },
+        scripExchange = { x=-258.52585, y=16.2, z=40.65883, requiresAethernet=true }
+    },
+    {
+        zoneName="Gridania",
+        zoneId = 132,
+        aethernet = {
+            aethernetZoneId = 133,
+            aethernetName = "Sapphire Avenue Exchange",
+            x=131.9447, y=4.714966, z=-29.800903
+        },
+        retainerBell = { x=168.72, y=15.5, z=-100.06, requiresAethernet=true },
+        scripExchange = { x=142.15, y=13.74, z=-105.39, requiresAethernet=true },
+    },
+    {
+        zoneName="Ul'dah",
+        zoneId = 130,
+        aethernet = {
+            aethernetZoneId = 131,
+            aethernetName = "Leatherworkers' Guild & Shaded Bower",
+            x=101, y=9, z=-112
+        },
+        retainerBell = { x=171, y=15, z=-102, requiresAethernet=true },
+        scripExchange = { x=142.68, y=13.75, z=-104.59, requiresAethernet=true },
+    },
+    {
+        zoneName="Solution Nine",
+        zoneId = 1186,
+        aethernet = {
+            aethernetZoneId = 1186,
+            aethernetName = "Nexus Arcade",
+            x=-161, y=-1, z=21
+        },
+        retainerBell = { x=-152.465, y=0.660, z=-13.557, requiresAethernet=true },
+        scripExchange = { x=-158.019, y=0.922, z=-37.884, requiresAethernet=true }
+    }
 }
 
 CharacterCondition = {
@@ -518,7 +530,7 @@ function TurnIn()
             LogInfo("Path not running")
             PathfindAndMoveTo(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z)
         end
-    elseif GetItemCount(OrangeGathererScripId) >= 3800 then
+    elseif GetItemCount(GathererScripId) >= 3800 then
         if IsAddonVisible("CollectablesShop") then
             yield("/callback CollectablesShop true -1")
         else
@@ -544,7 +556,7 @@ function TurnIn()
 end
 
 function KupoVoucherLottery()
-    if GetItemCount(OrangeGathererScripId) < 3800 then
+    if GetItemCount(GathererScripId) < 3800 then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
         elseif GetItemCount(SelectedFish.fishId) > 0 then
@@ -577,11 +589,11 @@ function KupoVoucherLottery()
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("InclusionShop") then
-        yield("/callback InclusionShop true 12 "..ScripExchangeItem.scripExchangeMenu1)
+        yield("/callback InclusionShop true 12 "..ScripExchangeItem.categoryMenu)
         yield("/wait 1")
-        yield("/callback InclusionShop true 13 "..ScripExchangeItem.scripExchangeMenu2)
+        yield("/callback InclusionShop true 13 "..ScripExchangeItem.subcategoryMenu)
         yield("/wait 1")
-        yield("/callback InclusionShop true 14 "..ScripExchangeItem.scripExchangeRow.." "..GetItemCount(OrangeGathererScripId)//ScripExchangeItem.scripExchangePrice)
+        yield("/callback InclusionShop true 14 "..ScripExchangeItem.listIndex.." "..GetItemCount(GathererScripId)//ScripExchangeItem.price)
     else
         yield("/wait 1")
         yield("/target Scrip Exchange")
@@ -881,6 +893,22 @@ CharacterState = {
 StopMain = false
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
+
+if ScripColorToFarm == "Orange" then
+    GathererScripId = OrangeGathererScripId
+else
+    GathererScripId = PurpleGathererScripId
+end
+
+for _, item in ipairs(ScripExchangeItems) do
+    if item.itemName == ItemToExchange then
+        ScripExchangeItem = item
+    end
+end
+if ScripExchange == nil then
+    yield("/echo Cannot recognize item "..ScripExchangeItem..". Stopping script.")
+    yield("/snd stop")
+end
 
 SelectedFish = SelectFishTable()
 
