@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.19.2                                 *
+*                               Version 2.19.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.19.2   Fixed flying ban in Outer La Noscea and Southern Thanalan
+    -> 2.19.3   Added checks and debugs for bicolor gemstone shopkeeper
+                Fixed flying ban in Outer La Noscea and Southern Thanalan
                 Added feature to walk towards center of fate if you are too far
                     away to target the collections fate npc
                 Added anti-botting changes:
@@ -2240,7 +2241,12 @@ function ExchangeVouchers()
         end
     else
         if IsAddonVisible("ShopExchangeCurrency") then
+            LogInfo("[FATE] Attemping to close shop window")
             yield("/callback ShopExchangeCurrency true -1")
+            return
+        elseif GetCharacterCondition(CharacterCondition.occupiedInEvent) then
+            LogInfo("[FATE] Character still occupied talking to shopkeeper")
+            yield("/wait 0.5")
             return
         end
 
