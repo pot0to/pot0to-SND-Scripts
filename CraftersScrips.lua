@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.4.0                                 *
+*                                Version 0.4.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.4.0    Added purple scrips, fixed /li inn
+    -> 0.4.1    Fixed purple scrip turn ins (credit: Telain)
+                Added purple scrips, fixed /li inn
                 Added HQ item count to out of materials check, continue turn in
                     items after dumping scrips
                 Fixed up some bugs
@@ -472,6 +473,7 @@ function TurnIn()
         else
 			if ScripColor == "Purple" then
 				yield("/callback CollectablesShop true 12 1")
+                yield("/wait 0.5")
 			end
             yield("/callback CollectablesShop true 15 0")
             yield("/wait 1")
