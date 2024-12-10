@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.1                                  *
+*                               Version 1.0.2                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.1   Added default change to miner to make sure you can queue in
+    ->  1.0.2   Fixed starting NodeId after entering Diadem
+                Added default change to miner to make sure you can queue in
                 Added ability to leave and re-enter after gathering umbral nodes
                     instead of fishing (credit: Estriam)
                 Added long route for botanist islands and added ability to
