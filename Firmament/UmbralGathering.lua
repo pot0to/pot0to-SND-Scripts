@@ -396,6 +396,7 @@ CharacterCondition = {
 }
 
 function Ready()
+    yield("/echo ready")
     if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: BuyFishingBait")
@@ -409,6 +410,7 @@ function Ready()
         State = CharacterState.moveToNextNode
         LogInfo("State Change: MoveToNextNode")
     end
+    yield("/echo ready end")
 end
 
 --#endregion States

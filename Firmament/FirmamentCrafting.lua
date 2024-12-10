@@ -147,7 +147,7 @@ function TurnIn()
             yield("/wait 1")
         elseif GetNodeText("HWDSupply", 16) == "10/10" then
             yield("/callback HWDSupply true -1")
-            State = CharacterState.scripExchange
+            State = CharacterState.kupoVoucherLottery
             LogInfo("State Change: KupoVouchers")
         else
             yield("/callback HWDSupply true 1 0")
@@ -190,7 +190,7 @@ CharacterState =
 {
     crafting = Crafting,
     turnIn = TurnIn,
-    scripExchange = KupoVoucherLottery
+    kupoVoucherLottery = KupoVoucherLottery
 }
 
 State = CharacterState.crafting
