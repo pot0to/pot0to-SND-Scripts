@@ -399,16 +399,16 @@ function Ready()
     yield("/echo ready")
     if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
-        LogInfo("State Change: BuyFishingBait")
+        LogInfo("[UmbralGathering] State Change: BuyFishingBait")
     elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
-        LogInfo("State Change: Repair")
+        LogInfo("[UmbralGathering] State Change: Repair")
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
         State = CharacterState.fireCannon
         LogInfo("State Change: Fire Cannon")
     else
         State = CharacterState.moveToNextNode
-        LogInfo("State Change: MoveToNextNode")
+        LogInfo("[UmbralGathering] State Change: MoveToNextNode")
     end
     yield("/echo ready end")
 end
@@ -445,7 +445,7 @@ function EnterDiadem()
             LastStuckCheckTime = os.clock()
             LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[UmbralGathering] State Change: Ready")
         end
         return
     end
@@ -563,6 +563,7 @@ function GetRandomRouteType()
 end
 
 function SelectNextNode()
+    yield("/echo select next node")
     local weather = GetActiveWeatherID()
     if PrioritizeUmbral and not UmbralGathered and (weather >= 133 and weather <= 136) then
         for _, umbralWeather in pairs(UmbralWeatherNodes) do
@@ -598,6 +599,7 @@ end
 
 function MoveToNextNode()
     NextNodeCandidate = SelectNextNode()
+    yield("/echo selected next node")
     if (NextNodeCandidate == nil) then
         State = CharacterState.ready
         LogInfo("State Change: Ready")

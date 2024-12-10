@@ -89,6 +89,7 @@ function Crafting()
     local slots = GetInventoryFreeSlotCount()
     if slots <= MinInventoryFreeSlots then
         yield("/echo Out of inventory slots")
+        ArtisanSetEnduranceStatus(false)
         if IsAddonVisible("RecipeNote") then
             yield("/echo Closing crafting log 1")
             yield("/callback RecipeNote true -1")
@@ -96,7 +97,11 @@ function Crafting()
             yield("/echo Turning in")
             State = CharacterState.turnIn
             LogInfo("State Change: TurnIn")
+        else
+            yield("/wait 0.5")
         end
+    elseif ArtisanGetEnduranceStatus() then
+        -- let artisan keep crafting
     elseif IsAddonVisible("RecipeNote") and OutOfMaterials() then
         if GetItemCount(ItemId) == 0 then
             yield("/echo Out of materials. Stopping SND.")

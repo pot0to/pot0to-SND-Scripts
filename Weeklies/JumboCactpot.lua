@@ -72,7 +72,11 @@ TicketsPurchased = false
 function PurchaseNewTickets()
     yield("/target Jumbo Cactpot Broker")
 
-    if IsAddonVisible("SelectString") then
+    if IsAddonVisible("LotteryWeeklyRewardList") then
+        yield("/echo You have already purchased tickets this week!")
+        yield("/callback LotteryWeeklyRewardList true -1")
+        State = CharacterStates.endState
+    elseif IsAddonVisible("SelectString") then
         yield("/callback SelectString true 0")
     elseif IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
@@ -92,6 +96,11 @@ function PurchaseNewTickets()
 end
 
 function EndState()
+    if IsAddonVisible("SelectString") then
+        yield("/callback SelectString true -1")
+    else
+        StopFlag = true
+    end
 end
 
 CharacterStates =
@@ -102,13 +111,10 @@ CharacterStates =
     endState = EndState
 }
 
+StopFlag = false
 State = CharacterStates.start
 yield("/at y")
-while true do
-    if State == CharacterStates.endState then
-        break
-    else
-        State()
-        yield("/wait 0.1")
-    end
+while not StopFlag do
+    State()
+    yield("/wait 0.1")
 end
