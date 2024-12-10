@@ -224,10 +224,10 @@ for i = 0, 12 do
         local type = GetWeeklyBingoOrderDataType(key)
         local data = GetWeeklyBingoOrderDataData(key)
         local text = GetWeeklyBingoOrderDataText(key)
-        LogInfo("[WonderousTails] Wonderous Tails #"..(i+1).." Key: "..key)
-        LogInfo("[WonderousTails] Wonderous Tails #"..(i+1).." Type: "..type)
-        LogInfo("[WonderousTails] Wonderous Tails #"..(i+1).." Data: "..data)
-        LogInfo("[WonderousTails] Wonderous Tails #"..(i+1).." Text: "..text)
+        LogInfo("[WondrousTails] Wonderous Tails #"..(i+1).." Key: "..key)
+        LogInfo("[WondrousTails] Wonderous Tails #"..(i+1).." Type: "..type)
+        LogInfo("[WondrousTails] Wonderous Tails #"..(i+1).." Data: "..data)
+        LogInfo("[WondrousTails] Wonderous Tails #"..(i+1).." Text: "..text)
 
         local duty = SearchWonderousTailsTable(type, data, text)
         if duty == nil then

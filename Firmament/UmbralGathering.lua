@@ -442,6 +442,7 @@ function EnterDiadem()
         elseif GetCharacterCondition(CharacterCondition.betweenAreas) or GetCharacterCondition(CharacterCondition.beingMoved) then
             -- wait to instance in
         else
+            yield("/wait 3")
             LastStuckCheckTime = os.clock()
             LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
             State = CharacterState.ready
