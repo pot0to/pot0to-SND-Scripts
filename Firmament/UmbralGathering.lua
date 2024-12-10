@@ -396,7 +396,6 @@ CharacterCondition = {
 }
 
 function Ready()
-    yield("/echo ready")
     if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("[UmbralGathering] State Change: BuyFishingBait")
@@ -410,7 +409,6 @@ function Ready()
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
     end
-    yield("/echo ready end")
 end
 
 --#endregion States
@@ -433,7 +431,7 @@ end
 
 function EnterDiadem()
     UmbralGathered = false
-    NextNodeId = 0
+    NextNodeId = 1
 
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
         if not NavIsReady() then
@@ -564,7 +562,6 @@ function GetRandomRouteType()
 end
 
 function SelectNextNode()
-    yield("/echo select next node")
     local weather = GetActiveWeatherID()
     if PrioritizeUmbral and not UmbralGathered and (weather >= 133 and weather <= 136) then
         for _, umbralWeather in pairs(UmbralWeatherNodes) do
@@ -600,7 +597,6 @@ end
 
 function MoveToNextNode()
     NextNodeCandidate = SelectNextNode()
-    yield("/echo selected next node")
     if (NextNodeCandidate == nil) then
         State = CharacterState.ready
         LogInfo("State Change: Ready")
