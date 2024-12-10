@@ -1021,7 +1021,7 @@ function Repair()
             yield("/interact")
         else
             State = CharacterState.ready
-            LogInfo("[FATE] State Change: Ready")
+            LogInfo("[UmbralGatherer] State Change: Ready")
         end
     end
 end
