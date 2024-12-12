@@ -251,7 +251,7 @@ function GetAcceptedAlliedSocietyQuests(alliedSocietyName)
     local accepted = {}
     local allAcceptedQuests = GetAcceptedQuests()
     for i=0, allAcceptedQuests.Count-1 do
-        if GetQuestAlliedSociety(allAcceptedQuests[i]) == alliedSocietyName then
+        if GetQuestAlliedSociety(allAcceptedQuests[i]):lower() == alliedSocietyName:lower() then
             table.insert(accepted, allAcceptedQuests[i])
         end
     end

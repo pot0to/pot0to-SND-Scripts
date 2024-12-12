@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.2                                  *
+*                               Version 1.0.3                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.2   Fixed starting NodeId after entering Diadem
+    ->  1.0.3   Added food and potion check back in
+                Fixed starting NodeId after entering Diadem
                 Added default change to miner to make sure you can queue in
                 Added ability to leave and re-enter after gathering umbral nodes
                     instead of fishing (credit: Estriam)
@@ -58,21 +59,8 @@ This Plugins are optional and not needed unless you have it enabled in the setti
 ********************************************************************************
 ]]
 
-UseFood = false
-FoodKind = "Sideritis Cookie <HQ>"
-RemainingFoodTimer = 5 -- This is in minutes
--- If you would like to use food while in diadem, and what kind of food you would like to use. 
--- With the suggested TeamCraft melds, Sideritis Cookies (HQ) are the best ones you can be using to get the most bang for your buck
--- Can also set it to where it will refood at a certain duration left
--- Options
-    -- UseFood : true | false (default is true)
-    -- FoodKind : "Sideritis Cookie" (make sure to have the name of the food IN the "")
-    -- RemainingFoodTimer : Default is 5, time is in minutes
-
-FoodTimeout = 5 
--- How many attempts would you like it to try and food before giving up?
--- The higher this is, the longer it's going to take. Don't set it below 5 for safety. 
-
+Food = ""                   --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+Potion = ""                 --Leave "" Blank if you don't want to use any potions.
 
 SelectedRoute = "Random"
 -- Select which route you would like to do. 
@@ -396,7 +384,24 @@ CharacterCondition = {
     flying=77
 }
 
+function FoodCheck()
+    --food usage
+    if not HasStatusId(48) and Food ~= "" then
+        yield("/item " .. Food)
+    end
+end
+
+function PotionCheck()
+    --pot usage
+    if not HasStatusId(49) and Potion ~= "" then
+        yield("/item " .. Potion)
+    end
+end
+
 function Ready()
+    FoodCheck()
+    PotionCheck()
+    
     if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("[UmbralGathering] State Change: BuyFishingBait")
