@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.2.10                                 *
+*                                Version 1.2.11                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.10   Fixed purple scrip exchange, changed purple fishing point to
+    -> 1.2.11   Added IsAddonReady("RetainerList") check
+                Fixed purple scrip exchange, changed purple fishing point to
                     face to be further south, fixed coordinates for ul'dah and
                     gridania
                 Added purple scrip exchange code bc i forgot lol
@@ -617,7 +618,9 @@ function ProcessRetainers()
     LogInfo("[FishingGatherer] Handling retainers...")
     if not LogInfo("[FishingGatherer] check retainers ready") and not ARRetainersWaitingToBeProcessed() or GetInventoryFreeSlotCount() <= 1 then
         if IsAddonVisible("RetainerList") then
-            yield("/callback RetainerList true -1")
+            if IsAddonReady("RetainerList") then
+                yield("/callback RetainerList true -1")
+            end
         elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
             State = CharacterState.ready
             LogInfo("[FishingGatherer] State Change: Ready")
@@ -649,7 +652,7 @@ function ProcessRetainers()
         return
     elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
         yield("/interact")
-    elseif IsAddonVisible("RetainerList") then
+    elseif IsAddonReady("RetainerList") and IsAddonVisible("RetainerList") then
         yield("/ays e")
         if Echo == "All" then
             yield("/echo [FishingGatherer] Processing retainers")
