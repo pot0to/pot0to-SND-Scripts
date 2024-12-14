@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.3                                  *
+*                               Version 1.0.4                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.3   Added food and potion check back in
+    ->  1.0.4   Fixed DoFish, added DodgeTree()
+                Added food and potion check back in
                 Fixed starting NodeId after entering Diadem
                 Added default change to miner to make sure you can queue in
                 Added ability to leave and re-enter after gathering umbral nodes
@@ -375,7 +376,7 @@ CharacterCondition = {
     fishing=43,
     betweenAreas=45,
     jumping48=48,
-    jumping61=61,
+    jumpPlatform=61,
     betweenAreasForDuty=51,
     boundByDuty56=56,
     mounting57=57,
@@ -417,6 +418,27 @@ function Ready()
     end
 end
 
+-- because there's this one stupid tree on the starting platform between the
+-- spawn point and the launch platform that you always get stuck on
+function DodgeTree()
+    while GetDistanceToPoint(-652.28, 293.78, -176.22) > 5 do
+        PathfindAndMoveTo(-652.28, 293.78, -176.22, true)
+        yield("/wait 3")
+    end
+    while GetDistanceToPoint(-628.01, 276.3, -190.51) > 5 and not GetCharacterCondition(CharacterCondition.jumpPlatform) do
+        if not PathfindInProgress() and not PathIsRunning() then
+            PathfindAndMoveTo(-628.01, 276.3, -190.51, true)
+        end
+        yield("/wait 1")
+    end
+    if PathfindInProgress() or PathIsRunning() then
+        yield("/vnav stop")
+    end
+    while GetCharacterCondition(CharacterCondition.jumpPlatform) do
+        yield("/wait 1")
+    end
+end
+
 --#endregion States
 
 --#region Movement
@@ -438,6 +460,7 @@ end
 function EnterDiadem()
     UmbralGathered = false
     NextNodeId = 1
+    JustEntered = true
 
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
         if not NavIsReady() then
@@ -580,7 +603,7 @@ function SelectNextNode()
             end
         end
     elseif PrioritizeUmbral and UmbralGathered and (weather >= 133 and weather <= 136) then
-        if Dofish then
+        if DoFish then
             for _, umbralWeather in pairs(UmbralWeatherNodes) do
                 if umbralWeather.weatherId == weather then
                     umbralWeather.fishingNode.isUmbralNode = true
@@ -619,10 +642,19 @@ function MoveToNextNode()
     if not GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.mounting
         LogInfo("State Change: Mounting")
+        return
     elseif NextNode.isFishingNode and GetClassJobId() ~= 18 then
         yield("/gs change Fisher")
         yield("/wait 3")
-    elseif NextNode.isUmbralNode and not NextNode.isFishingNode and
+        return
+    elseif not NextNode.isUmbralNode and JustEntered then
+        DodgeTree()
+        JustEntered = false
+        return
+    end
+
+    JustEntered = false
+    if NextNode.isUmbralNode and not NextNode.isFishingNode and
         ((NextNode.class == "Miner" and GetClassJobId() ~= 16) or
         (NextNode.class == "Botanist" and GetClassJobId() ~= 17))
     then
@@ -1059,7 +1091,12 @@ else
     yield("/echo Invalid SelectedRoute : " .. RouteType)
 end
 yield("/echo SelectedRoute : " .. RouteType)
-yield("/gs change Miner")
+if (RouteType == "RedRoute" or RouteType == "MinerIslands") and GetClassJobId() ~= 16 then
+    yield("/gs change Miner")
+elseif (RouteType == "PinkRoute" or RouteType == "BotanistIslands") and GetClassJobId() ~= 17 then
+    yield("/gs change Botanist")
+end
+yield("/wait 3")
 
 SetSNDProperty("StopMacroIfTargetNotFound", "false")
 if not (IsInZone(FoundationZoneId) or IsInZone(FirmamentZoneId) or IsInZone(DiademZoneId)) then
@@ -1078,6 +1115,11 @@ if IsInZone(FoundationZoneId) then
     repeat
         yield("/wait 1")
     until IsInZone(FirmamentZoneId)
+end
+if IsInZone(DiademZoneId) then
+    JustEntered = GetDistanceToPoint(Mender.x, Mender.y, Mender.z) < 50
+else
+    JustEntered = true
 end
 
 LastStuckCheckTime = os.clock()
@@ -1098,7 +1140,7 @@ while true do
     if not (IsPlayerCasting() or
         GetCharacterCondition(CharacterCondition.betweenAreas) or
         GetCharacterCondition(CharacterCondition.jumping48) or
-        GetCharacterCondition(CharacterCondition.jumping61) or
+        GetCharacterCondition(CharacterCondition.jumpPlatform) or
         GetCharacterCondition(CharacterCondition.mounting57) or
         GetCharacterCondition(CharacterCondition.mounting64) or
         GetCharacterCondition(CharacterCondition.beingMoved) or
