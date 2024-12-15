@@ -1,13 +1,17 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.2.11                                 *
+*                                Version 1.2.12                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.11   Added IsAddonReady("RetainerList") check
+    -> 1.2.12   Adjusted tree coords to give an even wider berth, shortened
+                    fishing range to avoid unfishable area, changed state
+                    transition dismount -> goToFishingHole to avoid flying out
+                    to pointToFace
+                Added IsAddonReady("RetainerList") check
                 Fixed purple scrip exchange, changed purple fishing point to
                     face to be further south, fixed coordinates for ul'dah and
                     gridania
@@ -95,9 +99,8 @@ FishTable =
         fishingSpots = {
             maxHeight = 1024,
             waypoints = {
-                { x=-115.85, y=-27.7, z=723.95 },
-                { x=-11.04, y=-7.64, z=746.06 },
-                { x=64.24, y=1.78, z=729.25 }, -- tree
+                { x=-4.47, y=-6.85, z=747.47 },
+                { x=59.27, y=-2.0, z=735.09 }, -- tree
                 { x=135.71, y=6.12, z=715.0 },
                 { x=212.5, y=12.2, z=739.26 },
             },
@@ -488,8 +491,8 @@ function Dismount()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
     else
-        State = CharacterState.fishing
-        LogInfo("State Change: Fishing")
+        State = CharacterState.goToFishingHole
+        LogInfo("State Change: GoToFishingHole")
     end
     yield("/wait 1")
 end
@@ -889,7 +892,7 @@ CharacterState = {
     goToFishingHole = GoToFishingHole,
     extractMateria = ExecuteExtractMateria,
     repair = ExecuteRepair,
-    exchangingVouchers = ExchangeVouchers,
+    exchangingVouchers = ExecuteBicolorExchange,
     processRetainers = ProcessRetainers,
     gcTurnIn = ExecuteGrandCompanyTurnIn,
     fishing = Fishing,
