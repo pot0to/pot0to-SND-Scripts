@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.2.13                                 *
+*                                Version 1.2.14                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.2.13   Fixed dismounting
+    -> 1.2.14   Reverted dismount -> fishing
+                Fixed dismounting
                 Adjusted tree coords to give an even wider berth, shortened
                     fishing range to avoid unfishable area, changed state
                     transition dismount -> goToFishingHole to avoid flying out
@@ -281,7 +282,7 @@ function GoToFishingHole()
         return
     end
 
-    if GetDistanceToPoint(SelectedFishingSpot.waypointX, SelectedFishingSpot.waypointY, SelectedFishingSpot.waypointZ) > 5 then
+    if GetDistanceToPoint(SelectedFishingSpot.waypointX, SelectedFishingSpot.waypointY, SelectedFishingSpot.waypointZ) > 10 then
         if not GetCharacterCondition(CharacterCondition.mounted) then
             State = CharacterState.mounting
             LogInfo("State Change: Mounting")
@@ -492,8 +493,8 @@ function Dismount()
     elseif GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
     else
-        State = CharacterState.goToFishingHole
-        LogInfo("State Change: GoToFishingHole")
+        State = CharacterState.fishing
+        LogInfo("State Change: Fishing")
     end
     yield("/wait 1")
 end
