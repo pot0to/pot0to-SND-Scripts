@@ -31,10 +31,11 @@ Loosely based on Ahernika's NonStopFisher
 *                               Required Plugins                               *
 ********************************************************************************
 
-AutoHook
-VnavMesh
-Lifestream
-Teleporter
+1. AutoHook
+2. VnavMesh
+3. Lifestream
+4. Teleporter
+5. YesAlready: YesNo > ... (the 3 dots) > Auto Collectables https://github.com/PunishXIV/AutoHook/blob/main/AcceptCollectable.md
 
 ********************************************************************************
 *                                   Settings                                   *
