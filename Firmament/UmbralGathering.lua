@@ -8,12 +8,14 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.6                                  *
+*                               Version 1.0.7                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.6   Removed jump to fly
+    ->  1.0.7   Fixed jump to fly properly, added 10s stuck check when using
+                    cannon
+                Removed jump to fly
                 Updated autohook presets to force bait swap
                 Fixed DoFish, added DodgeTree()
                 Added food and potion check back in
@@ -639,7 +641,7 @@ function MoveToNextNode()
         return
     end
 
-    if not GetCharacterCondition(CharacterCondition.flying) then
+    if not GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.mounting
         LogInfo("State Change: Mounting")
         return
@@ -683,6 +685,18 @@ function MoveToNextNode()
     then
         PathfindAndMoveTo(NextNode.x, NextNode.y, NextNode.z, true)
     end
+end
+
+function RandomAdjustCoordinates(x, y, z, maxDistance)
+    local angle = math.random() * 2 * math.pi
+    local x_adjust = maxDistance * math.random()
+    local z_adjust = maxDistance * math.random()
+
+    local randomX = x + (x_adjust * math.cos(angle))
+    local randomY = y + maxDistance
+    local randomZ = z + (z_adjust * math.sin(angle))
+
+    return randomX, randomY, randomZ
 end
 --#endregion Movement
 
@@ -905,6 +919,28 @@ function FireCannon()
         return
     end
 
+    if (PathIsRunning() or PathfindInProgress()) then
+        local now = os.clock()
+        if now - LastStuckCheckTime > 10 then
+            local x = GetPlayerRawXPos()
+            local y = GetPlayerRawYPos()
+            local z = GetPlayerRawZPos()
+
+            local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
+
+            if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
+                yield("/vnav stop")
+                yield("/wait 1")
+                LogInfo("[UmbralGathering] Antistuck")
+                PathfindAndMoveTo(randomX, y, randomZ)
+            end
+            
+            LastStuckCheckTime = now
+            LastStuckCheckPosition = {x=x, y=y, z=z}
+        end
+        return
+    end
+
     if not HasTarget() then
         for i=1, #MobTable[TargetType] do
             yield("/target "..MobTable[TargetType][i][1])
@@ -920,13 +956,6 @@ function FireCannon()
     end
 
     if GetDistanceToTarget() > 10 then
-        -- if not GetCharacterCondition(CharacterCondition.flying) then
-        --     State = CharacterState.mounting
-        --     LogInfo("State Change: Mount")
-        -- else
-        --     PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-        -- end
-        -- return
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
         end
@@ -939,8 +968,6 @@ function FireCannon()
     end
 
     if GetCharacterCondition(CharacterCondition.mounted) then
-        -- State = CharacterState.dismounting
-        -- LogInfo("State Change: Dismount")
         yield("/ac dismount")
         yield("/wait 1")
         return
