@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.5                                  *
+*                               Version 1.0.6                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.5   Updated autohook presets to force bait swap
+    ->  1.0.6   Removed jump to fly
+                Updated autohook presets to force bait swap
                 Fixed DoFish, added DodgeTree()
                 Added food and potion check back in
                 Fixed starting NodeId after entering Diadem
@@ -514,11 +515,9 @@ function EnterDiadem()
 end
 
 function Mount()
-    if GetCharacterCondition(CharacterCondition.flying) then
+    if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.moveToNextNode
         LogInfo("[FATE] State Change: MoveToNextNode")
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
-        yield("/gaction jump")
     else
         yield('/gaction "mount roulette"')
     end
