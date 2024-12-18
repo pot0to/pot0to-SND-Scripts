@@ -1,17 +1,3 @@
-
-
--- for each cactpot ticket
-while GetCharacterCondition(32) do
-    if IsAddonVisible("SelectYesno") then
-        yield("/callback SelectYesno true 0")
-    elseif not HasPlugin("TextAdvance") and IsAddonVisible("Talk") then
-        yield("/click Talk Click")
-    end
-    yield("/wait 0.1")
-end
-
-
-
 --[[
 
 ********************************************************************************
