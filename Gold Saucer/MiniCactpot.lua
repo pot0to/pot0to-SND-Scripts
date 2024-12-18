@@ -51,21 +51,14 @@ function GoToCashier()
         yield("/vnav stop")
     end
 
-    if not HasTarget() or GetTargetName() ~= Npc.name then
-        yield("/target "..Npc.name)
-        return
-    end
-
     State = CharacterStates.playMiniCactpot
 end
 
-Attempts = 0
+TicketsPurchased = false
 function PlayMiniCactpot()
     -- TODO: replace with mini cactpot name
-    if Attempts >= 3 then
-        State = CharacterStates.endState
-    elseif IsAddonVisible("LotteryDaily") then
-        Attempts = 0
+    
+    if IsAddonVisible("LotteryDaily") then
         yield("/wait 1")
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
@@ -79,9 +72,13 @@ function PlayMiniCactpot()
         PathfindAndMoveTo(Npc.x, Npc.y, Npc.z)
     elseif PathIsRunning() or PathfindInProgress() then
         yield("/vnav stop")
+    elseif TicketsPurchased and not GetCharacterCondition(32) then
+        State = CharacterStates.endState
+    elseif not HasTarget() or GetTargetName() ~= Npc.name then
+        yield("/target "..Npc.name)
     else
         yield("/interact")
-        Attempts = Attempts + 1
+        TicketsPurchased = true
     end
 end
 
