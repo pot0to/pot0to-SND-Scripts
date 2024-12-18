@@ -2,13 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.20.1                                 *
+*                               Version 2.20.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.20.1   Added height limit check for flying  back to aetheryte
+    -> 2.20.2   Cleanup for Yak'tel fates and landing condition when flying back
+                    to aetheryte
+                Added height limit check for flying  back to aetheryte
                 Rework bicolor exchange
                 Added checks and debugs for bicolor gemstone shopkeeper
                 Fixed flying ban in Outer La Noscea and Southern Thanalan
@@ -77,7 +79,7 @@ MountToUse                          = "mount roulette"       --The mount you'd l
 
 --Fate Combat Settings
 CompletionToIgnoreFate              = 80            --If the fate has more than this much progress already, skip it
-MinTimeLeftToIgnoreFate             = 3*60          --If the fate has less than this many seconds left on the timer, skip it
+MinTimeLeftToIgnoreFate             = 15*60          --If the fate has less than this many seconds left on the timer, skip it
 CompletionToJoinBossFate            = 0             --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
     CompletionToJoinSpecialBossFates = 20           --For the Special Fates like the Serpentlord Seethes or Mascot Murder
     ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
@@ -664,12 +666,14 @@ FatesData = {
                 --{ fateName=, npcName="Xbr'aal Hunter" }, 2 npcs names same thing....
                 { fateName="La Selva se lo Llevó", npcName="Xbr'aal Hunter" },
                 { fateName="Stabbing Gutward", npcName="Doppro Spearbrother" },
-                --{ fateName=, npcName="Xbr'aal Sentry" }, -- 2 npcs named same thing.....
+                { fateName="Porting is Such Sweet Sorrow", npcName="Hoobigo Porter" }
+                -- { fateName="Stick it to the Mantis", npcName="Xbr'aal Sentry" }, -- 2 npcs named same thing.....
             },
-            fatesWithContinuations = {},
+            fatesWithContinuations = {
+                "Stabbing Gutward"
+            },
             blacklistedFates= {
-                "The Departed",
-                "Porting Is Such Sweet Sorrow" -- defence fate
+                "The Departed"
             }
         }
     },
@@ -1267,7 +1271,7 @@ function FlyBackToAetheryte()
 
     yield("/target aetheryte")
 
-    if HasTarget() and GetTargetName() == "aetheryte" and GetDistanceToTarget() <= 20 then
+    if HasTarget() and GetTargetName() == "aetheryte" and DistanceBetween(GetTargetRawXPos(), y, GetTargetRawZPos(), x, y, z) <= 20 then
         if PathfindInProgress() or PathIsRunning() then
             yield("/vnav stop")
         end
@@ -1453,25 +1457,27 @@ function MoveToFate()
     end
 
     -- upon approaching fate, pick a target and switch to pathing towards target
-    if HasTarget() then
-        LogInfo("[FATE] Found FATE target, immediate rerouting")
-        PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-        if GetTargetName() == CurrentFate.npcName then
-            State = CharacterState.interactWithNpc
-        elseif GetTargetFateID() == CurrentFate.fateId then
-            State = CharacterState.middleOfFateDismount
-            LogInfo("[FATE] State Change: MiddleOfFateDismount")
+    if GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 60 then
+        if HasTarget() then
+            LogInfo("[FATE] Found FATE target, immediate rerouting")
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+            if GetTargetName() == CurrentFate.npcName then
+                State = CharacterState.interactWithNpc
+            elseif GetTargetFateID() == CurrentFate.fateId then
+                State = CharacterState.middleOfFateDismount
+                LogInfo("[FATE] State Change: MiddleOfFateDismount")
+            else
+                ClearTarget()
+            end
+            return
         else
-            ClearTarget()
+            if (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) and not IsInFate() then
+                yield("/target "..CurrentFate.npcName)
+            else
+                TargetClosestFateEnemy()
+            end
+            return
         end
-        return
-    elseif GetDistanceToPoint(CurrentFate.x, CurrentFate.y, CurrentFate.z) < 60 then
-        if (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) and not IsInFate() then
-            yield("/target "..CurrentFate.npcName)
-        else
-            TargetClosestFateEnemy()
-        end
-        return
     end
 
     -- check for stuck
