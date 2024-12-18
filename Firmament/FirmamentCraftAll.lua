@@ -10,9 +10,19 @@ Created by: pot0to (https://ko-fi.com/pot0to)
 This script will teleport you to the firmament, switch to each crafter class and
 run FirmamentCrafting.lua for each of those classes. You will need
 FirmamentCrafting.lua in order for this to work.
+
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
 ]]
 
-MacroName = "Craft Skybuilders' Items"
+MacroName = "Craft Skybuilders' Items"      -- this is what you named the FirmamentCrafting.lua script in SND
+
+--[[
+********************************************************************************
+*           Code: Don't touch this unless you know what you're doing           *
+********************************************************************************
+]]
 
 Classes = {
     "Carpenter",
