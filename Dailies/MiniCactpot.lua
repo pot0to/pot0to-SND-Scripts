@@ -49,25 +49,25 @@ function Start()
     end
 end
 
+local Npc = { name = "Mini Cactpot Broker", x=-50, y=1, z=22 }
 RewardClaimed = false
 function GoToCashier()
     
 
-    if GetDistanceToPoint(npc.x, npc.y, npc.z) > 5 then
+    if GetDistanceToPoint(Npc.x, Npc.y, Npc.z) > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(npc.x, npc.y, npc.z)
+            PathfindAndMoveTo(Npc.x, Npc.y, Npc.z)
         end
         return
     end
 
-    if not HasTarget() or GetTargetName() ~= npc.name then
-        yield("/target "..npc.name)
+    if not HasTarget() or GetTargetName() ~= Npc.name then
+        yield("/target "..Npc.name)
         return
     end
 
     State = CharacterStates.playMiniCactpot
 end
-local Npc = { name = "Mini Cactpot Broker", x=-50, y=1, z=22 }
 
 TimesPlayed = false
 function PlayMiniCactpot()
