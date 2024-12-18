@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.20.0                                 *
+*                               Version 2.20.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.20.0   Rework bicolor exchange
+    -> 2.20.1   Added height limit check for flying  back to aetheryte
+                Rework bicolor exchange
                 Added checks and debugs for bicolor gemstone shopkeeper
                 Fixed flying ban in Outer La Noscea and Southern Thanalan
                 Added feature to walk towards center of fate if you are too far
