@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.8                                  *
+*                               Version 1.0.9                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.8   Added feature to skip target if it doesn't stick
+    ->  1.0.9   Another fix for aether cannon mounting
+                Added feature to skip target if it doesn't stick
                 Fixed jump to fly properly, added 10s stuck check when using
                     cannon
                 Removed jump to fly
@@ -27,14 +28,6 @@ Created by: pot0to (https://ko-fi.com/pot0to)
                 Added long route for botanist islands and added ability to
                     select random route after finishing previous route (credit: 
                     Mars375)
-                SetSNDProperty("StopMacroIfTargetNotFound", "false")
-                Fixed it for autobuy dark matter too
-                Fixed bug with repairing via mender
-                Fixed mender name for repair function
-                Fixed name for merchant & mender
-                Logging for mender?
-                Added wait for vnav to be ready
-                First release
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -517,10 +510,20 @@ function EnterDiadem()
     yield("/wait 1")
 end
 
-function Mount()
+function NextNodeMount()
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
+    else
+        yield('/gaction "mount roulette"')
+    end
+    yield("/wait 1")
+end
+
+function AetherCannonMount()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        State = CharacterState.fireCannon
+        LogInfo("[UmbralGathering] State Change: FireCannon")
     else
         yield('/gaction "mount roulette"')
     end
@@ -643,7 +646,7 @@ function MoveToNextNode()
     end
 
     if not GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.mounting
+        State = CharacterState.nextNodeMount
         LogInfo("State Change: Mounting")
         return
     elseif NextNode.isFishingNode and GetClassJobId() ~= 18 then
@@ -964,11 +967,11 @@ function FireCannon()
     end
 
     if GetDistanceToTarget() > 10 then
-        if not GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.mounting
-            LogInfo("[UmbralGathering] State Change: Mounting")
+        if GetDistanceToTarget() > 50 and not GetCharacterCondition(CharacterCondition.mounted) then
+            State = CharacterState.aetherCannonMount
+            LogInfo("[UmbralGathering] State Change: Aether Cannon Mount")
         elseif not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), true)
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.mounted))
         end
         return
     end
@@ -1107,7 +1110,8 @@ end
 CharacterState = {
     ready = Ready,
     diademEntry = EnterDiadem,
-    mounting = Mount,
+    nextNodeMount = NextNodeMount,
+    aetherCannonMount = AetherCannonMount,
     dismounting = Dismount,
     moveToNextNode = MoveToNextNode,
     gathering = Gather,
