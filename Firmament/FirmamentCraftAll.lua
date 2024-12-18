@@ -1,3 +1,17 @@
+--[[
+
+********************************************************************************
+*                            Firmament Craft All                               *
+*                               Version 1.0.0                                  *
+********************************************************************************
+
+Created by: pot0to (https://ko-fi.com/pot0to)
+
+This script will teleport you to the firmament, switch to each crafter class and
+run FirmamentCrafting.lua for each of those classes. You will need
+FirmamentCrafting.lua in order for this to work.
+]]
+
 MacroName = "Craft Skybuilders' Items"
 
 Classes = {
