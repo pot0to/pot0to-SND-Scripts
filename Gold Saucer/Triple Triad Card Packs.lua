@@ -7,8 +7,9 @@
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
-This script will repeatedly a specific triple triad card pack from the vender in
-sets of 10, opens them, and repeats until you find the cards you're looking for.
+This script will repeatedly purchase a specific triple triad card pack from the
+vender in sets of 10, opens them, and repeats until you find the cards you're
+looking for.
 
 ********************************************************************************
 *                                   Settings                                   *
