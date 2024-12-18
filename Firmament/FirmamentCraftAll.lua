@@ -31,7 +31,7 @@ Classes = {
     "Goldsmith",
     "Leatherworker",
     "Weaver",
-    "Alcemist",
+    "Alchemist",
     "Culinarian"
 }
 
