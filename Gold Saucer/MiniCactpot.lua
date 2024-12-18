@@ -73,12 +73,13 @@ function GoToCashier()
     State = CharacterStates.playMiniCactpot
 end
 
-TimesPlayed = 0
+Attempts = 0
 function PlayMiniCactpot()
     -- TODO: replace with mini cactpot name
-    if TimesPlayed >= 3 then
+    if Attempts >= 3 then
         State = CharacterStates.endState
     elseif IsAddonVisible("LotteryDaily") then
+        Attempts = 0
         yield("/wait 1")
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
@@ -94,9 +95,8 @@ function PlayMiniCactpot()
         yield("/vnav stop")
     else
         yield("/interact")
-        TimesPlayed = 0
+        Attempts = Attempts + 1
     end
-
 end
 
 function EndState()
