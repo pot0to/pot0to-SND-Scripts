@@ -16,7 +16,7 @@ end
 
 ********************************************************************************
 *                                 Mini Cactpot                                 *
-*                                Version 1.1.0                                 *
+*                                Version 1.1.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -61,6 +61,10 @@ function GoToCashier()
         return
     end
 
+    if PathfindInProgress() or PathIsRunning() then
+        yield("/vnav stop")
+    end
+
     if not HasTarget() or GetTargetName() ~= Npc.name then
         yield("/target "..Npc.name)
         return
@@ -69,7 +73,7 @@ function GoToCashier()
     State = CharacterStates.playMiniCactpot
 end
 
-TimesPlayed = false
+TimesPlayed = 0
 function PlayMiniCactpot()
     -- TODO: replace with mini cactpot name
     if TimesPlayed >= 3 then
