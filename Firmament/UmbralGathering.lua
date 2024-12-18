@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.7                                  *
+*                               Version 1.0.8                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.7   Fixed jump to fly properly, added 10s stuck check when using
+    ->  1.0.8   Added feature to skip target if it doesn't stick
+                Fixed jump to fly properly, added 10s stuck check when using
                     cannon
                 Removed jump to fly
                 Updated autohook presets to force bait swap
@@ -450,12 +451,12 @@ function TeleportTo(aetheryteName)
     yield("/tp "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
-        LogInfo("[FATE] Casting teleport...")
+        LogInfo("[UmbralGathering] Casting teleport...")
         yield("/wait 1")
     end
     yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
     while GetCharacterCondition(CharacterCondition.betweenAreas) do
-        LogInfo("[FATE] Teleporting...")
+        LogInfo("[UmbralGathering] Teleporting...")
         yield("/wait 1")
     end
     yield("/wait 1")
@@ -519,7 +520,7 @@ end
 function Mount()
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.moveToNextNode
-        LogInfo("[FATE] State Change: MoveToNextNode")
+        LogInfo("[UmbralGathering] State Change: MoveToNextNode")
     else
         yield('/gaction "mount roulette"')
     end
@@ -919,26 +920,24 @@ function FireCannon()
         return
     end
 
-    if (PathIsRunning() or PathfindInProgress()) then
-        local now = os.clock()
-        if now - LastStuckCheckTime > 10 then
-            local x = GetPlayerRawXPos()
-            local y = GetPlayerRawYPos()
-            local z = GetPlayerRawZPos()
+    local now = os.clock()
+    if now - LastStuckCheckTime > 10 then
+        local x = GetPlayerRawXPos()
+        local y = GetPlayerRawYPos()
+        local z = GetPlayerRawZPos()
 
-            local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
+        local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
 
-            if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
-                yield("/vnav stop")
-                yield("/wait 1")
-                LogInfo("[UmbralGathering] Antistuck")
-                PathfindAndMoveTo(randomX, y, randomZ)
-            end
-            
-            LastStuckCheckTime = now
-            LastStuckCheckPosition = {x=x, y=y, z=z}
+        LastStuckCheckTime = now
+        LastStuckCheckPosition = {x=x, y=y, z=z}
+
+        if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
+            yield("/vnav stop")
+            yield("/wait 1")
+            LogInfo("[UmbralGathering] Antistuck")
+            PathfindAndMoveTo(randomX, y, randomZ)
+            return
         end
-        return
     end
 
     if not HasTarget() then
@@ -946,18 +945,30 @@ function FireCannon()
             yield("/target "..MobTable[TargetType][i][1])
             yield("/wait 0.03")
             if HasTarget() then
+                LogInfo("[UmbralGathering] Found cannon target")
                 return
             end
         end
         
         State = CharacterState.moveToNextNode
-        LogInfo("State Change: MoveToNextNode")
+        LogInfo("[UmbralGathering] State Change: MoveToNextNode")
+        return
+    end
+
+    yield("/wait 0.5")
+    if not HasTarget() then
+        LogInfo("[UmbralGathering] Target does not stick. Skipping...")
+        State = CharacterState.moveToNextNode
+        LogInfo("[UmbralGathering] State Change: MoveToNextNode")
         return
     end
 
     if GetDistanceToTarget() > 10 then
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
+        if not GetCharacterCondition(CharacterCondition.mounted) then
+            State = CharacterState.mounting
+            LogInfo("[UmbralGathering] State Change: Mounting")
+        elseif not PathfindInProgress() and not PathIsRunning() then
+            PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), true)
         end
         return
     end
@@ -1021,7 +1032,7 @@ function Repair()
                 end
             else
                 State = CharacterState.ready
-                LogInfo("[FATE] State Change: Ready")
+                LogInfo("[UmbralGathering] State Change: Ready")
             end
         elseif ShouldAutoBuyDarkMatter then
             if not HasTarget() or GetTargetName() ~= Mender.npcName then
