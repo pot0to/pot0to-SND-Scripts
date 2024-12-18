@@ -35,6 +35,15 @@ Classes = {
     "Culinarian"
 }
 
+CharacterCondition = {
+    casting=27,
+    occupiedInEvent=31,
+    occupiedInQuestEvent=32,
+    occupied=33,
+    betweenAreas=45,
+    beingMoved=70
+}
+
 FoundationZoneId = 418
 FirmamentZoneId = 886
 function TeleportTo(aetheryteName)
@@ -52,7 +61,7 @@ function TeleportTo(aetheryteName)
     yield("/wait 1")
 end
 
-if not (IsInZone(FoundationZoneId) or IsInZone(FirmamentZoneId) or IsInZone(DiademZoneId)) then
+if not (IsInZone(FoundationZoneId) or IsInZone(FirmamentZoneId)) then
     TeleportTo("Foundation")
 end
 if IsInZone(FoundationZoneId) then
@@ -67,7 +76,7 @@ if IsInZone(FoundationZoneId) then
     yield("/callback SelectString true 2")
     repeat
         yield("/wait 1")
-    until IsInZone(FirmamentZoneId)
+    until IsInZone(FirmamentZoneId) and not GetCharacterCondition(CharacterCondition.betweenAreas)
 end
 
 for _, class in ipairs(Classes) do
