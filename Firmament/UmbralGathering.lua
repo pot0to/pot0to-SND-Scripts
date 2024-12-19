@@ -8,12 +8,12 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.9                                  *
+*                               Version 1.0.10                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.9   Another fix for aether cannon mounting
+    ->  1.0.10  Another fix for aether cannon mounting
                 Added feature to skip target if it doesn't stick
                 Fixed jump to fly properly, added 10s stuck check when using
                     cannon
@@ -818,8 +818,10 @@ function Gather()
 
     if IsAddonVisible("Gathering") and IsAddonReady("Gathering") then
         if GetTargetName():sub(1, 7) == "Clouded" then
+            LogInfo("[UmbralGathering] /callback Gathering true 0")
             yield("/callback Gathering true 0")
         else
+            LogInfo("[UmbralGathering] /callback Gathering true "..GatheringSlot-1)
             yield("/callback Gathering true "..GatheringSlot-1)
         end
     end
