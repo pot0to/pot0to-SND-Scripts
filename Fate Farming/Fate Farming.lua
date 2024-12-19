@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.20.2                                 *
+*                               Version 2.20.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.20.2   Cleanup for Yak'tel fates and landing condition when flying back
+    -> 2.20.3   Added some thanalan npc fates
+                Cleanup for Yak'tel fates and landing condition when flying back
                     to aetheryte
                 Added height limit check for flying  back to aetheryte
                 Rework bicolor exchange
@@ -79,7 +80,7 @@ MountToUse                          = "mount roulette"       --The mount you'd l
 
 --Fate Combat Settings
 CompletionToIgnoreFate              = 80            --If the fate has more than this much progress already, skip it
-MinTimeLeftToIgnoreFate             = 15*60          --If the fate has less than this many seconds left on the timer, skip it
+MinTimeLeftToIgnoreFate             = 3*60          --If the fate has less than this many seconds left on the timer, skip it
 CompletionToJoinBossFate            = 0             --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
     CompletionToJoinSpecialBossFates = 20           --For the Special Fates like the Serpentlord Seethes or Mascot Murder
     ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
@@ -313,9 +314,25 @@ FatesData = {
         zoneName = "Central Thanalan",
         zoneId = 141,
         fatesList = {
+            collectionsFates= {
+                { fateName="Let them Eat Cactus", npcName="Hungry Hobbledehoy"},
+            },
+            otherNpcFates= {
+                { fateName="A Few Arrows Short of a Quiver" , npcName="Crestfallen Merchant" },
+                { fateName="Wrecked Rats", npcName="Coffer & Coffin Heavy" },
+                { fateName="Something to Prove", npcName="Cowardly Challenger" }
+            },
+            fatesWithContinuations = {},
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName = "Eastern Thanalan",
+        zoneId = 145,
+        fatesList = {
             collectionsFates= {},
             otherNpcFates= {
-                { fateName="" , npcName="Crestfallen Merchant" }
+                { fateName="Attack on Highbridge: Denouement" , npcName="Brass Blade" }
             },
             fatesWithContinuations = {},
             blacklistedFates= {}
@@ -1155,8 +1172,12 @@ end
 
 function ChangeInstance()
     if SuccessiveInstanceChanges >= 2 then
-        yield("/wait 10")
-        SuccessiveInstanceChanges = 0
+        if CompanionScriptMode then
+            StopScript = true
+        else
+            yield("/wait 10")
+            SuccessiveInstanceChanges = 0
+        end
         return
     end
 
@@ -2156,8 +2177,12 @@ function Ready()
             State = CharacterState.changingInstances
             LogInfo("[FATE] State Change: ChangingInstances")
         elseif not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
-            State = CharacterState.flyBackToAetheryte
-            LogInfo("[FATE] State Change: FlyBackToAetheryte")
+            if CompanionScriptMode then
+                StopScript = true
+            else
+                State = CharacterState.flyBackToAetheryte
+                LogInfo("[FATE] State Change: FlyBackToAetheryte")
+            end
         else
             yield("/wait 10")
         end
