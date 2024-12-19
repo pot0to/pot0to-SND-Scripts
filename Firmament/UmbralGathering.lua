@@ -816,10 +816,12 @@ function Gather()
         return
     end
 
-    if GetTargetName():sub(1, 7) == "Clouded" then
-        yield("/callback Gathering true 0")
-    else
-        yield("/callback Gathering true "..GatheringSlot-1)
+    if IsAddonVisible("Gathering") and IsAddonReady("Gathering") then
+        if GetTargetName():sub(1, 7) == "Clouded" then
+            yield("/callback Gathering true 0")
+        else
+            yield("/callback Gathering true "..GatheringSlot-1)
+        end
     end
 end
 
