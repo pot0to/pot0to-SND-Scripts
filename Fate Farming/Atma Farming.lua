@@ -23,6 +23,7 @@ Created by: pot0to (https://ko-fi.com/pot0to)
 ]]
 
 FateMacro = "Fate Farming"
+NumberToFarm = 1                -- How many of each atma to farm
 
 --#endregion Settings
 
@@ -56,7 +57,7 @@ CharacterCondition = {
 
 function GetNextAtmaTable()
     for _, atmaTable in pairs(Atmas) do
-        if GetItemCount(atmaTable.itemId) < 12 then
+        if GetItemCount(atmaTable.itemId) < NumberToFarm then
             return atmaTable
         end
     end
@@ -78,9 +79,9 @@ function TeleportTo(aetheryteName)
 end
 
 NextAtmaTable = GetNextAtmaTable()
-while not NextAtmaTable ~= nil do
+while NextAtmaTable ~= nil do
     if not IsPlayerOccupied() and not IsMacroRunningOrQueued(FateMacro) then
-        if GetItemCount(NextAtmaTable.itemId) >= 12 then
+        if GetItemCount(NextAtmaTable.itemId) >= NumberToFarm then
             NextAtmaTable = GetNextAtmaTable()
         elseif not IsInZone(NextAtmaTable.zoneId) then
             TeleportTo(GetAetheryteName(GetAetherytesInZone(NextAtmaTable.zoneId)[0]))
