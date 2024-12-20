@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.0                                 *
+*                               Version 2.21.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.0   Support for multi-zone farming
+    -> 2.21.1   Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
+                Support for multi-zone farming
                 Added some thanalan npc fates
                 Cleanup for Yak'tel fates and landing condition when flying back
                     to aetheryte
@@ -22,12 +23,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                     - /slightly/ smoother dismount (not by much tbh)
                     - added check to prevent vnav from interrupting casters
                     - turned off vnav pathing for boss fates while in combat
-                Added extra check for chocobo healer stance if you start script
-                    with chocobo already out
-                Added check to stop /vnav if you die
-                Fixed bug that causes you to dodge back and forth too much
-                Added setting for dodging plugin
-                Added chocobo stance
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -260,7 +255,7 @@ BicolorExchangeData =
         zoneName = "Old Sharlayan",
         zoneId = 962,
         aetheryteName = "Old Sharlayan",
-        x=74.17, y=5.15, z=-37.44,
+        x=78, y=5, z=-37,
         shopItems =
         {
             { itemName = "Bicolor Gemstone Voucher", itemIndex = 8, price = 100 }
