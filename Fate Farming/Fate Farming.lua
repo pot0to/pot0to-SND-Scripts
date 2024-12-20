@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.20.3                                 *
+*                               Version 2.21.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.20.3   Added some thanalan npc fates
+    -> 2.21.0   Support for multi-zone farming
+                Added some thanalan npc fates
                 Cleanup for Yak'tel fates and landing condition when flying back
                     to aetheryte
                 Added height limit check for flying  back to aetheryte
@@ -103,10 +104,11 @@ IgnoreForlorns                      = false
 
 --Post Fate Settings
 WaitUpTo                            = 10            --Max number of seconds it should wait until mounting up for next fate.
-                                                        --Actual wait time will be a randomly generated number between zero and this value
+                                                        --Actual wait time will be a randomly generated number between 3s and this value
 EnableChangeInstance                = true          --should it Change Instance when there is no Fate (only works on DT fates)
     WaitIfBonusBuff                 = true          --Don't change instances if you have the Twist of Fate bonus buff
-ShouldExchangeBicolorGemstones       = true          --Should it exchange Bicolor Gemstone Vouchers?
+    NumberOfInstances               = 2
+ShouldExchangeBicolorGemstones      = true          --Should it exchange Bicolor Gemstone Vouchers?
     ItemToPurchase                  = "Turali Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
 SelfRepair                          = false         --if false, will go to Limsa mender
     RepairAmount                    = 20            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
@@ -1171,9 +1173,11 @@ function TeleportTo(aetheryteName)
 end
 
 function ChangeInstance()
-    if SuccessiveInstanceChanges >= 2 then
+    if SuccessiveInstanceChanges >= NumberOfInstances then
         if CompanionScriptMode then
-            StopScript = true
+            if not WaitingForFateRewards and not shouldWaitForBonusBuff then
+                StopScript = true
+            end
         else
             yield("/wait 10")
             SuccessiveInstanceChanges = 0
@@ -1198,7 +1202,7 @@ function ChangeInstance()
         return
     end
 
-    if WaitingForCollectionsFate ~= 0 then
+    if WaitingForFateRewards ~= 0 then
         yield("/wait 10")
         return
     end
@@ -1242,7 +1246,7 @@ function WaitForContinuation()
         if nextFateId ~= CurrentFate.fateId then
             CurrentFate = BuildFateTable(nextFateId)
             State = CharacterState.doFate
-            LogInfo("State Change: DoFate")
+            LogInfo("[FATE] State Change: DoFate")
         end
     elseif os.clock() - LastFateEndTime > 30 then
         LogInfo("WaitForContinuation Abort")
@@ -1387,7 +1391,7 @@ function MiddleOfFateDismount()
     end
 
     if HasTarget() then
-        if DistanceBetween(GetPlayerRawXPos(), 0, GetPlayerRawZPos(), GetTargetRawXPos(), 0, GetTargetRawZPos()) > (MaxDistance + GetTargetHitboxRadius()) then
+        if DistanceBetween(GetPlayerRawXPos(), 0, GetPlayerRawZPos(), GetTargetRawXPos(), 0, GetTargetRawZPos()) > (MaxDistance + GetTargetHitboxRadius() + 5) then
             if not (PathfindInProgress() or PathIsRunning()) then
                 LogInfo("[FATE] MiddleOfFateDismount PathfindAndMoveTo")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
@@ -1691,12 +1695,12 @@ function SummonChocobo()
             yield('/cac "'..ChocoboStance..' stance"')
         elseif ShouldAutoBuyGysahlGreens then
             State = CharacterState.autoBuyGysahlGreens
-            LogInfo("[State] State Change: AutoBuyGysahlGreens")
+            LogInfo("[FATE] State Change: AutoBuyGysahlGreens")
             return
         end
     end
     State = CharacterState.ready
-    LogInfo("[State] State Change: Ready")
+    LogInfo("[FATE] State Change: Ready")
 end
 
 function AutoBuyGysahlGreens()
@@ -1933,6 +1937,10 @@ function HandleUnexpectedCombat()
 end
 
 function DoFate()
+    if WaitingForFateRewards ~= CurrentFate.fateId then
+        WaitingForFateRewards = CurrentFate.fateId
+        LogInfo("[FATE] WaitingForFateRewards DoFate: "..tostring(WaitingForFateRewards))
+    end
     local currentClass = GetClassJobId()
     -- switch classes (mostly for continutation fates that pop you directly into the next one)
     if CurrentFate.isBossFate and BossFatesClass ~= nil and currentClass ~= BossFatesClass.classId and not IsPlayerOccupied() then
@@ -1963,16 +1971,15 @@ function DoFate()
             LastFateEndTime = os.clock()
             State = CharacterState.waitForContinuation
             LogInfo("[FATE] State Change: WaitForContinuation")
+            return
         else
+            DidFate = true
             LogInfo("[FATE] No continuation for "..CurrentFate.fateName)
+            local randomWait = (math.floor(math.random() * (math.max(0, WaitUpTo - 3)) * 1000)/1000) + 3 -- truncated to 3 decimal places
+            yield("/wait "..randomWait)
             TurnOffCombatMods()
             State = CharacterState.ready
             LogInfo("[FATE] State Change: Ready")
-            local randomWait = math.floor(math.random()*3 * 1000)/1000 -- truncated to 3 decimal places
-            yield("/wait "..randomWait)
-        end
-        if CompanionScriptMode then
-            StopScript = true
         end
         return
     elseif GetCharacterCondition(CharacterCondition.mounted) then
@@ -1980,7 +1987,6 @@ function DoFate()
         LogInfo("[FATE] State Change: MiddleOfFateDismount")
         return
     elseif CurrentFate.isCollectionsFate then
-        WaitingForCollectionsFate = CurrentFate.fateId
         yield("/wait 1") -- needs a moment after start of fate for GetFateEventItem to populate
         if GetItemCount(GetFateEventItem(CurrentFate.fateId)) >= 7 or (GotCollectionsFullCredit and GetFateProgress(CurrentFate.fateId) == 100) then
             yield("/vnav stop")
@@ -2151,12 +2157,12 @@ function Ready()
             yield("/wait 10")
         end
         return
-    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForCollectionsFate == 0 and
+    elseif not LogInfo("[FATE] Ready -> ExchangingVouchers") and WaitingForFateRewards == 0 and
         ShouldExchangeBicolorGemstones and (BicolorGemCount >= 1400) and not shouldWaitForBonusBuff
     then
         State = CharacterState.exchangingVouchers
         LogInfo("[FATE] State Change: ExchangingVouchers")
-    elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForCollectionsFate == 0 and
+    elseif not LogInfo("[FATE] Ready -> ProcessRetainers") and WaitingForFateRewards == 0 and
         Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1  and not shouldWaitForBonusBuff
     then
         State = CharacterState.processRetainers
@@ -2172,21 +2178,32 @@ function Ready()
     elseif not LogInfo("[FATE] Ready -> SummonChocobo") and ShouldSummonChocobo and GetBuddyTimeRemaining() <= ResummonChocoboTimeLeft and
         (not shouldWaitForBonusBuff or GetItemCount(4868) > 0) then
         State = CharacterState.summonChocobo
-    elseif not LogInfo("[FATE] Ready -> ChangingInstances") and NextFate == nil then
+    elseif not LogInfo("[FATE] Ready -> NextFate nil") and NextFate == nil then
         if EnableChangeInstance and GetZoneInstance() > 0 and not shouldWaitForBonusBuff then
             State = CharacterState.changingInstances
             LogInfo("[FATE] State Change: ChangingInstances")
-        elseif not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
-            if CompanionScriptMode then
+            return
+        elseif CompanionScriptMode and not shouldWaitForBonusBuff then
+            if WaitingForFateRewards == 0 then
                 StopScript = true
+                LogInfo("[FATE] StopScript: Ready")
             else
-                State = CharacterState.flyBackToAetheryte
-                LogInfo("[FATE] State Change: FlyBackToAetheryte")
+                LogInfo("[FATE] Waiting for fate rewards")
             end
+        elseif not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20 then
+            State = CharacterState.flyBackToAetheryte
+            LogInfo("[FATE] State Change: FlyBackToAetheryte")
         else
             yield("/wait 10")
         end
         return
+    elseif CompanionScriptMode and DidFate and not shouldWaitForBonusBuff then
+        if WaitingForFateRewards == 0 then
+            StopScript = true
+            LogInfo("[FATE] StopScript: DidFate")
+        else
+            LogInfo("[FATE] Waiting for fate rewards")
+        end
     elseif not LogInfo("[FATE] Ready -> MovingToFate") then -- and ((CurrentFate == nil) or (GetFateProgress(CurrentFate.fateId) == 100) and NextFate ~= nil) then
         CurrentFate = NextFate
         SetMapFlag(SelectedZone.zoneId, CurrentFate.x, CurrentFate.y, CurrentFate.z)
@@ -2557,6 +2574,7 @@ CharacterState = {
 LogInfo("[FATE] Starting fate farming script.")
 
 StopScript = false
+DidFate = false
 GemAnnouncementLock = false
 DeathAnnouncementLock = false
 MovingAnnouncementLock = false
@@ -2566,7 +2584,7 @@ LastTeleportTimeStamp = 0
 GotCollectionsFullCredit = false -- needs 7 items for  full
 -- variable to track collections fates that you have completed but are still active.
 -- will not leave area or change instance if value ~= 0
-WaitingForCollectionsFate = 0
+WaitingForFateRewards = 0
 LastFateEndTime = os.clock()
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
@@ -2579,8 +2597,9 @@ SetMaxDistance()
 
 SelectedZone = SelectNextZone()
 if SelectedZone.zoneName ~= "" and Echo == "All" then
-    yield("/echo Farming "..SelectedZone.zoneName)
+    yield("/echo [FATE] Farming "..SelectedZone.zoneName)
 end
+LogInfo("[FATE] Farming Start for "..SelectedZone.zoneName)
 
 for _, shop in ipairs(BicolorExchangeData) do
     for _, item in ipairs(shop.shopItems) do
@@ -2637,13 +2656,15 @@ while not StopScript do
             GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
             LifestreamIsBusy())
         then
-            if WaitingForCollectionsFate ~= 0 and not IsFateActive(WaitingForCollectionsFate) then
-                WaitingForCollectionsFate = 0
+            if WaitingForFateRewards ~= 0 and not IsFateActive(WaitingForFateRewards) then
+                WaitingForFateRewards = 0
+                LogInfo("[FATE] WaitingForFateRewards: "..tostring(WaitingForFateRewards))
             end
             State()
         end
     end
     yield("/wait 0.1")
 end
+yield("/vnav stop")
 
 --#endregion Main
