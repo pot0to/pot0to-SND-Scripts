@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.0                                  *
+*                               Version 1.1.1                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.0   Added ability to process retainers and made gathering path
+    ->  1.1.1   Added function to extract spiritbonded materia
+                Added ability to process retainers and made gathering path
                     smoother
                 Fixed order for redroute
                 Another fix for aether cannon mounting
@@ -410,6 +411,9 @@ function Ready()
     elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("[UmbralGathering] State Change: Repair")
+    elseif ShouldExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
+        State = CharacterState.extractMateria
+        LogInfo("[FATE] State Change: ExtractMateria")
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
         ClearTarget()
         State = CharacterState.fireCannon
@@ -420,6 +424,40 @@ function Ready()
     else
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
+    end
+end
+
+function ExtractMateria()
+    if GetCharacterCondition(CharacterCondition.mounted) then
+        yield('/ac dismount')
+        yield("/wait 0.5")
+        return
+    end
+
+    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
+        return
+    end
+
+    if CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
+        if not IsAddonVisible("Materialize") then
+            yield("/generalaction \"Materia Extraction\"")
+            return
+        end
+
+        LogInfo("[FATE] Extracting materia...")
+            
+        if IsAddonVisible("MaterializeDialog") then
+            yield("/callback MaterializeDialog true 0")
+        else
+            yield("/callback Materialize true 2 0")
+        end
+    else
+        if IsAddonVisible("Materialize") then
+            yield("/callback Materialize true -1")
+        else
+            State = CharacterState.ready
+            LogInfo("[FATE] State Change: Ready")
+        end
     end
 end
 
@@ -1198,7 +1236,8 @@ CharacterState = {
     fishing = Fish,
     fireCannon = FireCannon,
     buyFishingBait = BuyFishingBait,
-    repair = Repair
+    repair = Repair,
+    extractMateria = ExtractMateria
 }
 
 FoundationZoneId = 418
