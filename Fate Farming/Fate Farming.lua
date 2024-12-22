@@ -1326,7 +1326,7 @@ function FlyBackToAetheryte()
     end
 end
 
-function NextNodeMount()
+function Mount()
     if GetCharacterCondition(CharacterCondition.flying) then
         State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MoveToFate")
@@ -1481,11 +1481,17 @@ function MoveToFate()
         if HasTarget() then
             LogInfo("[FATE] Found FATE target, immediate rerouting")
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-            if GetTargetName() == CurrentFate.npcName then
-                State = CharacterState.interactWithNpc
-            elseif GetTargetFateID() == CurrentFate.fateId then
+            if IsInFate() then
                 State = CharacterState.middleOfFateDismount
                 LogInfo("[FATE] State Change: MiddleOfFateDismount")
+            elseif (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) then
+                State = CharacterState.interactWithNpc
+                LogInfo("[FATE] State Change: Interact with npc")
+            -- if GetTargetName() == CurrentFate.npcName then
+            --     State = CharacterState.interactWithNpc
+            -- elseif GetTargetFateID() == CurrentFate.fateId then
+            --     State = CharacterState.middleOfFateDismount
+            --     LogInfo("[FATE] State Change: MiddleOfFateDismount")
             else
                 ClearTarget()
             end
@@ -1548,8 +1554,8 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-
     if IsInFate() or GetFateStartTimeEpoch(CurrentFate.fateId) > 0 then
+        yield("/vnav stop")
         State = CharacterState.doFate
         LogInfo("[FATE] State Change: DoFate")
         yield("/wait 1") -- give the fate a second to register before dofate and lsync
@@ -2542,7 +2548,7 @@ CharacterState = {
     ready = Ready,
     dead = HandleDeath,
     unexpectedCombat = HandleUnexpectedCombat,
-    mounting = NextNodeMount,
+    mounting = Mount,
     npcDismount = NPCDismount,
     middleOfFateDismount = MiddleOfFateDismount,
     moveToFate = MoveToFate,
