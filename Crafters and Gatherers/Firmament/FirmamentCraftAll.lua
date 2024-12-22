@@ -44,6 +44,13 @@ CharacterCondition = {
     beingMoved=70
 }
 
+local Npcs =
+{
+    turnInNpc = "Potkin",
+    kupoVouchersNpc = "Lizbeth",
+    x = 52.750366, y = -16, z = 168.9325
+}
+
 FoundationZoneId = 418
 FirmamentZoneId = 886
 function TeleportTo(aetheryteName)
@@ -78,6 +85,13 @@ if IsInZone(FoundationZoneId) then
         yield("/wait 1")
     until IsInZone(FirmamentZoneId) and not GetCharacterCondition(CharacterCondition.betweenAreas)
 end
+
+PathfindAndMoveTo(Npcs.x, Npcs.y, Npcs.z)
+repeat
+    yield("/wait 1")
+until GetDistanceToPoint(Npcs.x, Npcs.y, Npcs.z) < 20
+
+yield("/vnav stop")
 
 for _, class in ipairs(Classes) do
     yield("/echo Crafting for "..class)
