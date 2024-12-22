@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.1                                  *
+*                               Version 1.1.2                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.1   Added function to extract spiritbonded materia
+    ->  1.1.2   Updated to check retainers only when naturally backing out
+                Added function to extract spiritbonded materia
                 Added ability to process retainers and made gathering path
                     smoother
                 Fixed order for redroute
@@ -418,9 +419,6 @@ function Ready()
         ClearTarget()
         State = CharacterState.fireCannon
         LogInfo("State Change: Fire Cannon")
-    elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
-        State = CharacterState.processRetainers
-        LogInfo("[FATE] State Change: ProcessingRetainers")
     else
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
@@ -483,15 +481,7 @@ function DodgeTree()
 end
 
 function ProcessRetainers()
-    CurrentFate = nil
-
-    LogInfo("[UmbralGathering] Handling retainers...")
     if ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
-
-        if not IsInZone(FirmamentZoneId) then
-            LeaveDuty()
-            return
-        end
 
         if PathfindInProgress() or PathIsRunning() then
             return
@@ -518,9 +508,6 @@ function ProcessRetainers()
             yield("/interact")
             if IsAddonVisible("RetainerList") then
                 yield("/ays e")
-                if Echo == "All" then
-                    yield("/echo [UmbralGathering] Processing retainers")
-                end
                 yield("/wait 1")
             end
         end
@@ -556,7 +543,7 @@ function EnterDiadem()
     UmbralGathered = false
     NextNodeId = 1
     JustEntered = true
-
+    
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
         if not NavIsReady() then
             yield("/echo Waiting for navmesh...")
@@ -570,6 +557,12 @@ function EnterDiadem()
             State = CharacterState.ready
             LogInfo("[UmbralGathering] State Change: Ready")
         end
+        return
+    end
+
+    if Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
+        State = CharacterState.processRetainers
+        LogInfo("[UmbralGathering] State Change: ProcessingRetainers")
         return
     end
 
@@ -643,7 +636,7 @@ function Dismount()
             local z = GetPlayerRawZPos()
 
             if GetCharacterCondition(CharacterCondition.flying) and GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 2 then
-                LogInfo("Unable to dismount here. Moving to another spot.")
+                LogInfo("[UmbralGathering] Unable to dismount here. Moving to another spot.")
                 local random_x, random_y, random_z = RandomAdjustCoordinates(x, y, z, 10)
                 local nearestPointX = QueryMeshNearestPointX(random_x, random_y, random_z, 100, 100)
                 local nearestPointY = QueryMeshNearestPointY(random_x, random_y, random_z, 100, 100)
@@ -662,10 +655,10 @@ function Dismount()
     else
         if NextNode.isFishingNode then
             State = CharacterState.fishing
-            LogInfo("State Change: Fishing")
+            LogInfo("[UmbralGathering] State Change: Fishing")
         else
             State = CharacterState.gathering
-            LogInfo("State Change: Gathering")
+            LogInfo("[UmbralGathering] State Change: Gathering")
         end
     end
     yield("/wait 1")
@@ -695,24 +688,24 @@ end
 
 function SelectNextNode()
     local weather = GetActiveWeatherID()
-    if PrioritizeUmbral and not UmbralGathered and (weather >= 133 and weather <= 136) then
+    if PrioritizeUmbral and (weather >= 133 and weather <= 136) then -- and not UmbralGathered then
         for _, umbralWeather in pairs(UmbralWeatherNodes) do
             if umbralWeather.weatherId == weather then
                 umbralWeather.gatheringNode.isUmbralNode = true
                 umbralWeather.gatheringNode.isFishingNode = false
                 umbralWeather.gatheringNode.umbralWeatherName = umbralWeather.weatherName
-                LogInfo("Selected umbral gathering node for "..umbralWeather.weatherName..": "..umbralWeather.gatheringNode.nodeName)
+                LogInfo("[UmbralGathering] Selected umbral gathering node for "..umbralWeather.weatherName..": "..umbralWeather.gatheringNode.nodeName)
                 return umbralWeather.gatheringNode
             end
         end
-    elseif PrioritizeUmbral and UmbralGathered and (weather >= 133 and weather <= 136) then
+    elseif PrioritizeUmbral and (weather >= 133 and weather <= 136) then -- and UmbralGathered then
         if DoFish then
             for _, umbralWeather in pairs(UmbralWeatherNodes) do
                 if umbralWeather.weatherId == weather then
                     umbralWeather.fishingNode.isUmbralNode = true
                     umbralWeather.fishingNode.isFishingNode = true
                     umbralWeather.fishingNode.umbralWeatherName = umbralWeather.weatherName
-                    LogInfo("Selected umbral fishing node for "..umbralWeather.weatherName)
+                    LogInfo("[UmbralGathering] Selected umbral fishing node for "..umbralWeather.weatherName)
                     return umbralWeather.fishingNode
                 end
             end
@@ -724,7 +717,7 @@ function SelectNextNode()
     else
         GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
         GatheringRoute[RouteType][NextNodeId].isFishingNode = false
-        LogInfo("Selected regular gathering node: "..GatheringRoute[RouteType][NextNodeId].nodeName)
+        LogInfo("[UmbralGathering] Selected regular gathering node: "..GatheringRoute[RouteType][NextNodeId].nodeName)
         return GatheringRoute[RouteType][NextNodeId]
     end
 end
@@ -733,7 +726,7 @@ function MoveToNextNode()
     NextNodeCandidate = SelectNextNode()
     if (NextNodeCandidate == nil) then
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[UmbralGathering] State Change: Ready")
         return
     elseif (NextNodeCandidate.x ~= NextNode.x or NextNodeCandidate.y ~= NextNode.y or NextNodeCandidate.z ~= NextNode.z) then
         yield("/vnav stop")
@@ -746,7 +739,7 @@ function MoveToNextNode()
 
     if not GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.nextNodeMount
-        LogInfo("State Change: Mounting")
+        LogInfo("[UmbralGathering] State Change: Mounting")
         return
     elseif NextNode.isFishingNode and GetClassJobId() ~= 18 then
         yield("/gs change Fisher")
@@ -774,11 +767,11 @@ function MoveToNextNode()
     elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) < 3 then
         if NextNode.isFishingNode then
             State = CharacterState.fishing
-            LogInfo("State Change: Fishing")
+            LogInfo("[UmbralGathering] State Change: Fishing")
             return
         else
             State = CharacterState.gathering
-            LogInfo("State Change: Gathering")
+            LogInfo("[UmbralGathering] State Change: Gathering")
             return
         end
     elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) <= 20 then
@@ -786,7 +779,7 @@ function MoveToNextNode()
             if HasTarget() and GetTargetName() == NextNode.nodeName then
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.mounted))
                 State = CharacterState.gathering
-                LogInfo("State Change: Gathering")
+                LogInfo("[UmbralGathering] State Change: Gathering")
             else
                 yield("/target "..NextNode.nodeName)
             end
@@ -847,8 +840,13 @@ function Gather()
         yield("/wait 1")
         if not HasTarget() then
             -- yield("/echo Could not find "..NextNode.nodeName)
-            if NextNode.nodeName:sub(1, 7) == "Clouded" then
-                UmbralGathered = true
+            if NextNode.isUmbralNode then
+                if not DoFish then
+                    LeaveDuty()
+                    State = CharacterState.diademEntry
+                    return
+                end
+                -- UmbralGathered = true
             else
                 if NextNodeId >= #GatheringRoute[RouteType] then
                     if SelectedRoute == "Random" then
@@ -861,6 +859,8 @@ function Gather()
                 end
                 NextNode = GatheringRoute[RouteType][NextNodeId]
             end
+            LastStuckCheckTime = os.clock()
+            LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
             State = CharacterState.ready
             LogInfo("[UmbralGathering] State Change: Ready")
         end
@@ -869,20 +869,19 @@ function Gather()
 
     if GetDistanceToTarget() < 5 and GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
-        LogInfo("State Change: Dismount")
+        LogInfo("[UmbralGathering] State Change: Dismount")
         return
     end
 
     if GetDistanceToTarget() >= 3.5 then
         if not (PathfindInProgress() or PathIsRunning()) then
+            LogInfo("[UmbralGathering] Gathering move closer")
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
         end
         return
     end
 
-    if (GetDistanceToTarget() < 3.5 or GetCharacterCondition(CharacterCondition.gathering42)) and
-        (PathfindInProgress() or PathIsRunning())
-    then
+    if (PathfindInProgress() or PathIsRunning()) then
         yield("/vnav stop")
         return
     end
@@ -895,7 +894,7 @@ function Gather()
 
     -- proc the buffs you need
     if (NextNode.isUmbralNode and not NextNode.isFishingNode) or visibleNode == "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
-        LogInfo("[Diadem Gathering] [Node Type] This is a Max Integrity Node, time to start buffing/smacking")
+        LogInfo("[UmbralGathering] This is a Max Integrity Node, time to start buffing/smacking")
         if BuffYield2 and GetGp() >= 500 and not HasStatusId(219) and GetLevel() >= 40 then
             UseSkill(Yield2)
             return
@@ -918,7 +917,7 @@ function Gather()
     end
 
     if (GetGp() >= (GetMaxGp() - 30)) and (GetLevel() >= 68) and visibleNode ~= "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
-        LogInfo("Popping Yield 2 Buff")
+        LogInfo("[UmbralGathering] Popping Yield 2 Buff")
         UseSkill(Bountiful2)
         return
     end
@@ -942,7 +941,7 @@ function Fish()
             yield("/wait 1")
         else
             State = CharacterState.ready
-            LogInfo("State Change: ready")
+            LogInfo("[UmbralGathering] State Change: ready")
         end
         return
     end
@@ -956,7 +955,7 @@ function Fish()
 
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.dismounting
-        LogInfo("State Change: Dismounting")
+        LogInfo("[UmbralGathering] State Change: Dismounting")
         return
     end
 
@@ -977,7 +976,7 @@ function BuyFishingBait()
             yield("/callback Shop true -1")
         else
             State = CharacterState.moveToNextNode
-            LogInfo("State Change: MoveToNextNode")
+            LogInfo("[UmbralGathering] State Change: MoveToNextNode")
         end
         return
     end
@@ -1026,7 +1025,7 @@ end
 function FireCannon()
     if GetDiademAetherGaugeBarCount() == 0 then
         State = CharacterState.ready
-        LogInfo("State Change: Ready")
+        LogInfo("[UmbralGathering] State Change: Ready")
         return
     end
 
@@ -1084,6 +1083,7 @@ function FireCannon()
             State = CharacterState.aetherCannonMount
             LogInfo("[UmbralGathering] State Change: Aether Cannon Mount")
         elseif not PathfindInProgress() and not PathIsRunning() then
+            LogInfo("[UmbralGathering] Too far from target, moving closer")
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.mounted))
         end
         return
