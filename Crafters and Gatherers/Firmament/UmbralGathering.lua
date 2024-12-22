@@ -8,12 +8,14 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.0.11                                  *
+*                               Version 1.1.0                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.0.11  Fixed order for redroute
+    ->  1.1.0   Added ability to process retainers and made gathering path
+                    smoother
+                Fixed order for redroute
                 Another fix for aether cannon mounting
                 Added feature to skip target if it doesn't stick
                 Fixed jump to fly properly, added 10s stuck check when using
@@ -23,12 +25,6 @@ Created by: pot0to (https://ko-fi.com/pot0to)
                 Fixed DoFish, added DodgeTree()
                 Added food and potion check back in
                 Fixed starting NodeId after entering Diadem
-                Added default change to miner to make sure you can queue in
-                Added ability to leave and re-enter after gathering umbral nodes
-                    instead of fishing (credit: Estriam)
-                Added long route for botanist islands and added ability to
-                    select random route after finishing previous route (credit: 
-                    Mars375)
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -61,6 +57,8 @@ This Plugins are optional and not needed unless you have it enabled in the setti
 
 Food = ""                   --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                 --Leave "" Blank if you don't want to use any potions.
+
+Retainers = true
 
 SelectedRoute = "Random"
 -- Select which route you would like to do. 
@@ -254,15 +252,15 @@ GatheringRoute =
 
     BotanistIslands = 
         {
-            {x = -202, y = -2, z = -310, nodeName = "Mature Tree"}, 
-            {x = -262, y = -2, z = -346, nodeName = "Mature Tree"}, 
-            {x = -323, y = -5, z = -322, nodeName = "Mature Tree"}, 
-            {x = -372, y = 16, z = -290, nodeName = "Lush Vegetation Patch"}, 
-            {x = -421, y = 23, z = -201, nodeName = "Lush Vegetation Patch"}, 
-            {x = -471, y = 28, z = -193, nodeName = "Mature Tree"}, 
+            {x = -202, y = -2, z = -310, nodeName = "Mature Tree"},
+            {x = -262, y = -2, z = -346, nodeName = "Mature Tree"},
+            {x = -323, y = -5, z = -322, nodeName = "Mature Tree"},
+            {x = -372, y = 16, z = -290, nodeName = "Lush Vegetation Patch"},
+            {x = -421, y = 23, z = -201, nodeName = "Lush Vegetation Patch"},
+            {x = -471, y = 28, z = -193, nodeName = "Mature Tree"},
             {x = -549, y = 29, z = -211, nodeName = "Mature Tree"},
-            {x = -627, y = 285, z = -141, nodeName = "Lush Vegetation Patch"}, 
-            {x = -715, y = 271, z = -49, nodeName = "Mature Tree"}, 
+            {x = -627, y = 285, z = -141, nodeName = "Lush Vegetation Patch"},
+            {x = -715, y = 271, z = -49, nodeName = "Mature Tree"},
 
             {x = -45, y = -48, z = -501, nodeName = "Lush Vegetation Patch"},
             {x = -63, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
@@ -375,10 +373,11 @@ CharacterCondition = {
     fishing=43,
     betweenAreas=45,
     jumping48=48,
-    jumpPlatform=61,
+    occupiedSummoningBell=50,
     betweenAreasForDuty=51,
     boundByDuty56=56,
     mounting57=57,
+    jumpPlatform=61,
     mounting64=64,
     beingMoved=70,
     flying=77
@@ -402,15 +401,22 @@ function Ready()
     FoodCheck()
     PotionCheck()
     
-    if GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
+    if not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry then
+        State = CharacterState.diademEntry
+        LogInfo("[UmbralGathering] State Change: Diadem Entry")
+    elseif GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
         State = CharacterState.buyFishingBait
         LogInfo("[UmbralGathering] State Change: BuyFishingBait")
     elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
         State = CharacterState.repair
         LogInfo("[UmbralGathering] State Change: Repair")
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
+        ClearTarget()
         State = CharacterState.fireCannon
         LogInfo("State Change: Fire Cannon")
+    elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
+        State = CharacterState.processRetainers
+        LogInfo("[FATE] State Change: ProcessingRetainers")
     else
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
@@ -435,6 +441,58 @@ function DodgeTree()
     end
     while GetCharacterCondition(CharacterCondition.jumpPlatform) do
         yield("/wait 1")
+    end
+end
+
+function ProcessRetainers()
+    CurrentFate = nil
+
+    LogInfo("[UmbralGathering] Handling retainers...")
+    if ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
+
+        if not IsInZone(FirmamentZoneId) then
+            LeaveDuty()
+            return
+        end
+
+        if PathfindInProgress() or PathIsRunning() then
+            return
+        end
+
+        local summoningBell = { x=36, y=-17, z=164 }
+        if GetDistanceToPoint(summoningBell.x, summoningBell.y, summoningBell.z) > 4.5 then
+            if not PathfindInProgress() and not PathIsRunning() then
+                PathfindAndMoveTo(summoningBell.x, summoningBell.y, summoningBell.z)
+            end
+            return
+        end
+
+        if PathfindInProgress() or PathIsRunning() then
+            yield("/vnav stop")
+        end
+
+        if not HasTarget() or GetTargetName() ~= "Summoning Bell" then
+            yield("/target Summoning Bell")
+            return
+        end
+
+        if not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
+            yield("/interact")
+            if IsAddonVisible("RetainerList") then
+                yield("/ays e")
+                if Echo == "All" then
+                    yield("/echo [UmbralGathering] Processing retainers")
+                end
+                yield("/wait 1")
+            end
+        end
+    else
+        if IsAddonVisible("RetainerList") then
+            yield("/callback RetainerList true -1")
+        elseif not GetCharacterCondition(CharacterCondition.occupiedSummoningBell) then
+            State = CharacterState.ready
+            LogInfo("[UmbralGathering] State Change: Ready")
+        end
     end
 end
 
@@ -511,7 +569,7 @@ function EnterDiadem()
     yield("/wait 1")
 end
 
-function NextNodeMount()
+function Mount()
     if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
@@ -622,6 +680,8 @@ function SelectNextNode()
             end
         else
             LeaveDuty()
+            State = CharacterState.diademEntry
+            LogInfo("[UmbralGathering] Diadem Entry")
         end
     else
         GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
@@ -673,9 +733,7 @@ function MoveToNextNode()
     elseif not NextNode.isUmbralNode and (RouteType == "PinkRoute" or RouteType == "BotanistIslands") and GetClassJobId() ~= 17 then
         yield("/gs change Botanist")
         yield("/wait 3")
-    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) <= 5 then
-        yield("/vnav stop")
-
+    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) < 3 then
         if NextNode.isFishingNode then
             State = CharacterState.fishing
             LogInfo("State Change: Fishing")
@@ -685,8 +743,18 @@ function MoveToNextNode()
             LogInfo("State Change: Gathering")
             return
         end
-    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) > 5 and
-        not (PathfindInProgress() or PathIsRunning())
+    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) <= 20 then
+        if not NextNode.isFishingNode then
+            if HasTarget() and GetTargetName() == NextNode.nodeName then
+                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.mounted))
+                State = CharacterState.gathering
+                LogInfo("State Change: Gathering")
+            else
+                yield("/target "..NextNode.nodeName)
+            end
+            return
+        end
+    elseif not (PathfindInProgress() or PathIsRunning())
     then
         PathfindAndMoveTo(NextNode.x, NextNode.y, NextNode.z, true)
     end
@@ -756,7 +824,7 @@ function Gather()
                 NextNode = GatheringRoute[RouteType][NextNodeId]
             end
             State = CharacterState.ready
-            LogInfo("State Change: Ready")
+            LogInfo("[UmbralGathering] State Change: Ready")
         end
         return
     end
@@ -768,7 +836,7 @@ function Gather()
     end
 
     if GetDistanceToTarget() >= 3.5 then
-        if not (PathfindInProgress() or PathIsRunning()) and not IsPlayerOccupied() then
+        if not (PathfindInProgress() or PathIsRunning()) then
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying))
         end
         return
@@ -878,6 +946,8 @@ function BuyFishingBait()
 
     if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 100 then
         LeaveDuty()
+        State = CharacterState.diademEntry
+        LogInfo("[UmbralGathering] Diadem Entry")
         return
     end
 
@@ -1048,6 +1118,8 @@ function Repair()
                 yield("/wait 1")
                 if not HasTarget() or GetTargetName() ~= Mender.npcName then
                     LeaveDuty() -- leave and reenter next to mender
+                    State = CharacterState.diademEntry
+                    LogInfo("[UmbralGathering] Diadem Entry")
                 else
                     yield("/interact")
                 end
@@ -1081,6 +1153,8 @@ function Repair()
                 yield("/wait 1")
                 if not HasTarget() or GetTargetName() ~= Mender.npcName then
                     LeaveDuty() -- leave and reenter next to mender
+                    State = CharacterState.diademEntry
+                    LogInfo("[UmbralGathering] Diadem Entry")
                 else
                     yield("/interact")
                 end
@@ -1114,8 +1188,9 @@ end
 
 CharacterState = {
     ready = Ready,
+    processRetainers = ProcessRetainers,
     diademEntry = EnterDiadem,
-    nextNodeMount = NextNodeMount,
+    nextNodeMount = Mount,
     aetherCannonMount = AetherCannonMount,
     dismounting = Dismount,
     moveToNextNode = MoveToNextNode,
@@ -1181,8 +1256,6 @@ while true do
             LeaveDuty()
         end
         yield("/snd stop")
-    elseif not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry then
-        State = CharacterState.diademEntry
     end
     if not (IsPlayerCasting() or
         GetCharacterCondition(CharacterCondition.betweenAreas) or
