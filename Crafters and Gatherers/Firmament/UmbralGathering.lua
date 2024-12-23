@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.2                                  *
+*                               Version 1.1.3                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.2   Updated to check retainers only when naturally backing out
+    ->  1.1.3   Added diadem re-entry back to main loop
+                Updated to check retainers only when naturally backing out
                 Added function to extract spiritbonded materia
                 Added ability to process retainers and made gathering path
                     smoother
@@ -57,7 +58,7 @@ This Plugins are optional and not needed unless you have it enabled in the setti
 ********************************************************************************
 ]]
 
-Food = ""                   --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+Food = "Boiled Egg"                   --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                 --Leave "" Blank if you don't want to use any potions.
 
 Retainers = true
@@ -1295,6 +1296,8 @@ while true do
             LeaveDuty()
         end
         yield("/snd stop")
+    elseif not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry and State ~= CharacterState.processRetainers then
+        State = CharacterState.diademEntry
     end
     if not (IsPlayerCasting() or
         GetCharacterCondition(CharacterCondition.betweenAreas) or
