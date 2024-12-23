@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Island Sanctuary Dailies                           *
-*                                Version 0.0.1                                 *
+*                                Version 0.0.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -154,7 +154,7 @@ function EnterIslandSanctuary()
     elseif not IsInZone(Locations.moraby.zoneId) or
         GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 30 then
         TeleportTo(Locations.moraby.aetheryte)
-    elseif GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 30 then
+    elseif GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z)
         end
