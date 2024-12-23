@@ -58,7 +58,7 @@ This Plugins are optional and not needed unless you have it enabled in the setti
 ********************************************************************************
 ]]
 
-Food = "Boiled Egg"                   --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+Food = ""                   --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion = ""                 --Leave "" Blank if you don't want to use any potions.
 
 Retainers = true
