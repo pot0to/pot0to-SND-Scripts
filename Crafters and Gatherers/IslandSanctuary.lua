@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Island Sanctuary Dailies                           *
-*                                Version 0.0.2                                 *
+*                                Version 0.0.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -158,7 +158,7 @@ function EnterIslandSanctuary()
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z)
         end
-    elseif PathfindInProgress or PathIsRunning() then
+    elseif PathfindInProgress() or PathIsRunning() then
         yield("/vnav stop")
     elseif not HasTarget() or GetTargetName() ~= Locations.moraby.ferryman.name then
         yield("/target "..Locations.moraby.ferryman.name)
@@ -385,6 +385,8 @@ CharacterState =
 yield("/at y")
 State = CharacterState.enter
 while State ~= CharacterState.endState do
-    State()
+    if not GetCharacterCondition(CharacterCondition.betweenAreas) then
+        State()
+    end
     yield("/wait 0.1")
 end
