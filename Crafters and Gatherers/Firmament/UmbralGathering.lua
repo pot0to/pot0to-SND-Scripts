@@ -8,12 +8,12 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.7                                  *
+*                               Version 1.1.8                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.7   Updated the wait to 2s
+    ->  1.1.8   Updated the wait to 2s
                 Changed food and potion to repeated checks
                 Added diadem re-entry back to main loop
                 Updated to check retainers only when naturally backing out
@@ -601,8 +601,9 @@ function Mount()
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
     else
         yield('/gaction "mount roulette"')
+        yield("/wait 2")
     end
-    yield("/wait 3")
+    yield("/wait 1")
 end
 
 function AetherCannonMount()
