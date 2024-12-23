@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.3                                  *
+*                               Version 1.1.5                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.3   Added diadem re-entry back to main loop
+    ->  1.1.5   Changed food and potion to repeated checks
+                Added diadem re-entry back to main loop
                 Updated to check retainers only when naturally backing out
                 Added function to extract spiritbonded materia
                 Added ability to process retainers and made gathering path
@@ -386,20 +387,6 @@ CharacterCondition = {
     flying=77
 }
 
-function FoodCheck()
-    --food usage
-    if not HasStatusId(48) and Food ~= "" then
-        yield("/item " .. Food)
-    end
-end
-
-function PotionCheck()
-    --pot usage
-    if not HasStatusId(49) and Potion ~= "" then
-        yield("/item " .. Potion)
-    end
-end
-
 function Ready()
     FoodCheck()
     PotionCheck()
@@ -416,6 +403,14 @@ function Ready()
     elseif ShouldExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
         LogInfo("[FATE] State Change: ExtractMateria")
+    elseif not HasStatusId(48) and Food ~= "" then
+        LogInfo("[UmbralGathering] Attempting food")
+        yield("/item " .. Food)
+        yield("/wait 1")
+    elseif not HasStatusId(49) and Potion ~= "" then
+        LogInfo("[UmbralGathering] Attempting potion")
+        yield("/item " .. Potion)
+        yield("/wait 1")
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
         ClearTarget()
         State = CharacterState.fireCannon
