@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Island Sanctuary Dailies                           *
-*                                Version 0.0.0                                 *
+*                                Version 0.0.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -21,6 +21,19 @@ Description:
 2. Vnavmesh
 3. Teleporter
 4. TextAdvance
+--#region Settings
+
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
+
+FeedToCraft = "Premium Island Greenfeed"
+
+--[[
+********************************************************************************
+*           Code: Don't touch this unless you know what you're doing           *
+********************************************************************************
 ]]
 
 FlyingUnlocked = false -- don't change this bc the pathing sucks
@@ -95,6 +108,44 @@ Locations =
         }
     }
 }
+
+Feed =
+{
+    types =
+    {
+        { name="Island Sweetfeed", id=37612, recipeIndex=0, requiredMaterialsCount=0 },
+        { name="Island Greenfeed", id=37613, recipeIndex=1, requiredMaterialsCount=1 },
+        { name="Premium Island Greenfeed", id=37614, recipeIndex=2, requiredMaterialsCount=2 }
+    },
+    ingredients =
+    {
+        { name="Island Popoto", id=25204 },
+        { name="Island Cabbage", id=25208 },
+        { name="Isleberry", id=25306 },
+        { name="Island Pumpkin", id=25232 },
+        { name="Island Onion", id=25203 },
+        { name="Island Tomato", id=25209 },
+        { name="Island Wheat", id=25357 },
+        { name="Island Corn", id=25352 },
+        { name="Island Parsnip", id=25215 },
+        { name="Island Radish", id=25233 }
+    }
+}
+
+function TeleportTo(aetheryteName)
+    yield("/tp "..aetheryteName)
+    yield("/wait 1") -- wait for casting to begin
+    while GetCharacterCondition(CharacterCondition.casting) do
+        LogInfo("[IslandSanctuary] Casting teleport...")
+        yield("/wait 1")
+    end
+    yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
+    while GetCharacterCondition(CharacterCondition.betweenAreas) do
+        LogInfo("[IslandSanctuary] Teleporting...")
+        yield("/wait 1")
+    end
+    yield("/wait 1")
+end
 
 function EnterIslandSanctuary()
     if IsInZone(Locations.sanctuary.zoneId) then
@@ -257,6 +308,64 @@ function Export()
 end
 
 function End()
+end
+
+function GetFeed()
+    for _, feed in ipairs(Feed.types) do
+        if feed.name == FeedToCraft then
+            return feed
+        end
+    end
+end
+
+function SortTopIngredients(i1, i2)
+    return i1.quantity > i2.quantity
+end
+
+function GetTopIngredients(count)
+    local ingredients = {}
+    for i=1,#Feed.ingredients do
+        local quantity = GetNodeText("ContextIconMenu", 2, i, 1, 6)
+        table.insert(ingredients, { contextMenuParam=Feed.ingredients[i], quantity=quantity })
+    end
+    
+    local topIngredients = {}
+    table.sort(ingredients, SortTopIngredients)
+    for i=1,count do
+        table.insert(topIngredients, ingredients[i])
+    end
+    return topIngredients
+end
+
+function CraftFeed()
+    if not IsAddonVisible("MJIRecipeNoteBook") then
+        yield("/callback MJIHud true 15")
+    else
+        yield("/wait 1")
+        yield("/callback MJIRecipeNoteBook true 11 1")
+        yield("/wait 1")
+        local feed = GetFeed()
+        yield("/callback MJIRecipeNoteBook true 12 "..feed.recipeIndex)
+        yield("/wait 1")
+        local topIngredients = GetTopIngredients(feed.requiredMaterialsCount)
+        local maxCrafts = 99
+        for i=0,(feed.requiredMaterialsCount-1) do
+            local ingredient = topIngredients[i+1]
+
+            yield("/callback MJIRecipeNoteBook true 20 "..i)
+            yield("/wait 1")
+            yield("/callback ContextIconMenu true 0 0 "..ingredient.contextMenuParam.." 0 0")
+            yield("/wait 1")
+            local requiredQty = GetNodeText("MJIRecipeNoteBook", 24-i, 12)
+            local crafts = ingredient.quantity/requiredQty
+            if crafts < maxCrafts then
+                maxCrafts = crafts
+            end
+        end
+        yield("/wait 1")
+        yield("/callback MJIRecipeNoteBook true 14 "..maxCrafts)
+        State = CharacterState.endState
+    end
 end
 
 CharacterState =
