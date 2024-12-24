@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.9                                  *
+*                               Version 1.1.10                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.9   Added RandomWait feature
+    ->  1.1.10  Fixed DoFish
+                Added RandomWait feature
                 Updated the wait to 2s
                 Changed food and potion to repeated checks
                 Added diadem re-entry back to main loop
@@ -153,8 +154,8 @@ UmbralWeatherNodes = {
             itemName = "Grade 4 Artisanal Skybuilders' Marrella",
             baitName = "Diadem Hoverworm",
             baitId = 30281,
-            x = 589.74, y = 188.42, z = -591.81,
-            fishingX=593.08, fishingY=187.17, fishingZ=-594.61,
+            x = 589.21, y=188.84, z=-571.89,
+            fishingX=599.23, fishingY=185.36, fishingZ=-579.41,
             autohookPreset = "AH4_H4sIAAAAAAAACu1YzW/iOBT/V1Aue8FS4tgh6Y2hLVOJdquhoz2s9mAcByxCzDjOzLCj/u/znI+SQChVhfayPWGen3/vI88/P/uXMy6MmrDc5JNk6Vz9cm4ytkjFOE2dK6MLMXTs5ExmYj8ZN1N3MMJhNHQetVRamp1z5YE0v/nJ0yIW8V5s9Z8rrHul+MqClQNsRyVOEA6d6fZppUW+UilIPNftIL8OXWJEo84K96wzk1WxaTwgnkvOuNCsUmkquGkt9Npq+LxZpWPJ0gYg8EgHgNRqtzJf3exE3jJEDzyktONh0CSZrcV8JRPzicnSTyvIG8HcML4GVACrU3+M20aNatRHZqTIuGj5ExyuC7oZw81SLf8VE2aqT99YPVyND/Lt16ufViyVbJ3fsu9KW4COoAnHH3blXwRX3wXoezZJjU3SsdAk7JNcTtmmjGycLVOh8wYVV0v9kUuO3O1Ahc+AdfPTaFZvJZvqJzX/wbZ3mSmkkSqbMpk1CUDwzWeFFvciz9kSTDvO0HkonXAeFGy4YYWw24LEZqIHb6Zy8268RwhE9HvoIOfEfGWxnN/7M9/CdtAsnRRai8xcKMoD1IvF2uvtUcS91kutW6W5KPcRqDVcWFXN3Kit3bUyW86NgEmvHVBdWWN9mTjacKVjXzP5rRAW1xFxvBAME4RH1EOEUYxCFiVoxHAQj0I/ioDGAW8mc/NnYm1Aqf9d1awNoHHQd3H4io/XksViM/hs99kPpTcW8gF+WfpZqbUFaTjjL8HK/1YOEbycJAlLc0hf9b+ebOe1FlUZIN7IclGDOTdaZcsLoLp+C3UmliKLmd7tT7w3IlyrApQPIq00cBC9KBy5fazS8aFH60nL7SlLI4r9F5VTtjpKr1ir9WxdjxMj9IQVyxX0Axt7rEBh9BV82TFAwZTnlh20CLqng/BHNDo+eF85Q+1p39BRU2ZfxLdCahGDKVPYo822Eydq7221dL42PkrgXSXw3m/eYrc44QENwwARjywQCXyKFsTjiI38OOKJSBJBned/GnqrW84+eoP2lZymt6kGehuQwXy9WxQyjYFt/xhMV3AUDG6Z0LLLz7Y9/CC/D/K7eOV/sN3/mu1YFGPKBUfExUB5lBAUum6CfBIljFPfd6nXYruK34DsukQXuW8gOuglZc4ylnYp755BD5ym7IjuTqbpLoaeWXJonyE31olKYbxRRdZS62kHCI0O71l+95IbWsOFhtjFPLUdWX0bpRE9c5+ksLLn/aHvWeM/f47YXxPefTmwi61kYpNc5rd9XagvCXZYifdqfUXdLkC+CNyYBYh71FahCFAUBhj5PMSYuiEO4E3AFmCFW7v4dbOA69PguoDHJQN3ggEavL3MWtZHmNCYswVyfRIj4sM5HxHGEY98z09YEHscO8+/AWFE55LKEgAA"
         }
     },
@@ -688,7 +689,7 @@ end
 
 function SelectNextNode()
     local weather = GetActiveWeatherID()
-    if PrioritizeUmbral and (weather >= 133 and weather <= 136) then -- and not UmbralGathered then
+    if not UmbralGathered and PrioritizeUmbral and (weather >= 133 and weather <= 136) then -- and not UmbralGathered then
         for _, umbralWeather in pairs(UmbralWeatherNodes) do
             if umbralWeather.weatherId == weather then
                 umbralWeather.gatheringNode.isUmbralNode = true
@@ -835,7 +836,7 @@ function Gather()
                     State = CharacterState.diademEntry
                     return
                 end
-                -- UmbralGathered = true
+                UmbralGathered = true
             else
                 if NextNodeId >= #GatheringRoute[RouteType] then
                     if SelectedRoute == "Random" then
@@ -923,7 +924,7 @@ function Gather()
     end
 end
 
-function Fish()
+function GoFishing()
     local weather = GetActiveWeatherID()
     if not (weather >= 133 and weather <= 136) then
         if GetCharacterCondition(CharacterCondition.fishing) then
@@ -1223,7 +1224,7 @@ CharacterState = {
     dismounting = Dismount,
     moveToNextNode = MoveToNextNode,
     gathering = Gather,
-    fishing = Fish,
+    fishing = GoFishing,
     fireCannon = FireCannon,
     buyFishingBait = BuyFishingBait,
     repair = Repair,
