@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Island Sanctuary Dailies                           *
-*                                Version 0.0.5                                 *
+*                                Version 0.0.6                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -158,6 +158,9 @@ function EnterIslandSanctuary()
     elseif GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z)
+        elseif GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 13 then
+            yield("/gaction jump")
+            yield("/wait 1")
         end
     elseif PathfindInProgress() or PathIsRunning() then
         yield("/vnav stop")
