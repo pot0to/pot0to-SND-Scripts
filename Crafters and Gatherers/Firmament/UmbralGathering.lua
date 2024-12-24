@@ -8,7 +8,7 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.10                                  *
+*                               Version 1.1.10                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -950,7 +950,7 @@ function GoFishing()
         return
     end
 
-    if GetDistanceToPoint(NextNode.fishingX, NextNode.fishingY, NextNode.fishingZ) > 5 and not PathfindInProgress() and not PathIsRunning() then
+    if GetDistanceToPoint(NextNode.fishingX, NextNode.fishingY, NextNode.fishingZ) > 1 and not PathfindInProgress() and not PathIsRunning() then
         PathfindAndMoveTo(NextNode.fishingX, NextNode.fishingY, NextNode.fishingZ)
         return
     end

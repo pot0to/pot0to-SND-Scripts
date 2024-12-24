@@ -149,16 +149,17 @@ function TeleportTo(aetheryteName)
 end
 
 function EnterIslandSanctuary()
+    local distanceToFerryman = GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z)
+
     if IsInZone(Locations.sanctuary.zoneId) then
         State = CharacterState.openWorkshop
         LogInfo("[IslandSanctuary] OpenWorkshop")
-    elseif not IsInZone(Locations.moraby.zoneId) or
-        GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 30 then
+    elseif not IsInZone(Locations.moraby.zoneId) or distanceToFerryman > 30 then
         TeleportTo(Locations.moraby.aetheryte)
-    elseif GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 5 then
+    elseif distanceToFerryman > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
             PathfindAndMoveTo(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z)
-        elseif GetDistanceToPoint(Locations.moraby.ferryman.x, Locations.moraby.ferryman.y, Locations.moraby.ferryman.z) > 13 then
+        elseif distanceToFerryman > 13 then
             yield("/gaction jump")
             yield("/wait 1")
         end
