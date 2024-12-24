@@ -34,9 +34,11 @@ Alliance Raids/PVP/Treasure Maps/Palace of the Dead
 1. Autoduty
 2. Rotation Solver Reborn
 3. BossModReborn (BMR) or Veyn's BossMod (VBM)
-]]
 
--- Region: Data ---------------------------------------------------------------------------------
+********************************************************************************
+*           Code: Don't touch this unless you know what you're doing           *
+********************************************************************************
+]]
 
 WonderousTailsDuties = {
     { -- type 0: extreme trials
