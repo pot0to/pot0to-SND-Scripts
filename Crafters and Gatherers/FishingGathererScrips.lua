@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.3.0                                 *
+*                                Version 1.4.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.3.0    Added stuck checks
+    -> 1.4.0    Added soft and hard amiss checks
+                Added stuck checks
                 Added a second dismount check just to make sure
                 Reverted dismount -> fishing
                 Fixed dismounting
@@ -109,7 +110,11 @@ FishTable =
                 { x=135.71, y=6.12, z=715.0 },
                 { x=212.5, y=12.2, z=739.26 },
             },
-            pointToFace = { x=134.07, y=6.07, z=10000 }
+            pointToFace = { x=134.07, y=6.07, z=10000 },
+            reset = {
+                waypoint = { x=458.1, y=17.06, z=666.35 },
+                pointToFace = { x=458.1, y=17.06, z=10000 }
+            }
         },
         scripColor = "Orange",
         scripId = 39,
@@ -130,7 +135,11 @@ FishTable =
                 { x=58.87, y=22.22, z=487.95 }, --orange balls
                 { x=71.79, y=22.39, z=477.65 },
             },
-            pointToFace = { x=37.71, y=22.36, z=1000 }
+            pointToFace = { x=37.71, y=22.36, z=1000 },
+            reset = {
+                waypoint = { x=477.26, y=66.67, z=520.09 },
+                pointToFace = { x=10000, y=66.67, z=520.09 },
+            }
         },
         scripColor = "Purple",
         scripId = 38,
@@ -327,7 +336,7 @@ function GoToFishingHole()
     if GetDistanceToPoint(SelectedFishingSpot.waypointX, GetPlayerRawYPos(), SelectedFishingSpot.waypointZ) > 10 then
         LogInfo("FishingGatherer] Too far from waypoint! Currently "..GetDistanceToPoint(SelectedFishingSpot.waypointX, GetPlayerRawYPos(), SelectedFishingSpot.waypointZ).." distance.")
         if not GetCharacterCondition(CharacterCondition.mounted) then
-            State = CharacterState.mounting
+            Mount(CharacterState.goToFishingHole)
             LogInfo("State Change: Mounting")
         elseif not (PathfindInProgress() or PathIsRunning()) then
             LogInfo("[FishingGatherer] Moving to waypoint: ("..SelectedFishingSpot.waypointX..", "..SelectedFishingSpot.waypointY..", "..SelectedFishingSpot.waypointZ..")")
@@ -338,7 +347,7 @@ function GoToFishingHole()
     end
 
     if GetCharacterCondition(CharacterCondition.mounted) then
-        State = CharacterState.dismounting
+        Dismount()
         LogInfo("[FishingGatherer] State Change: Dismount")
         return
     end
@@ -347,10 +356,66 @@ function GoToFishingHole()
     LogInfo("[FishingGatherer] State Change: Fishing")
 end
 
+function GoToResetFishingHole()
+    AmissCount = 0
+    local reset = SelectedFish.fishingSpots.reset
+    if GetDistanceToPoint(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z) > 30 and
+        not GetCharacterCondition(CharacterCondition.mounted)
+    then
+        Mount()
+        return
+    elseif GetDistanceToPoint(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z) > 5 then
+        if not PathfindInProgress() and not PathIsRunning() then
+            PathfindAndMoveTo(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z, GetCharacterCondition(CharacterCondition.mounted))
+        end
+    elseif PathfindInProgress() or PathIsRunning() then
+        yield("/vnav stop")
+    elseif GetCharacterCondition(CharacterCondition.mounted) then
+        Dismount()
+    else
+        State = CharacterState.resetFishingHole
+        LogInfo("[FishingGatherer] State Change: ResetFishingHole")
+    end
+end
+
+CastSuccess = false
+function ResetFishingHole()
+    if GetItemCount(29717) == 0 then
+        State = CharacterState.buyFishingBait
+        LogInfo("State Change: Buy Fishing Bait")
+        return
+    end
+
+    if GetCharacterCondition(CharacterCondition.gathering) then
+        CastSuccess = true
+    elseif CastSuccess then
+        CastSuccess = false
+        SelectNewFishingHole()
+        State = CharacterState.ready
+    elseif not PathfindInProgress() and not PathIsRunning() then
+        local pointToFace = SelectedFish.fishingSpots.reset.pointToFace
+        PathMoveTo(pointToFace.x, pointToFace.y, pointToFace.z)
+        return
+    end
+    yield("/ac Cast")
+    yield("/wait 0.5")
+end
+
+AmissCount = 0
 function Fishing()
     if GetItemCount(29717) == 0 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: Buy Fishing Bait")
+        return
+    elseif IsAddonVisible("_TextError") and GetNodeText("_TextError", 1) == "The fish sense something amiss." then
+        AmissCount = AmissCount + 1
+        if AmissCount < 2 then
+            State = CharacterState.goToFishingHole
+            LogInfo("[FishingGatherer] State Change: Soft amiss")
+        else
+            State = CharacterState.amissReset
+            LogInfo("[FishingGatherer] State Change: Hard amiss")
+        end
         return
     end
 
@@ -376,10 +441,11 @@ function Fishing()
         else
             SelectNewFishingHole()
             State = CharacterState.ready
-            LogInfo("[FishingGatherer] State Change: Ready")
+            LogInfo("[FishingGatherer] State Change: Timeout Ready")
         end
         return
     elseif GetCharacterCondition(CharacterCondition.gathering) then
+        AmissCount = 0
         if (PathfindInProgress() or PathIsRunning()) then
             yield("/vnav stop")
         end
@@ -399,7 +465,7 @@ function Fishing()
             end
             SelectNewFishingHole()
             State = CharacterState.ready
-            LogInfo("[FishingGatherer] State Change: Ready")
+            LogInfo("[FishingGatherer] State Change: Stuck Ready")
             return
         else
             SelectedFishingSpot.lastStuckCheckPosition = { x = x, y = y, z = z }
@@ -409,10 +475,10 @@ function Fishing()
     -- run towards fishing hole and cast until the fishing line hits the water
     if not PathfindInProgress() and not PathIsRunning() then
         PathMoveTo(SelectedFishingSpot.x, SelectedFishingSpot.y, SelectedFishingSpot.z)
+        return
     end
     yield("/ac Cast")
     yield("/wait 0.5")
-    return
 end
 
 FishingBaitMerchant =
@@ -530,10 +596,7 @@ function TeleportTo(aetheryteName)
 end
 
 function Mount()
-    if GetCharacterCondition(CharacterCondition.flying) then
-        State = CharacterState.goToFishingHole
-        LogInfo("[FishingGatherer] State Change: GoToFishingHole")
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
+    if GetCharacterCondition(CharacterCondition.mounted) then
         yield("/gaction jump")
     else
         yield('/gaction "mount roulette"')
@@ -541,7 +604,7 @@ function Mount()
     yield("/wait 1")
 end
 
-function Dismount()
+function Dismount(callbackState)
     if PathIsRunning() or PathfindInProgress() then
         yield("/vnav stop")
         return
@@ -549,9 +612,9 @@ function Dismount()
 
     if GetCharacterCondition(CharacterCondition.flying) or GetCharacterCondition(CharacterCondition.mounted) then
         yield('/ac dismount')
-    elseif GetCharacterCondition(CharacterCondition.normal) then
-        State = CharacterState.fishing
-        LogInfo("State Change: Fishing")
+    elseif GetCharacterCondition(CharacterCondition.normal) and callbackState ~= nil then
+        State = callbackState
+        LogInfo("[FishingGatherer] State Change: CallbackState")
     end
     yield("/wait 1")
 end
@@ -943,8 +1006,6 @@ end
 
 CharacterState = {
     ready = Ready,
-    mounting = Mount,
-    dismounting = Dismount,
     teleportToFishingZone = TeleportToFishingZone,
     goToFishingHole = GoToFishingHole,
     extractMateria = ExecuteExtractMateria,
@@ -956,7 +1017,8 @@ CharacterState = {
     turnIn = TurnIn,
     scripExchange = ScripExchange,
     goToHubCity = GoToHubCity,
-    buyFishingBait = BuyFishingBait
+    buyFishingBait = BuyFishingBait,
+    amissReset = GoToResetFishingHole
 }
 
 StopMain = false
