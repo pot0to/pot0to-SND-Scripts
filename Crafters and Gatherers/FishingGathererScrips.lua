@@ -1,13 +1,13 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.0                                 *
+*                                Version 1.4.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.0    Added soft and hard amiss checks
+    -> 1.4.1    Added soft and hard amiss checks
                 Added stuck checks
                 Added a second dismount check just to make sure
                 Reverted dismount -> fishing
@@ -674,7 +674,7 @@ function TurnIn()
             yield("/vnav stop")
         end
 
-        if not IsAddonVisible("CollectablesShop") then
+        if not IsAddonVisible("CollectablesShop") or not IsAddonReady("CollectablesShop") then
             yield("/target Collectable Appraiser")
             yield("/wait 0.5")
             yield("/interact")
@@ -715,12 +715,12 @@ function ScripExchange()
             LogInfo("Path not running")
             PathfindAndMoveTo(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z)
         end
-    elseif IsAddonVisible("ShopExchangeItemDialog") then
+    elseif IsAddonVisible("ShopExchangeItemDialog") and IsAddonReady("ShopExchangeItemDialog") then
         yield("/callback ShopExchangeItemDialog true 0")
         yield("/wait 1")
-    elseif IsAddonVisible("SelectIconString") then
+    elseif IsAddonVisible("SelectIconString") and IsAddonReady("SelectIconString") then
         yield("/callback SelectIconString true 0")
-    elseif IsAddonVisible("InclusionShop") then
+    elseif IsAddonVisible("InclusionShop") and IsAddonReady("InclusionShop") then
         yield("/callback InclusionShop true 12 "..ScripExchangeItem.categoryMenu)
         yield("/wait 1")
         yield("/callback InclusionShop true 13 "..ScripExchangeItem.subcategoryMenu)
