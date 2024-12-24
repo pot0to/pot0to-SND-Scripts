@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                 Orange Crafter Scrips (Solution Nine Patch 7.1)              *
-*                                Version 0.4.1                                 *
+*                                Version 0.5.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.4.1    Fixed purple scrip turn ins (credit: Telain)
+    -> 0.5.0    Added feature to purchase items that can only be bought one at a
+                    time, such as gear
+                Fixed purple scrip turn ins (credit: Telain)
                 Added purple scrips, fixed /li inn
                 Added HQ item count to out of materials check, continue turn in
                     items after dumping scrips
@@ -46,10 +48,10 @@ stuff, repeat.
 ]]
 
 CrafterClass                = "Carpenter"
-ScripColor                  = "Orange"
+ScripColor                  = "Purple"
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy                   = "Crafter's Command Materia XII"
-HomeCommand                 = "/li inn"                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+ItemToBuy                   = "Afflatus Ring"
+HomeCommand                 = ""                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
 Potion                      = "Superior Spiritbond Potion <hq>"     -- WARNING: This will overwrite any crafter's pots you have.
@@ -110,6 +112,14 @@ ScripExchangeItems = {
         subcategoryMenu = 1,
         listIndex = 2,
         price = 250
+    },
+    {
+        itemName = "Afflatus Ring",
+        categoryMenu = 0,
+        subcategoryMenu = 10,
+        listIndex = 24,
+        price = 75,
+        oneAtATime = true
     }
 }
 
@@ -482,7 +492,7 @@ function TurnIn()
 end
 
 function ScripExchange()
-    if GetItemCount(CrafterScripId) < 3800 then
+    if GetItemCount(CrafterScripId) < SelectedItemToBuy.price then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
         elseif GetItemCount(ItemId) > 0 then
@@ -520,7 +530,11 @@ function ScripExchange()
         yield("/wait 1")
         yield("/callback InclusionShop true 13 "..SelectedItemToBuy.subcategoryMenu)
         yield("/wait 1")
-        yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..GetItemCount(CrafterScripId)//SelectedItemToBuy.price)
+        local qty = 1
+        if SelectedItemToBuy.oneAtATime ~= true then
+            qty = GetItemCount(CrafterScripId)//SelectedItemToBuy.price
+        end
+        yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..qty)
     else
         yield("/wait 1")
         yield("/target Scrip Exchange")
