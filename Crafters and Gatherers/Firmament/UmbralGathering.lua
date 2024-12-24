@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.8                                  *
+*                               Version 1.1.9                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.8   Updated the wait to 2s
+    ->  1.1.9   Added RandomWait feature
+                Updated the wait to 2s
                 Changed food and potion to repeated checks
                 Added diadem re-entry back to main loop
                 Updated to check retainers only when naturally backing out
@@ -25,11 +26,6 @@ Created by: pot0to (https://ko-fi.com/pot0to)
                 Added feature to skip target if it doesn't stick
                 Fixed jump to fly properly, added 10s stuck check when using
                     cannon
-                Removed jump to fly
-                Updated autohook presets to force bait swap
-                Fixed DoFish, added DodgeTree()
-                Added food and potion check back in
-                Fixed starting NodeId after entering Diadem
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -64,6 +60,11 @@ Food = ""                   --Leave "" Blank if you don't want to use any food. 
 Potion = ""                 --Leave "" Blank if you don't want to use any potions.
 
 Retainers = true
+
+-- How long to wait before mounting up for the next node. Actual value will be a
+-- random number in between MaxWait and MinWait
+MaxWait = 10
+MinWait = 3
 
 SelectedRoute = "Random"
 -- Select which route you would like to do. 
@@ -104,10 +105,6 @@ SelfRepair = true                              --if false, will go to Limsa mend
     ShouldAutoBuyDarkMatter = true                  --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
 ShouldExtractMateria = true                           --should it Extract Materia
 --When do you want to repair your own gear? From 0-100 (it's in percentage, but enter a whole value
-
-PlayerWaitTime = true
--- this is if you want to make it... LESS sus on you just jumping from node to node instantly/firing a cannon off at an enemy and then instantly flying off
--- default is true, just for safety. If you want to turn this off, do so at your own risk.
 
 debug = false
 -- This is for debugging 
@@ -672,12 +669,19 @@ function RandomAdjustCoordinates(x, y, z, maxDistance)
     return randomX, randomY, randomZ
 end
 
+function RandomWait()
+    local duration = math.random() * (MaxWait - MinWait)
+    duration = duration + MinWait
+    duration = math.floor(duration * 1000) / 1000
+    yield("/wait "..duration)
+end
+
 function GetRandomRouteType()
     local routeNames = {}
     for routeName, _ in pairs(GatheringRoute) do
         table.insert(routeNames, routeName)
     end
-    local randomIndex = math.random(#routeNames) 
+    local randomIndex = math.random(#routeNames)
     
     return routeNames[randomIndex] 
 end
@@ -786,18 +790,6 @@ function MoveToNextNode()
         PathfindAndMoveTo(NextNode.x, NextNode.y, NextNode.z, true)
     end
 end
-
-function RandomAdjustCoordinates(x, y, z, maxDistance)
-    local angle = math.random() * 2 * math.pi
-    local x_adjust = maxDistance * math.random()
-    local z_adjust = maxDistance * math.random()
-
-    local randomX = x + (x_adjust * math.cos(angle))
-    local randomY = y + maxDistance
-    local randomZ = z + (z_adjust * math.sin(angle))
-
-    return randomX, randomY, randomZ
-end
 --#endregion Movement
 
 --#region Gathering
@@ -838,6 +830,7 @@ function Gather()
             -- yield("/echo Could not find "..NextNode.nodeName)
             if NextNode.isUmbralNode then
                 if not DoFish then
+                    RandomWait()
                     LeaveDuty()
                     State = CharacterState.diademEntry
                     return
@@ -855,6 +848,7 @@ function Gather()
                 end
                 NextNode = GatheringRoute[RouteType][NextNodeId]
             end
+            RandomWait()
             LastStuckCheckTime = os.clock()
             LastStuckCheckPosition = { x = GetPlayerRawXPos(), y = GetPlayerRawYPos(), z = GetPlayerRawZPos() }
             State = CharacterState.ready
