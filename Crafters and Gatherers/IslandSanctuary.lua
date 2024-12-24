@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Island Sanctuary Dailies                           *
-*                                Version 0.0.3                                 *
+*                                Version 0.0.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -28,7 +28,8 @@ Description:
 ********************************************************************************
 ]]
 
-FeedToCraft = "Premium Island Greenfeed"
+FeedToCraft = "Island Greenfeed"
+    Quantity = 99
 
 --[[
 ********************************************************************************
@@ -239,57 +240,35 @@ function SetGranary()
 end
 
 function CollectRanch()
-    OpenAndCloseNpc(Locations.sanctuary.ranch, CharacterState.garden, "Garden")
+    local feed = GetFeed()
+    if GetItemCount(feed.id) < 10 then
+        CraftFeed()
+    else
+        OpenAndCloseNpc(Locations.sanctuary.ranch, CharacterState.garden, "Garden")
+    end
 end
 
 function CollectGarden()
     OpenAndCloseNpc(Locations.sanctuary.garden, CharacterState.goToFurball, "GoToFurball")
 end
 
+PathToFurball = "H4sIAAAAAAAACu1WTY/TMBD9K5XPIYodO4lzQ2VbFbRL2S0qLOLgEreJlHiK44BWVf874yT7UeDAFbW+eN6TPfM8ebJzIDeq0SQnS+XKyuwmWwvNZK5sYbSdOJjMOrtRdU0CMrfQ7XHlR7PzkS6QmwEUJI8Ccq1Mp+o+XCm7026O+bRdON305Fo97KEyriX5lwNZQlu5CgzJD+QTyV8xIcNMsiQNyGeSCxFSiQPRPckpj8JYCkGPCMHoxRvkIiECcquKqsOEcegFwA/daONIzoL+MNvKoDRnOx2QhXHaqm9uXbnyvU8QnXJjD8gp+5vKyJdBef18388oqS3h5+MmXItytqpuX9TsE9CAXDXg9GNtbMsYvu5XjOBDp1v3Mr7T34f2wmak7xzsp2CKURky76q6nkLnj47oFjqnn88zLZWbQtMo3wxPeL1rVblnoR7NwJ4m9eSqavR1ewKvVn82A5uwaJelMg6ap6T+C5DcdHWNxumtgOZaPexRlpR+ww0U+mm1B29hg+mOwV/cEcmQpVzwviIXYcwzniaDO5IoTGQiL+44X3dkYUoFZYM7WJgyyTgf3JElIac0yy53x7m6I8G7I2JcDO7Akn4M7mAxviw0SsTFHWfsjjiVcTK4g44vO6MY8Zj/86OC4PLL8d8a4+vxFx+sRHEGCwAA"
 function GoToFurball()
     local npc = Locations.sanctuary.furball
-    if GetDistanceToPoint(npc.waypointX, npc.waypointY, npc.waypointZ) > 20 then
-        if not GetCharacterCondition(CharacterCondition.mounted) then
-            yield('/gaction "mount roulette"')
-            yield("/wait 1")
-            return
-        elseif GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.mounting57) then
-            return
-        end
-    end
-
-    if GetDistanceToPoint(npc.waypointX, npc.waypointY, npc.waypointZ) > 3 then
-        local shouldFly = FlyingUnlocked and GetCharacterCondition(CharacterCondition.mounted)
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(npc.waypointX, npc.waypointY, npc.waypointZ, shouldFly)
-        end
-        return
-    end
-
-    State = CharacterState.talkToFurball
-    LogInfo("[IslandSanctuary] State Change: TalkToFurball")
-end
-
-function TalkToFurball()
-    local npc = Locations.sanctuary.furball
-
     if GetDistanceToPoint(npc.x, npc.y, npc.z) > 20 then
         if not GetCharacterCondition(CharacterCondition.mounted) then
             yield('/gaction "mount roulette"')
             yield("/wait 1")
             return
-        elseif GetCharacterCondition(CharacterCondition.casting) or GetCharacterCondition(CharacterCondition.mounting57) then
+        elseif not IsVislandRouteRunning() then
+            VislandStartRoute(PathToFurball, true)
             return
         end
+    elseif IsVislandRouteRunning() then
+        return
     end
-    if GetDistanceToPoint(npc.x, npc.y, npc.z) > 5 then
-        local shouldFly = FlyingUnlocked and GetCharacterCondition(CharacterCondition.mounted)
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(npc.x, npc.y, npc.z, shouldFly)
-        end
-    elseif PathfindInProgress() or PathIsRunning() then
-        yield("/vnav stop")
-    elseif not HasTarget() or GetTargetName() ~= npc.name then
+
+    if not HasTarget() or GetTargetName() ~= npc.name then
         yield("/target ".. npc.name)
     elseif GetCharacterCondition(CharacterCondition.flying) then
         yield("/ac dismount")
@@ -340,6 +319,8 @@ end
 function CraftFeed()
     if not IsAddonVisible("MJIRecipeNoteBook") then
         yield("/callback MJIHud true 15")
+    elseif GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
+        yield("/wait 3")
     else
         yield("/wait 1")
         yield("/callback MJIRecipeNoteBook true 11 1")
@@ -348,7 +329,7 @@ function CraftFeed()
         yield("/callback MJIRecipeNoteBook true 12 "..feed.recipeIndex)
         yield("/wait 1")
         local topIngredients = GetTopIngredients(feed.requiredMaterialsCount)
-        local maxCrafts = 99
+        local maxCrafts = Quantity
         for i=0,(feed.requiredMaterialsCount-1) do
             local ingredient = topIngredients[i+1]
 
@@ -364,7 +345,6 @@ function CraftFeed()
         end
         yield("/wait 1")
         yield("/callback MJIRecipeNoteBook true 14 "..maxCrafts)
-        State = CharacterState.endState
     end
 end
 
