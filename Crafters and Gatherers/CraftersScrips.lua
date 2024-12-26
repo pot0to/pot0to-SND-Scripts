@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                    Crafter Scrips (Solution Nine Patch 7.1)                  *
-*                                Version 0.5.0                                 *
+*                                Version 0.5.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.5.0    Added feature to purchase items that can only be bought one at a
+    -> 0.5.1    Fixed name of Artful Afflatus Ring
+                Added feature to purchase items that can only be bought one at a
                     time, such as gear
                 Fixed purple scrip turn ins (credit: Telain)
                 Added purple scrips, fixed /li inn
@@ -114,7 +115,7 @@ ScripExchangeItems = {
         price = 250
     },
     {
-        itemName = "Afflatus Ring",
+        itemName = "Artful Afflatus Ring",
         categoryMenu = 0,
         subcategoryMenu = 10,
         listIndex = 24,
