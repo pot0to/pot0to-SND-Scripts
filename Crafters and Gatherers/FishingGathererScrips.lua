@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.3                                 *
+*                                Version 1.4.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.3    Fix typo
+    -> 1.4.4    Separate IsAddonReady and IsAddonVisible
+                Fix typo
                 Added more logging statements
                 Added soft and hard amiss checks
                 Added stuck checks
@@ -717,17 +718,25 @@ function ScripExchange()
             LogInfo("Path not running")
             PathfindAndMoveTo(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z)
         end
-    elseif not LogInfo("[FishingGatherer] check ShopExchangeItemDialog") and IsAddonVisible("ShopExchangeItemDialog") and IsAddonReady("ShopExchangeItemDialog") then
-        yield("/callback ShopExchangeItemDialog true 0")
-        yield("/wait 1")
-    elseif not LogInfo("[FishingGatherer] check SelectIconString") and IsAddonVisible("SelectIconString") and IsAddonReady("SelectIconString") then
-        yield("/callback SelectIconString true 0")
-    elseif not LogInfo("[FishingGatherer] check InclusionShop") and IsAddonVisible("InclusionShop") and IsAddonReady("InclusionShop") then
-        yield("/callback InclusionShop true 12 "..ScripExchangeItem.categoryMenu)
-        yield("/wait 1")
-        yield("/callback InclusionShop true 13 "..ScripExchangeItem.subcategoryMenu)
-        yield("/wait 1")
-        yield("/callback InclusionShop true 14 "..ScripExchangeItem.listIndex.." "..math.min(99, GetItemCount(GathererScripId)//ScripExchangeItem.price))
+    elseif not LogInfo("[FishingGatherer] check ShopExchangeItemDialog") and IsAddonVisible("ShopExchangeItemDialog") then
+        if IsAddonReady("ShopExchangeItemDialog") then
+            yield("/callback ShopExchangeItemDialog true 0")
+        end
+    elseif not LogInfo("[FishingGatherer] check SelectIconString") and IsAddonVisible("SelectIconString") then
+        if IsAddonReady("SelectIconString") then
+            LogInfo("[FishingGatherer] SelectIconString Ready")
+            yield("/callback SelectIconString true 0")
+        else
+            LogInfo("[FishingGatherer] SelectIconString Not Ready")
+        end
+    elseif not LogInfo("[FishingGatherer] check InclusionShop") and IsAddonVisible("InclusionShop") then
+        if IsAddonReady("InclusionShop") then
+            yield("/callback InclusionShop true 12 "..ScripExchangeItem.categoryMenu)
+            yield("/wait 1")
+            yield("/callback InclusionShop true 13 "..ScripExchangeItem.subcategoryMenu)
+            yield("/wait 1")
+            yield("/callback InclusionShop true 14 "..ScripExchangeItem.listIndex.." "..math.min(99, GetItemCount(GathererScripId)//ScripExchangeItem.price))
+        end
     else
         LogInfo("[FishingGatherer] target and interact with Scrip Exchange")
         yield("/wait 1")
