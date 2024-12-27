@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.2                                 *
+*                                Version 1.4.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.2    Added more logging statements
+    -> 1.4.3    Fix typo
+                Added more logging statements
                 Added soft and hard amiss checks
                 Added stuck checks
                 Added a second dismount check just to make sure
@@ -728,7 +729,7 @@ function ScripExchange()
         yield("/wait 1")
         yield("/callback InclusionShop true 14 "..ScripExchangeItem.listIndex.." "..math.min(99, GetItemCount(GathererScripId)//ScripExchangeItem.price))
     else
-        not LogInfo("[FishingGatherer] target and interact with Scrip Exchange")
+        LogInfo("[FishingGatherer] target and interact with Scrip Exchange")
         yield("/wait 1")
         yield("/target Scrip Exchange")
         yield("/wait 0.5")
