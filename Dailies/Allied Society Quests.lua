@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Allied Society Quests                              *
-*                               Version 0.0.0                                  *
+*                               Version 0.1.1                                  *
 ********************************************************************************
 Created by: pot0to (https://ko-fi.com/pot0to)
 
@@ -13,8 +13,9 @@ moves on to the next beast tribe.
 *                                     0.1.0                                    *
 ********************************************************************************
 
-0.1.0   Added ability to change classes for different Allied Socieities
-0.0.0   First working version
+0.1.1   Updated Namazu aetheryte to Dhoro Iloh
+        Added ability to change classes for different Allied Socieities
+        First working version
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -146,7 +147,7 @@ AlliedSocietiesTable =
         y = 127.81,
         z = 98.76,
         zoneId = 622,
-        aetheryteName = "The Dawn Throne"
+        aetheryteName = "Dhoro Iloh"
     },
     pixies = {
         alliedSocietyName = "Pixies",
