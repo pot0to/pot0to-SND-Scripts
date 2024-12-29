@@ -10,10 +10,11 @@ moves on to the next beast tribe.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.1.0                                    *
+*                                     0.1.2                                    *
 ********************************************************************************
 
-0.1.1   Updated Namazu aetheryte to Dhoro Iloh
+0.1.2   Added /qst stop after finishing one set of quests
+        Updated Namazu aetheryte to Dhoro Iloh
         Added ability to change classes for different Allied Socieities
         First working version
 
@@ -334,5 +335,6 @@ for _, alliedSociety in ipairs(ToDoList) do
         repeat
             yield("/wait 10")
         until #GetAcceptedAlliedSocietyQuests(alliedSociety.alliedSocietyName) == 0
+        yield("/qst stop")
     end
 end
