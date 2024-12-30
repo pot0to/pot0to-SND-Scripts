@@ -8,12 +8,14 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.11                                 *
+*                               Version 1.1.12                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.11  Added extra logging around skills
+    ->  1.1.12  Move SkillCheck out from if statement, so now it checks
+                    every time. This is hopefully compatible with Pandora
+                Added extra logging around skills
                 Fixed DoFish
                 Added RandomWait feature
                 Updated the wait to 2s
@@ -883,10 +885,11 @@ function Gather()
     end
 
     if not GetCharacterCondition(CharacterCondition.gathering) then
-        SkillCheck()
         yield("/interact")
         return
     end
+
+    SkillCheck()
 
     -- proc the buffs you need
     if (NextNode.isUmbralNode and not NextNode.isFishingNode) or visibleNode == "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
