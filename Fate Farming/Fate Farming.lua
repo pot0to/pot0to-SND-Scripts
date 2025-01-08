@@ -90,8 +90,10 @@ RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath
     RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
 
     -- For BMR/VBM only
-    RotationSingleTargetPreset      = ""            --Preset name for aoe mode.
-    RotationAoePreset               = ""            --For BMR/VBM only. Prset name for single target mode (for forlorns).
+    RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns).
+    RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
+    RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
+    PorcentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
 DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
 
 IgnoreForlorns                      = false
@@ -1800,6 +1802,16 @@ function TurnOffAoes()
     end
 end
 
+function TurnOffRaidBuffs()
+    if AoesOn then
+        if RotationPlugin == "BMR" then
+            yield("/bmrai setpresetname "..RotationHoldBuffPreset)
+        elseif RotationPlugin == "VBM" then
+            yield("/vbmai setpresetname "..RotationHoldBuffPreset)
+        end
+    end
+end
+
 function SetMaxDistance()
     MaxDistance = MeleeDist --default to melee distance
     --ranged and casters have a further max distance so not always running all way up to target
@@ -2093,6 +2105,11 @@ function DoFate()
             end
         end
     end
+        
+    --hold buff thingy
+    if GetFateProgress(CurrentFate.fateId) >= PorcentageToHoldBuff then 
+        TurnOffRaidBuffs()
+    end   
 end
 
 --#endregion
