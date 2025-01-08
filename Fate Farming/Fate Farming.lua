@@ -364,6 +364,9 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             fatesWithContinuations = {},
+            specialFates = {
+                "He Taketh It with His Eyes" --behemoth
+            },
             blacklistedFates= {}
         }
     },
@@ -414,6 +417,9 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             fatesWithContinuations = {},
+            specialFates = {
+                "Coeurls Chase Boys Chase Coeurls" --coeurlregina
+            },
             blacklistedFates= {}
         }
     },
@@ -434,6 +440,110 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
+            fatesWithContinuations = {},
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName = "The Fringes",
+        zoneId = 612,
+        fatesList= {
+            collectionsFates= {
+                { fateName="Showing The Recruits What For", npcName="Storm Commander Bharbennsyn" },
+                { fateName="Get Sharp", npcName="M Tribe Youth" },
+            },
+            otherNpcFates= {
+                { fateName="The Mail Must Get Through", npcName="Storm Herald" },
+                { fateName="The Antlion's Share", npcName="M Tribe Ranger" },
+                { fateName="Double Dhara", npcName="Resistence Fighter" },
+                { fateName="Keeping the Peace", npcName="Resistence Fighter" }
+            },
+            fatesWithContinuations = {},
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName = "The Peaks",
+        zoneId = 620,
+        fatesList= {
+            collectionsFates= {
+                { fateName="Fletching Returns", npcName="Sorry Sutler" }
+            },
+            otherNpcFates= {
+                { fateName="Resist, Die, Repeat", npcName="Wounded Fighter" },
+                { fateName="And the Bandits Played On", npcName="Frightened Villager" },
+                { fateName="Forget-me-not", npcName="Coldhearth Resident" },
+                { fateName="Of Mice and Men", npcName="Furious Farmer" }
+            },
+            fatesWithContinuations = {},
+            blacklistedFates= {
+                "The Magitek Is Back", --escort
+                "A New Leaf" --escort
+            }
+        }
+    },
+    {
+        zoneName = "The Lochs",
+        zoneId = 621,
+        fatesList= {
+            collectionsFates= {},
+            otherNpcFates= {},
+            fatesWithContinuations = {},
+            specialFates = {
+                "A Horse Outside" --ixion
+            },
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName = "The Ruby Sea",
+        zoneId = 613,
+        fatesList= {
+            collectionsFates= {
+                { fateName="Treasure Island", npcName="Blue Avenger" },
+                { fateName="The Coral High Ground", npcName="Busy Beachcomber" }
+            },
+            otherNpcFates= {
+                { fateName="Another One Bites The Dust", npcName="Pirate Youth" },
+                { fateName="Ray Band", npcName="Wounded Confederate" },
+                { fateName="Bilge-hold Jin", npcName="Green Confederate" }
+            },
+            fatesWithContinuations = {},
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName = "Yanxia",
+        zoneId = 614,
+        fatesList= {
+            collectionsFates= {
+                { fateName="Rice and Shine", npcName="Flabbergasted Farmwife" },
+                { fateName="More to Offer", npcName="Ginko" }
+            },
+            otherNpcFates= {
+                { fateName="Freedom Flies", npcName="Kinko" },
+                { fateName="A Tisket, a Tasket", npcName="Gyogun of the Most Bountiful Catch" }
+            },
+            specialFates = {
+                "Foxy Lady" --foxyyy
+            },
+            fatesWithContinuations = {},
+            blacklistedFates= {}
+        }
+    },
+    {
+        zoneName = "The Azim Steppe",
+        zoneId = 622,
+        fatesList= {
+            collectionsFates= {
+                { fateName="The Dataqi Chronicles: Duty", npcName="Altani" }
+            },
+            otherNpcFates= {
+                { fateName="Rock for Food", npcName="Oroniri Youth" },
+                { fateName="Killing Dzo", npcName="Olkund Dzotamer" },
+                { fateName="They Shall Not Want", npcName="Mol Shepherd" },
+                { fateName="A Good Day to Die", npcName="Qestiri Merchant" }
+            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -464,6 +574,9 @@ FatesData = {
             },
             otherNpcFates= {},
             fatesWithContinuations = {},
+            specialFates = {
+                "A Finale Most Formidable" --formidable
+            },
             blacklistedFates= {}
         }
     },
@@ -524,6 +637,9 @@ FatesData = {
                 { fateName="Lookin' Back on the Track", npcName="Teushs Ooan" },
             },
             fatesWithContinuations = {},
+            specialFates = {
+                "The Head, the Tail, the Whole Damned Thing" --archaeotania
+            },
             blacklistedFates= {
                 "Coral Support", -- escort fate
                 "The Seashells He Sells", -- escort fate
@@ -551,6 +667,9 @@ FatesData = {
                 { fateName="Full Petal Alchemist: Perilous Pickings", npcName="Sajabaht" }
             },
             otherNpcFates= {},
+            specialFates = {
+                "Devout Pilgrims vs. Daivadipa" --daveeeeee
+            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -600,6 +719,9 @@ FatesData = {
                 { fateName="Wings of Glory", npcName="Ahl Ein's Kin" },
                 { fateName="Omicron Recall: Secure Connection", npcName="N-6205"},
                 { fateName="Only Just Begun", npcName="Myhk Nehr" }
+            },
+            specialFates = {
+                "Omicron Recall: Killing Order" --chi
             },
             fatesWithContinuations = {},
             blacklistedFates= {}
@@ -720,6 +842,7 @@ FatesData = {
         fatesList= {
             collectionsFates= {
                 { fateName="License to Dill", npcName="Tonawawtan Provider" },
+                { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
             otherNpcFates= {
                 { fateName="It's Super Defective", npcName="Novice Hunter" },
@@ -727,8 +850,7 @@ FatesData = {
                 { fateName="Ware the Wolves", npcName="Imperiled Hunter" },
                 { fateName="Domo Arigato", npcName="Perplexed Reforger" },
                 { fateName="Old Stampeding Grounds", npcName="Driftdowns Reforger" },
-                { fateName="Pulling the Wool", npcName="Panicked Courier" },
-                { fateName="When It's So Salvage", npcName="Refined Reforger" }
+                { fateName="Pulling the Wool", npcName="Panicked Courier" }
             },
             fatesWithContinuations = {
                 { fateName="Domo Arigato", continuationIsBoss=false }
