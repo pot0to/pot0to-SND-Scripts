@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                    Crafter Scrips (Solution Nine Patch 7.1)                  *
-*                                Version 0.5.4                                 *
+*                                Version 0.5.5                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.5.4    Fixes for some stuff
+    -> 0.5.5    Wait while Artisan Endurance is active, click menus once for
+                    scrip exchange
+                Fixes for some stuff
                 Fixed Deliveroo interrupt
                 Fixed name of Artful Afflatus Ring
                 Added feature to purchase items that can only be bought one at a
@@ -50,10 +52,10 @@ stuff, repeat.
 
 ]]
 
-CrafterClass                = "Alchemist"
+CrafterClass                = "Culinarian"
 ScripColor                  = "Purple"
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy                   = "Crafter's Command Materia XI"
+ItemToBuy                   = "Artful Afflatus Ring"
 HomeCommand                 = ""                        --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
@@ -402,7 +404,9 @@ function Crafting()
     end
 
     local slots = GetInventoryFreeSlotCount()
-    if slots == nil then
+    if ArtisanGetEnduranceStatus() then
+        return
+    elseif slots == nil then
         yield("/echo [OrangeCrafters] GetInventoryFreeSlotCount() is nil. WHYYY???")
     elseif not LogInfo("[OrangeCrafters] Check Artisan running") and (ArtisanIsListRunning() and not ArtisanIsListPaused()) or IsAddonVisible("Synthesis") then
         yield("/wait 1")
@@ -508,23 +512,28 @@ function TurnIn()
     end
 end
 
+SelectTurnInPage = false
 function ScripExchange()
     if GetItemCount(CrafterScripId) < SelectedItemToBuy.price or GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
         elseif GetItemCount(ItemId) > 0 and GetItemCount(CrafterScripId) < 3800 then
+            SelectTurnInPage = false
             State = CharacterState.turnIn
             LogInfo("[OrangeCrafters] State Change: TurnIn")
         elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
+            SelectTurnInPage = false
             State = CharacterState.gcTurnIn
             LogInfo("[OrangeCrafters] State Change: GCTurnIn")
         else
+            SelectTurnInPage = false
             State = CharacterState.ready
             LogInfo("[OrangeCrafters] State Change: Ready")
         end
     elseif not IsInZone(SelectedHubCity.zoneId) and
         (not SelectedHubCity.scripExchange.requiresAethernet or (SelectedHubCity.scripExchange.requiresAethernet and not IsInZone(SelectedHubCity.aethernet.aethernetZoneId)))
     then
+        SelectTurnInPage = false
         State = CharacterState.goToHubCity
         LogInfo("State Change: GoToHubCity")
     elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
@@ -547,10 +556,14 @@ function ScripExchange()
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("InclusionShop") then
         LogInfo("[OrangeCrafters] Free inventory slots: "..GetInventoryFreeSlotCount())
-        yield("/callback InclusionShop true 12 "..SelectedItemToBuy.categoryMenu)
-        yield("/wait 1")
-        yield("/callback InclusionShop true 13 "..SelectedItemToBuy.subcategoryMenu)
-        yield("/wait 1")
+
+        if not SelectTurnInPage then
+            yield("/callback InclusionShop true 12 "..SelectedItemToBuy.categoryMenu)
+            yield("/wait 1")
+            yield("/callback InclusionShop true 13 "..SelectedItemToBuy.subcategoryMenu)
+            yield("/wait 1")
+            SelectTurnInPage = true
+        end
         local qty = 1
         if SelectedItemToBuy.oneAtATime ~= true then
             qty = GetItemCount(CrafterScripId)//SelectedItemToBuy.price

@@ -2,16 +2,13 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.3                                 *
+*                               Version 2.21.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.3   Adjusted landing logic so hopefully it shouldn't get stuck too
-                    high up anymore
-                Added ability to only do bonus fates
-                Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
+    -> 2.21.1   Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
                 Support for multi-zone farming
                 Added some thanalan npc fates
                 Cleanup for Yak'tel fates and landing condition when flying back
@@ -85,7 +82,6 @@ CompletionToJoinBossFate            = 0             --If the boss fate has less 
     ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                                         --for the class. Ex: "PLD"
 JoinCollectionsFates                = true          --Set to false if you never want to do collections fates
-BonusFatesOnly                      = false         --If true, will only do bonus fates and ignore everything else
 
 MeleeDist                           = 2.5           --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
 RangedDist                          = 20            --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
@@ -94,10 +90,8 @@ RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath
     RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
 
     -- For BMR/VBM only
-    RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns).
-    RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
-    RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
-    PorcentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
+    RotationSingleTargetPreset      = ""            --Preset name for aoe mode.
+    RotationAoePreset               = ""            --For BMR/VBM only. Prset name for single target mode (for forlorns).
 DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
 
 IgnoreForlorns                      = false
@@ -370,9 +364,6 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             fatesWithContinuations = {},
-            specialFates = {
-                "He Taketh It with His Eyes" --behemoth
-            },
             blacklistedFates= {}
         }
     },
@@ -423,9 +414,6 @@ FatesData = {
             collectionsFates= {},
             otherNpcFates= {},
             fatesWithContinuations = {},
-            specialFates = {
-                "Coeurls Chase Boys Chase Coeurls" --coeurlregina
-            },
             blacklistedFates= {}
         }
     },
@@ -446,110 +434,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {},
             otherNpcFates= {},
-            fatesWithContinuations = {},
-            blacklistedFates= {}
-        }
-    },
-    {
-        zoneName = "The Fringes",
-        zoneId = 612,
-        fatesList= {
-            collectionsFates= {
-                { fateName="Showing The Recruits What For", npcName="Storm Commander Bharbennsyn" },
-                { fateName="Get Sharp", npcName="M Tribe Youth" },
-            },
-            otherNpcFates= {
-                { fateName="The Mail Must Get Through", npcName="Storm Herald" },
-                { fateName="The Antlion's Share", npcName="M Tribe Ranger" },
-                { fateName="Double Dhara", npcName="Resistence Fighter" },
-                { fateName="Keeping the Peace", npcName="Resistence Fighter" }
-            },
-            fatesWithContinuations = {},
-            blacklistedFates= {}
-        }
-    },
-    {
-        zoneName = "The Peaks",
-        zoneId = 620,
-        fatesList= {
-            collectionsFates= {
-                { fateName="Fletching Returns", npcName="Sorry Sutler" }
-            },
-            otherNpcFates= {
-                { fateName="Resist, Die, Repeat", npcName="Wounded Fighter" },
-                { fateName="And the Bandits Played On", npcName="Frightened Villager" },
-                { fateName="Forget-me-not", npcName="Coldhearth Resident" },
-                { fateName="Of Mice and Men", npcName="Furious Farmer" }
-            },
-            fatesWithContinuations = {},
-            blacklistedFates= {
-                "The Magitek Is Back", --escort
-                "A New Leaf" --escort
-            }
-        }
-    },
-    {
-        zoneName = "The Lochs",
-        zoneId = 621,
-        fatesList= {
-            collectionsFates= {},
-            otherNpcFates= {},
-            fatesWithContinuations = {},
-            specialFates = {
-                "A Horse Outside" --ixion
-            },
-            blacklistedFates= {}
-        }
-    },
-    {
-        zoneName = "The Ruby Sea",
-        zoneId = 613,
-        fatesList= {
-            collectionsFates= {
-                { fateName="Treasure Island", npcName="Blue Avenger" },
-                { fateName="The Coral High Ground", npcName="Busy Beachcomber" }
-            },
-            otherNpcFates= {
-                { fateName="Another One Bites The Dust", npcName="Pirate Youth" },
-                { fateName="Ray Band", npcName="Wounded Confederate" },
-                { fateName="Bilge-hold Jin", npcName="Green Confederate" }
-            },
-            fatesWithContinuations = {},
-            blacklistedFates= {}
-        }
-    },
-    {
-        zoneName = "Yanxia",
-        zoneId = 614,
-        fatesList= {
-            collectionsFates= {
-                { fateName="Rice and Shine", npcName="Flabbergasted Farmwife" },
-                { fateName="More to Offer", npcName="Ginko" }
-            },
-            otherNpcFates= {
-                { fateName="Freedom Flies", npcName="Kinko" },
-                { fateName="A Tisket, a Tasket", npcName="Gyogun of the Most Bountiful Catch" }
-            },
-            specialFates = {
-                "Foxy Lady" --foxyyy
-            },
-            fatesWithContinuations = {},
-            blacklistedFates= {}
-        }
-    },
-    {
-        zoneName = "The Azim Steppe",
-        zoneId = 622,
-        fatesList= {
-            collectionsFates= {
-                { fateName="The Dataqi Chronicles: Duty", npcName="Altani" }
-            },
-            otherNpcFates= {
-                { fateName="Rock for Food", npcName="Oroniri Youth" },
-                { fateName="Killing Dzo", npcName="Olkund Dzotamer" },
-                { fateName="They Shall Not Want", npcName="Mol Shepherd" },
-                { fateName="A Good Day to Die", npcName="Qestiri Merchant" }
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -580,9 +464,6 @@ FatesData = {
             },
             otherNpcFates= {},
             fatesWithContinuations = {},
-            specialFates = {
-                "A Finale Most Formidable" --formidable
-            },
             blacklistedFates= {}
         }
     },
@@ -643,9 +524,6 @@ FatesData = {
                 { fateName="Lookin' Back on the Track", npcName="Teushs Ooan" },
             },
             fatesWithContinuations = {},
-            specialFates = {
-                "The Head, the Tail, the Whole Damned Thing" --archaeotania
-            },
             blacklistedFates= {
                 "Coral Support", -- escort fate
                 "The Seashells He Sells", -- escort fate
@@ -673,9 +551,6 @@ FatesData = {
                 { fateName="Full Petal Alchemist: Perilous Pickings", npcName="Sajabaht" }
             },
             otherNpcFates= {},
-            specialFates = {
-                "Devout Pilgrims vs. Daivadipa" --daveeeeee
-            },
             fatesWithContinuations = {},
             blacklistedFates= {}
         }
@@ -725,9 +600,6 @@ FatesData = {
                 { fateName="Wings of Glory", npcName="Ahl Ein's Kin" },
                 { fateName="Omicron Recall: Secure Connection", npcName="N-6205"},
                 { fateName="Only Just Begun", npcName="Myhk Nehr" }
-            },
-            specialFates = {
-                "Omicron Recall: Killing Order" --chi
             },
             fatesWithContinuations = {},
             blacklistedFates= {}
@@ -848,7 +720,6 @@ FatesData = {
         fatesList= {
             collectionsFates= {
                 { fateName="License to Dill", npcName="Tonawawtan Provider" },
-                { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
             otherNpcFates= {
                 { fateName="It's Super Defective", npcName="Novice Hunter" },
@@ -856,7 +727,8 @@ FatesData = {
                 { fateName="Ware the Wolves", npcName="Imperiled Hunter" },
                 { fateName="Domo Arigato", npcName="Perplexed Reforger" },
                 { fateName="Old Stampeding Grounds", npcName="Driftdowns Reforger" },
-                { fateName="Pulling the Wool", npcName="Panicked Courier" }
+                { fateName="Pulling the Wool", npcName="Panicked Courier" },
+                { fateName="When It's So Salvage", npcName="Refined Reforger" }
             },
             fatesWithContinuations = {
                 { fateName="Domo Arigato", continuationIsBoss=false }
@@ -1024,17 +896,6 @@ end
     Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
-    if BonusFatesOnly then
-        if not tempFate.isBonusFate and nextFate ~= nil and nextFate.isBonusFate then
-            return nextFate
-        elseif tempFate.isBonusFate and (nextFate == nil or not nextFate.isBonusFate) then
-            return tempFate
-        elseif not tempFate.isBonusFate and (nextFate == nil or not nextFate.isBonusFate) then
-            return nil
-        end
-        -- if both are bonus fates, go through the regular fate selection process
-    end
-
     if tempFate.timeLeft < MinTimeLeftToIgnoreFate or tempFate.progress > CompletionToIgnoreFate then
         return nextFate
     else
@@ -1620,7 +1481,10 @@ function MoveToFate()
         if HasTarget() then
             LogInfo("[FATE] Found FATE target, immediate rerouting")
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-            if (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) then
+            if IsInFate() then
+                State = CharacterState.middleOfFateDismount
+                LogInfo("[FATE] State Change: MiddleOfFateDismount")
+            elseif (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) then
                 State = CharacterState.interactWithNpc
                 LogInfo("[FATE] State Change: Interact with npc")
             -- if GetTargetName() == CurrentFate.npcName then
@@ -1629,8 +1493,7 @@ function MoveToFate()
             --     State = CharacterState.middleOfFateDismount
             --     LogInfo("[FATE] State Change: MiddleOfFateDismount")
             else
-                State = CharacterState.middleOfFateDismount
-                LogInfo("[FATE] State Change: MiddleOfFateDismount")
+                ClearTarget()
             end
             return
         else
@@ -1639,7 +1502,6 @@ function MoveToFate()
             else
                 TargetClosestFateEnemy()
             end
-            yield("/wait 0.5") -- give it a moment to make sure the target sticks
             return
         end
     end
@@ -1688,11 +1550,7 @@ function MoveToFate()
         nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 10)
     end
 
-    if GetDistanceToPoint(nearestLandX, nearestLandY, nearestLandZ) > 5 then
-        PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
-    else
-        State = CharacterState.middleOfFateDismount
-    end
+    PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
 end
 
 function InteractWithFateNpc()
@@ -1939,16 +1797,6 @@ function TurnOffAoes()
             yield("/vbmai setpresetname "..RotationSingleTargetPreset)
         end
         AoesOn = false
-    end
-end
-
-function TurnOffRaidBuffs()
-    if AoesOn then
-        if RotationPlugin == "BMR" then
-            yield("/bmrai setpresetname "..RotationHoldBuffPreset)
-        elseif RotationPlugin == "VBM" then
-            yield("/vbmai setpresetname "..RotationHoldBuffPreset)
-        end
     end
 end
 
@@ -2245,11 +2093,6 @@ function DoFate()
             end
         end
     end
-        
-    --hold buff thingy
-    if GetFateProgress(CurrentFate.fateId) >= PorcentageToHoldBuff then 
-        TurnOffRaidBuffs()
-    end   
 end
 
 --#endregion
