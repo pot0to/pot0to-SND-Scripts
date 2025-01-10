@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                    Crafter Scrips (Solution Nine Patch 7.1)                  *
-*                                Version 0.5.0                                 *
+*                                Version 0.5.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,8 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.5.0    Added feature to purchase items that can only be bought one at a
+    -> 0.5.1    Fix Deliveroo turn in interrupt
+                Added feature to purchase items that can only be bought one at a
                     time, such as gear
                 Fixed purple scrip turn ins (credit: Telain)
                 Added purple scrips, fixed /li inn
@@ -615,7 +616,9 @@ function ProcessRetainers()
 end
 
 function ExecuteGrandCompanyTurnIn()
-    if GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
+    if DeliverooIsTurnInRunning() then
+        return
+    elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         local playerGC = GetPlayerGC()
         local gcZoneIds = {
             129, --Limsa Lominsa
@@ -625,8 +628,6 @@ function ExecuteGrandCompanyTurnIn()
         if not IsInZone(gcZoneIds[playerGC]) then
             yield("/li gc")
             yield("/wait 1")
-        elseif DeliverooIsTurnInRunning() then
-            return
         else
             yield("/deliveroo enable")
         end
