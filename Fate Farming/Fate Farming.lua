@@ -2,13 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.2                                 *
+*                               Version 2.21.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.2   Added ability to only do bonus fates
+    -> 2.21.3   Adjusted landing logic so hopefully it shouldn't get stuck too
+                    high up anymore
+                Added ability to only do bonus fates
                 Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
                 Support for multi-zone farming
                 Added some thanalan npc fates
@@ -83,7 +85,7 @@ CompletionToJoinBossFate            = 0             --If the boss fate has less 
     ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                                         --for the class. Ex: "PLD"
 JoinCollectionsFates                = true          --Set to false if you never want to do collections fates
-BonusOnly                           = false         --If true, will only do bonus fates and ignore everything else
+BonusFatesOnly                      = false         --If true, will only do bonus fates and ignore everything else
 
 MeleeDist                           = 2.5           --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
 RangedDist                          = 20            --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
@@ -1022,10 +1024,15 @@ end
     Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
-    if BonusOnly and tempFate.isBonusFate and (nextFate == nil or not nextFate.isBonusFate) then
-        return tempFate
-    elseif BonusOnly and not tempFate.isBonusFate and nextFate ~= nil and nextFate.isBonusFate then
-        return nextFate
+    if BonusFatesOnly then
+        if not tempFate.isBonusFate and nextFate ~= nil and nextFate.isBonusFate then
+            return nextFate
+        elseif tempFate.isBonusFate and (nextFate == nil or not nextFate.isBonusFate) then
+            return tempFate
+        elseif not tempFate.isBonusFate and (nextFate == nil or not nextFate.isBonusFate) then
+            return nil
+        end
+        -- if both are bonus fates, go through the regular fate selection process
     end
 
     if tempFate.timeLeft < MinTimeLeftToIgnoreFate or tempFate.progress > CompletionToIgnoreFate then
@@ -1613,10 +1620,7 @@ function MoveToFate()
         if HasTarget() then
             LogInfo("[FATE] Found FATE target, immediate rerouting")
             PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos())
-            if IsInFate() then
-                State = CharacterState.middleOfFateDismount
-                LogInfo("[FATE] State Change: MiddleOfFateDismount")
-            elseif (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) then
+            if (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) then
                 State = CharacterState.interactWithNpc
                 LogInfo("[FATE] State Change: Interact with npc")
             -- if GetTargetName() == CurrentFate.npcName then
@@ -1625,7 +1629,8 @@ function MoveToFate()
             --     State = CharacterState.middleOfFateDismount
             --     LogInfo("[FATE] State Change: MiddleOfFateDismount")
             else
-                ClearTarget()
+                State = CharacterState.middleOfFateDismount
+                LogInfo("[FATE] State Change: MiddleOfFateDismount")
             end
             return
         else
@@ -1634,6 +1639,7 @@ function MoveToFate()
             else
                 TargetClosestFateEnemy()
             end
+            yield("/wait 0.5") -- give it a moment to make sure the target sticks
             return
         end
     end
@@ -1682,7 +1688,11 @@ function MoveToFate()
         nearestLandX, nearestLandY, nearestLandZ = RandomAdjustCoordinates(CurrentFate.x, CurrentFate.y, CurrentFate.z, 10)
     end
 
-    PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
+    if GetDistanceToPoint(nearestLandX, nearestLandY, nearestLandZ) > 5 then
+        PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
+    else
+        State = CharacterState.middleOfFateDismount
+    end
 end
 
 function InteractWithFateNpc()
