@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                             Multi Zone Farming                               *
-*                                Version 1.0.0                                 *
+*                                Version 1.0.1                                 *
 ********************************************************************************
 
 Multi zone farming script meant to be used with `Fate Farming.lua`. This will go
@@ -11,7 +11,8 @@ then teleport to the next zone and restart the fate farming script.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    -> 1.0.0    First release
+    -> 1.0.1    Added check for death and unexpected combat
+                First release
 
 --#region Settings
 
@@ -66,10 +67,7 @@ FarmingZoneIndex = 1
 OldBicolorGemCount = GetItemCount(26807)
 while true do
     if not IsPlayerOccupied() and not IsMacroRunningOrQueued(FateMacro) then
-        if GetZoneID() ~= ZonesToFarm[FarmingZoneIndex].zoneId then
-            LogInfo("[MultiZone] Teleporting to "..ZonesToFarm[FarmingZoneIndex].zoneName)
-            TeleportTo(GetAetheryteName(GetAetherytesInZone(ZonesToFarm[FarmingZoneIndex].zoneId)[0]))
-        else
+        if GetCharacterCondition(2) or GetCharacterCondition(26) or GetZoneID() == ZonesToFarm[FarmingZoneIndex].zoneId then
             LogInfo("[MultiZone] Starting FateMacro")
             yield("/snd run "..FateMacro)
             repeat
@@ -83,6 +81,9 @@ while true do
             else
                 OldBicolorGemCount = NewBicolorGemCount
             end
+        else
+            LogInfo("[MultiZone] Teleporting to "..ZonesToFarm[FarmingZoneIndex].zoneName)
+            TeleportTo(GetAetheryteName(GetAetherytesInZone(ZonesToFarm[FarmingZoneIndex].zoneId)[0]))
         end
     end
     yield("/wait 1")

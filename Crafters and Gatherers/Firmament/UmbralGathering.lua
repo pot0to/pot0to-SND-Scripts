@@ -8,12 +8,15 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.10                                 *
+*                               Version 1.1.12                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.10  Fixed DoFish
+    ->  1.1.12  Move SkillCheck out from if statement, so now it checks
+                    every time. This is hopefully compatible with Pandora
+                Added extra logging around skills
+                Fixed DoFish
                 Added RandomWait feature
                 Updated the wait to 2s
                 Changed food and potion to repeated checks
@@ -796,18 +799,22 @@ end
 --#region Gathering
 
 function SkillCheck()
-    if GetClassJobId() == 16 then -- Miner Skills 
+    local class = GetClassJobId()
+    if class == 16 then -- Miner Skills 
         Yield2 = "\"King's Yield II\""
         Gift2 = "\"Mountaineer's Gift II\""
         Gift1 = "\"Mountaineer's Gift I\""
         Tidings2 = "\"Nald'thal's Tidings\""
         Bountiful2 = "\"Bountiful Yield II\""
-    elseif GetClassJobId() == 17 then -- Botanist Skills 
+    elseif class == 17 then -- Botanist Skills 
         Yield2 = "\"Blessed Harvest II\""
         Gift2 = "\"Pioneer's Gift II\""
         Gift1 = "\"Pioneer's Gift I\""
         Tidings2 = "\"Nophica's Tidings\""
         Bountiful2 = "\"Bountiful Harvest II\""
+    else
+        yield("/echo Cannot find gathering skills for class #"..class)
+        yield("/snd stop")
     end
 end
 
@@ -878,27 +885,33 @@ function Gather()
     end
 
     if not GetCharacterCondition(CharacterCondition.gathering) then
-        SkillCheck()
         yield("/interact")
         return
     end
+
+    SkillCheck()
 
     -- proc the buffs you need
     if (NextNode.isUmbralNode and not NextNode.isFishingNode) or visibleNode == "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
         LogInfo("[UmbralGathering] This is a Max Integrity Node, time to start buffing/smacking")
         if BuffYield2 and GetGp() >= 500 and not HasStatusId(219) and GetLevel() >= 40 then
+            LogInfo("[UmbralGathering] Using skill yield2")
             UseSkill(Yield2)
             return
         elseif BuffGift2 and GetGp() >= 300 and not HasStatusId(759) and GetLevel() >= 50 then
+            LogInfo("[UmbralGathering] Using skill gift2")
             UseSkill(Gift2) -- Mountaineer's Gift 2 (Min)
             return
         elseif BuffTidings2 and GetGp() >= 200 and not HasStatusId(2667) and GetLevel() >= 81 then
+            LogInfo("[UmbralGathering] Using skill tidings2")
             UseSkill(Tidings2) -- Nald'thal's Tidings (Min)
             return
         elseif BuffGift1 and GetGp() >= 50 and not HasStatusId(2666) and GetLevel() >= 15 then
+            LogInfo("[UmbralGathering] Using skill gift1")
             UseSkill(Gift1) -- Mountaineer's Gift 1 (Min)
             return
         elseif BuffBYieldHarvest2 and GetGp() >= 100 and not HasStatusId(1286) and GetLevel() >= 68 then
+            LogInfo("[UmbralGathering] Using skill bountiful2")
             UseSkill(Bountiful2)
             return
         end
