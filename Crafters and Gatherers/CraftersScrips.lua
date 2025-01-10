@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                    Crafter Scrips (Solution Nine Patch 7.1)                  *
-*                                Version 0.5.2                                 *
+*                                Version 0.5.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -11,7 +11,9 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.5.2    Fixed name of Artful Afflatus Ring
+    -> 0.5.4    Fixes for some stuff
+                Fixed Deliveroo interrupt
+                Fixed name of Artful Afflatus Ring
                 Added feature to purchase items that can only be bought one at a
                     time, such as gear
                 Fixed purple scrip turn ins (credit: Telain)
@@ -51,8 +53,8 @@ stuff, repeat.
 CrafterClass                = "Alchemist"
 ScripColor                  = "Purple"
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy                   = "Artful Afflatus Ring"
-HomeCommand                 = ""                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
+ItemToBuy                   = "Crafter's Command Materia XI"
+HomeCommand                 = ""                        --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
 Potion                      = "Superior Spiritbond Potion <hq>"     -- WARNING: This will overwrite any crafter's pots you have.
@@ -635,7 +637,9 @@ function ProcessRetainers()
 end
 
 function ExecuteGrandCompanyTurnIn()
-    if GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
+    if DeliverooIsTurnInRunning() then
+        return
+    elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         local playerGC = GetPlayerGC()
         local gcZoneIds = {
             129, --Limsa Lominsa
@@ -645,8 +649,6 @@ function ExecuteGrandCompanyTurnIn()
         if not IsInZone(gcZoneIds[playerGC]) then
             yield("/li gc")
             yield("/wait 1")
-        elseif DeliverooIsTurnInRunning() then
-            return
         else
             yield("/deliveroo enable")
             yield("/wait 1")
