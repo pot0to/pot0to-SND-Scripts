@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.1                                 *
+*                               Version 2.21.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.1   Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
+    -> 2.21.2   Added ability to only do bonus fates
+                Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
                 Support for multi-zone farming
                 Added some thanalan npc fates
                 Cleanup for Yak'tel fates and landing condition when flying back
@@ -82,6 +83,7 @@ CompletionToJoinBossFate            = 0             --If the boss fate has less 
     ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                                         --for the class. Ex: "PLD"
 JoinCollectionsFates                = true          --Set to false if you never want to do collections fates
+BonusOnly                           = false         --If true, will only do bonus fates and ignore everything else
 
 MeleeDist                           = 2.5           --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
 RangedDist                          = 20            --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
@@ -1020,6 +1022,12 @@ end
     Given two fates, picks the better one based on priority progress -> is bonus -> time left -> distance
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
+    if BonusOnly and tempFate.isBonusFate and (nextFate == nil or not nextFate.isBonusFate) then
+        return tempFate
+    elseif BonusOnly and not tempFate.isBonusFate and nextFate ~= nil and nextFate.isBonusFate then
+        return nextFate
+    end
+
     if tempFate.timeLeft < MinTimeLeftToIgnoreFate or tempFate.progress > CompletionToIgnoreFate then
         return nextFate
     else
