@@ -48,10 +48,10 @@ stuff, repeat.
 
 ]]
 
-CrafterClass                = "Carpenter"
+CrafterClass                = "Alchemist"
 ScripColor                  = "Purple"
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy                   = "Afflatus Ring"
+ItemToBuy                   = "Artful Afflatus Ring"
 HomeCommand                 = ""                 --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
@@ -241,16 +241,16 @@ PurpleScripRecipes =
     {
         className="Alchemist",
         classId=14,
-        itemName="Rarefied Gemdraught of Vitality",
-        itemId=44225,
-        recipeId=35822
+        itemName="Rarefied Draught",
+        itemId=35660,
+        recipeId=34746
     },
     {
         className="Culinarian",
         classId=15,
-        itemName="Rarefied Stuffed Peppers",
-        itemId=44231,
-        recipeId=35828
+        itemName="Rarefied Giant Popoto Pancakes",
+        itemId=35665,
+        recipeId=34751
     }
 }
 
@@ -359,6 +359,14 @@ function OutOfCrystals()
 end
 
 function OutOfMaterials()
+    while not IsAddonReady("RecipeNote") do
+        if not IsAddonVisible("RecipeNote") then
+            LogInfo("[OrangeCrafters] RecipeNote no longer visible")
+            return false
+        end
+        yield("/wait 0.1")
+    end
+
     for i=0,5 do
         local materialCountNQ = GetNodeText("RecipeNote", 18 + i, 8)
         local materialCountHQ = GetNodeText("RecipeNote", 18 + i, 5)
@@ -392,17 +400,19 @@ function Crafting()
     end
 
     local slots = GetInventoryFreeSlotCount()
-    if (ArtisanIsListRunning() and not ArtisanIsListPaused()) or IsAddonVisible("Synthesis") then
+    if slots == nil then
+        yield("/echo [OrangeCrafters] GetInventoryFreeSlotCount() is nil. WHYYY???")
+    elseif not LogInfo("[OrangeCrafters] Check Artisan running") and (ArtisanIsListRunning() and not ArtisanIsListPaused()) or IsAddonVisible("Synthesis") then
         yield("/wait 1")
-    elseif slots <= MinInventoryFreeSlots then
+    elseif not LogInfo("[OrangeCrafters] Check slots count") and slots <= MinInventoryFreeSlots then
         LogInfo("[OrangeCrafters] Out of inventory space")
         if IsAddonVisible("RecipeNote") then
-            yield("/callback RecipeNote true -1")
+            yield("/pcall RecipeNote true -1")
         elseif not GetCharacterCondition(CharacterCondition.craftingMode) then
             State = CharacterState.turnIn
             LogInfo("State Change: TurnIn")
         end
-    elseif IsAddonVisible("RecipeNote") and OutOfMaterials() then
+    elseif not LogInfo("[OrangeCrafters] Check out of materials") and IsAddonVisible("RecipeNote") and OutOfMaterials() then
         LogInfo("[OrangeCrafters] Out of materials")
         if not StopFlag then
             if slots > MinInventoryFreeSlots and (ArtisanTimeoutStartTime == 0) then
@@ -422,11 +432,13 @@ function Crafting()
                 StopFlag = true
             end
         end
-    elseif not IsAddonVisible("Synthesis") then -- GetCharacterCondition(CharacterCondition.craftingMode) then
+    elseif not LogInfo("[OrangeCrafters] Check new Artisan craft") and not IsAddonVisible("Synthesis") then -- GetCharacterCondition(CharacterCondition.craftingMode) then
         LogInfo("[OrangeCrafters] Attempting to craft "..(slots - MinInventoryFreeSlots).." of recipe #"..RecipeId)
         ArtisanTimeoutStartTime = 0
         ArtisanCraftItem(RecipeId, slots - MinInventoryFreeSlots)
         yield("/wait 5")
+    else
+        LogInfo("[OrangeCrafters] Else condition hit")
     end
 end
 
@@ -456,7 +468,7 @@ function TurnIn()
     then
         State = CharacterState.goToHubCity
         LogInfo("State Change: GoToHubCity")
-    elseif not LogInfo("Logging 1") and SelectedHubCity.scripExchange.requiresAethernet and not LogInfo("Logging 2") and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
+    elseif SelectedHubCity.scripExchange.requiresAethernet and (not IsInZone(SelectedHubCity.aethernet.aethernetZoneId) or
         GetDistanceToPoint(SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) > DistanceBetween(SelectedHubCity.aethernet.x, SelectedHubCity.aethernet.y, SelectedHubCity.aethernet.z, SelectedHubCity.scripExchange.x, SelectedHubCity.scripExchange.y, SelectedHubCity.scripExchange.z) + 10) then
         if not LifestreamIsBusy() then
             LogInfo("[OrangeCrafters] /li "..SelectedHubCity.aethernet.aethernetName)
@@ -483,9 +495,11 @@ function TurnIn()
             yield("/wait 1")
         else
 			if ScripColor == "Purple" then
-				yield("/callback CollectablesShop true 12 1")
+                LogInfo("[OrangeCrafters] Selecting purple scrip item")
+				yield("/callback CollectablesShop true 12 7")
                 yield("/wait 0.5")
 			end
+            LogInfo("[OrangeCrafters] Turnin 15 0")
             yield("/callback CollectablesShop true 15 0")
             yield("/wait 1")
         end
@@ -493,12 +507,15 @@ function TurnIn()
 end
 
 function ScripExchange()
-    if GetItemCount(CrafterScripId) < SelectedItemToBuy.price then
+    if GetItemCount(CrafterScripId) < SelectedItemToBuy.price or GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
         if IsAddonVisible("InclusionShop") then
             yield("/callback InclusionShop true -1")
-        elseif GetItemCount(ItemId) > 0 then
+        elseif GetItemCount(ItemId) > 0 and GetItemCount(CrafterScripId) < 3800 then
             State = CharacterState.turnIn
             LogInfo("[OrangeCrafters] State Change: TurnIn")
+        elseif GetInventoryFreeSlotCount() <= MinInventoryFreeSlots then
+            State = CharacterState.gcTurnIn
+            LogInfo("[OrangeCrafters] State Change: GCTurnIn")
         else
             State = CharacterState.ready
             LogInfo("[OrangeCrafters] State Change: Ready")
@@ -527,6 +544,7 @@ function ScripExchange()
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif IsAddonVisible("InclusionShop") then
+        LogInfo("[OrangeCrafters] Free inventory slots: "..GetInventoryFreeSlotCount())
         yield("/callback InclusionShop true 12 "..SelectedItemToBuy.categoryMenu)
         yield("/wait 1")
         yield("/callback InclusionShop true 13 "..SelectedItemToBuy.subcategoryMenu)
@@ -535,7 +553,8 @@ function ScripExchange()
         if SelectedItemToBuy.oneAtATime ~= true then
             qty = GetItemCount(CrafterScripId)//SelectedItemToBuy.price
         end
-        yield("/callback InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..qty)
+        yield("/pcall InclusionShop true 14 "..SelectedItemToBuy.listIndex.." "..qty)
+        yield("/wait 1")
     else
         yield("/wait 1")
         yield("/target Scrip Exchange")
@@ -630,6 +649,7 @@ function ExecuteGrandCompanyTurnIn()
             return
         else
             yield("/deliveroo enable")
+            yield("/wait 1")
         end
     else
         State = CharacterState.ready
@@ -649,8 +669,7 @@ function Ready()
 
     if not IsPlayerAvailable() then
         -- do nothing
-    elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1
-    then
+    elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.retainers
         LogInfo("[OrangeCrafters] State Change: ProcessingRetainers")
     elseif GetItemCount(CrafterScripId) >= 3800 then
