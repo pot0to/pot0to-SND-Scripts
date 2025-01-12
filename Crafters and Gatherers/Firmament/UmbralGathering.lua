@@ -70,7 +70,7 @@ Retainers = true
 MaxWait = 10
 MinWait = 3
 
-SelectedRoute = "Random"
+SelectedRoute = "BotanistIslands"
 -- Select which route you would like to do. 
     -- Options are:
         -- "RedRoute"     -> MIN perception route, 8 node loop
