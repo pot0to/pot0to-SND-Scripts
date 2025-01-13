@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.12                                 *
+*                               Version 1.1.13                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.12  Move SkillCheck out from if statement, so now it checks
+    ->  1.1.13  Added UmbralGatheringSlot
+                Move SkillCheck out from if statement, so now it checks
                     every time. This is hopefully compatible with Pandora
                 Added extra logging around skills
                 Fixed DoFish
@@ -79,10 +80,11 @@ SelectedRoute = "BotanistIslands"
         -- "BotanistIslands" -> BTN, all the islands
         -- "Random" -> Randomizes the route each time
 
-GatheringSlot = 4
 -- This will let you tell the script WHICH item you want to gather. (So if I was gathering the 4th item from the top, I would input 4)
 -- This will NOT work with Pandora's Gathering, as a fair warning in itself. 
 -- Options : 1 | 2 | 3 | 4 | 7 | 8 (1st slot... 2nd slot... ect)
+RegularGatheringSlot = 4
+UmbralGatheringSlot = 1
 
 TargetType = 1
 -- This will let you tell the script which target to use Aethercannon.
@@ -928,11 +930,11 @@ function Gather()
 
     if IsAddonVisible("Gathering") and IsAddonReady("Gathering") then
         if GetTargetName():sub(1, 7) == "Clouded" then
-            LogInfo("[UmbralGathering] /callback Gathering true 0")
+            LogInfo("[UmbralGathering] /callback Gathering true "..UmbralGatheringSlot-1)
             yield("/callback Gathering true 0")
         else
-            LogInfo("[UmbralGathering] /callback Gathering true "..GatheringSlot-1)
-            yield("/callback Gathering true "..GatheringSlot-1)
+            LogInfo("[UmbralGathering] /callback Gathering true "..RegularGatheringSlot-1)
+            yield("/callback Gathering true "..RegularGatheringSlot-1)
         end
     end
 end
