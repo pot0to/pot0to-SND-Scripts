@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.3                                 *
+*                               Version 2.21.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.3   Adjusted landing logic so hopefully it shouldn't get stuck too
+    -> 2.21.4   Fix for change instances companion script
+                Adjusted landing logic so hopefully it shouldn't get stuck too
                     high up anymore
                 Added ability to only do bonus fates
                 Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
@@ -1309,8 +1310,12 @@ end
 function ChangeInstance()
     if SuccessiveInstanceChanges >= NumberOfInstances then
         if CompanionScriptMode then
-            if not WaitingForFateRewards and not shouldWaitForBonusBuff then
+            local shouldWaitForBonusBuff = WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))
+            if WaitingForFateRewards == 0 and not shouldWaitForBonusBuff then
                 StopScript = true
+            else
+                LogInfo("[Fate Farming] Waiting for buff or fate rewards")
+                yield("/wait 3")
             end
         else
             yield("/wait 10")
