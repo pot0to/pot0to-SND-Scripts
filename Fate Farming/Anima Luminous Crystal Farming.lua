@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                        Anima Luminous Crystal Farming                        *
-*                                Version 1.0.0                                 *
+*                                Version 1.0.1                                 *
 ********************************************************************************
 
 Anima luminous crystal farming script meant to be used with `Fate Farming.lua`.
@@ -12,7 +12,8 @@ the fate farming script.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    -> 1.0.0    First release
+    -> 1.0.1    Added mounted character condition
+                First release
 
 --#region Settings
 
@@ -45,6 +46,7 @@ Atmas =
 }
 
 CharacterCondition = {
+    mounted=4,
     casting=27,
     betweenAreas=45
 }
