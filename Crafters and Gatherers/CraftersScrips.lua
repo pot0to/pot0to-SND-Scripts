@@ -55,7 +55,7 @@ stuff, repeat.
 CrafterClass                = "Culinarian"
 ScripColor                  = "Purple"
 ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
-ItemToBuy                   = "Artful Afflatus Ring"
+ItemToBuy                   = "Crafter's Command Materia XI"
 HomeCommand                 = ""                        --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
 
@@ -245,16 +245,16 @@ PurpleScripRecipes =
     {
         className="Alchemist",
         classId=14,
-        itemName="Rarefied Draught",
-        itemId=35660,
-        recipeId=34746
+        itemName="Rarefied Gemdraught of Vitality",
+        itemId=44225,
+        recipeId=35822
     },
     {
         className="Culinarian",
         classId=15,
-        itemName="Rarefied Giant Popoto Pancakes",
-        itemId=35665,
-        recipeId=34751
+        itemName="Rarefied Stuffed Peppers",
+        itemId=44231,
+        recipeId=35828
     }
 }
 
