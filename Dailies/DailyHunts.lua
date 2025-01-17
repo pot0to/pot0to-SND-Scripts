@@ -18,6 +18,12 @@ THIS CANNOT BE AFK'D FOR THE FOLLOWING REASONS:
    complete the mark manually, then restart the script.
 4. This script cannot do elites. If the script says the next mark to hunt is an
    elite, stop the script, complete the mark manually, then restart the script.
+   
+********************************************************************************
+*                                 Version 1.0.2                                *
+********************************************************************************
+    1.0.2   Fixed 3-star hunt pickups
+            Fixed n+1 hunt requirement
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -26,11 +32,6 @@ THIS CANNOT BE AFK'D FOR THE FOLLOWING REASONS:
 1. Hunt Buddy
 2. Rotation Solver Reborn
 3. BossModReborn (BMR)
-
-********************************************************************************
-*                                 Version 1.0.1                                *
-********************************************************************************
-    1.0.1   Fixed n+1 hunt requirement
 
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
@@ -268,10 +269,14 @@ function PickUpHunts()
         yield("/callback SelectYesno true 1")
         HuntNumber = HuntNumber + 1
     elseif IsAddonVisible("SelectString") then
-        yield("/callback SelectString true "..HuntNumber)
-        HuntNumber = HuntNumber + 1
+        local callback = "/callback SelectString true "..HuntNumber
+        LogInfo("[DailyHunts] Executing ".."/callback SelectString true "..HuntNumber)
+        yield(callback)
     elseif IsAddonVisible("Mobhunt"..BoardNumber) then
-        yield("/callback Mobhunt"..BoardNumber.." true 0")
+        local callback = "/callback Mobhunt"..BoardNumber.." true 0"
+        LogInfo("[DailyHunts] Executing "..callback)
+        yield(callback)
+        HuntNumber = HuntNumber + 1
     elseif not HasTarget() or GetTargetName() ~= Board.boardName then
         yield("/target "..Board.boardName)
     else
@@ -389,7 +394,7 @@ DidHunt = false
 CombatModsOn = false
 LastTargetName = nil
 function DoHunt()
-    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 200 then
+    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 50 then
         State = CharacterState.goToMarker
         LogInfo("[DailyHunts] State Change: GoToMarker")
         return
@@ -460,7 +465,7 @@ CharacterCondition = {
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
-State = CharacterState.pickUpHunts
+State = CharacterState.goToHuntBoard
 -- SelectNextHunt()
 while true do
     if not (IsPlayerCasting() or
