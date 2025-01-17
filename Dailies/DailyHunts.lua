@@ -317,6 +317,8 @@ function ParseHuntChat() -- Pattern to match the quantity and item name
 end
 
 function SelectNextHunt()
+    LogInfo("[DailyHunts] Selecting Next Hunt")
+    yield("/wait 1")
     Hunt = nil
     while Hunt == nil or Hunt.name:sub(1, 5):lower() == "elite" do
         yield("/phb next")
@@ -389,23 +391,17 @@ LastTargetName = nil
 function DoHunt()
     if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 200 then
         State = CharacterState.goToMarker
-        LogInfo("[DailyHunts] State Change: SelectNextHunt")
+        LogInfo("[DailyHunts] State Change: GoToMarker")
         return
+    -- elseif GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 50 then
+    --     State = CharacterState.goToMarker
+    --     LogInfo("[DailyHunts] State Change: GoToMarker")
     elseif not HasTarget() or GetTargetHP() <= 0 then
-        if DidHunt then
-            SelectNextHunt()
-            DidHunt = false
-
-            if GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 50 then
-                State = CharacterState.goToMarker
-                LogInfo("[DailyHunts] State Change: GoToMarker")
-            end
-        else
-            local targetingCommand = "/target "..Hunt.name
-            LogInfo("[DailyHunts] Executing "..targetingCommand)
-            yield(targetingCommand)
-            yield("/wait 0.5")
-        end
+        SelectNextHunt()
+        local targetingCommand = "/target "..Hunt.name
+        LogInfo("[DailyHunts] Executing "..targetingCommand)
+        yield(targetingCommand)
+        yield("/wait 0.5")
         return
     end
 
@@ -464,7 +460,7 @@ CharacterCondition = {
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
-State = CharacterState.doHunt
+State = CharacterState.pickUpHunts
 SelectNextHunt()
 while true do
     if not (IsPlayerCasting() or
