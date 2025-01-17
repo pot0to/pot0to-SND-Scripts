@@ -461,7 +461,7 @@ CharacterCondition = {
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
 State = CharacterState.pickUpHunts
-SelectNextHunt()
+-- SelectNextHunt()
 while true do
     if not (IsPlayerCasting() or
         GetCharacterCondition(CharacterCondition.betweenAreas) or
