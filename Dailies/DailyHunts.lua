@@ -1,7 +1,6 @@
 --[[
 ********************************************************************************
 *                              Daily Hunts Doer                                *
-*                                Version 1.0.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -12,16 +11,26 @@ will NOT do the weekly Elite hunts.
 THIS CANNOT BE AFK'D FOR THE FOLLOWING REASONS:
 1. The mark area is very large. There is no guarantee you will land within
    targetable range of a mark.
-2. The center of the mark area may not be landable. The script may send you to
-   the bottom of the Sea of Clouds. If this happens, stop the script, complete
-   the mark manually, then restart the script.
+2. If the mark is in a cave, this script will land you on top of the cave but
+   will not be able to actually find the mark.
+3. The center of the mark area may not be landable, ex. the script may send you
+   to the bottom of the Sea of Clouds. If this happens, stop the script,
+   complete the mark manually, then restart the script.
+4. This script cannot do elites. If the script says the next mark to hunt is an
+   elite, stop the script, complete the mark manually, then restart the script.
 
 ********************************************************************************
 *                               Required Plugins                               *
 ********************************************************************************
+
 1. Hunt Buddy
 2. Rotation Solver Reborn
 3. BossModReborn (BMR)
+
+********************************************************************************
+*                                 Version 1.0.1                                *
+********************************************************************************
+    1.0.1   Fixed n+1 hunt requirement
 
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
@@ -264,7 +273,6 @@ function PickUpHunts()
     elseif IsAddonVisible("Mobhunt"..BoardNumber) then
         yield("/callback Mobhunt"..BoardNumber.." true 0")
     elseif not HasTarget() or GetTargetName() ~= Board.boardName then
-        yield("/echo attempting to target "..Board.boardName)
         yield("/target "..Board.boardName)
     else
         yield("/interact")
@@ -276,17 +284,32 @@ function ParseHuntChat() -- Pattern to match the quantity and item name
     LogInfo("[DailyHunts] "..chat)
     -- Pattern to match the quantity, item name, and location
     local huntingPattern = "Hunting (%d+)x ([%w%s%-'–]+) in ([%w%s%-'–]+)"
+    local slainPattern = "Hunt mark ([%w%s%-'–]+) slain! %((%d+)/(%d+)%)"
     
     -- Find all matches and store them in a table
     local hunt = nil
     for line in chat:gmatch("[^\r\n]+") do
         LogInfo("[DailyHunts] Parsing Chat: "..line)
         for quantity, markName, location in line:gmatch(huntingPattern) do
-            LogInfo("[DailyHunts] Found hunt: "..markName)
             quantity = tonumber(quantity)
             markName = markName:lower()
+            LogInfo("[DailyHunts] Found hunt: "..markName)
 
             hunt = {quantity = tonumber(quantity), name = markName, location = location}
+        end
+        if hunt ~= nil then
+            for markName, slain, goal in line:gmatch(slainPattern) do
+                markName = markName:lower()
+                LogInfo("[DailyHunts] Found slain mark "..markName)
+                if hunt.name == markName and slain == goal then
+                    LogInfo("[DailyHunts] Hunt mark complete. Setting hunt to nil")
+                    hunt = nil
+                end
+            end
+        end
+        if string.find(line, "elite") ~= nil then
+            LogInfo("[DailyHunts] line is elite")
+            hunt = nil
         end
     end
 
@@ -368,7 +391,7 @@ function DoHunt()
         State = CharacterState.goToMarker
         LogInfo("[DailyHunts] State Change: SelectNextHunt")
         return
-    elseif not HasTarget() then
+    elseif not HasTarget() or GetTargetHP() <= 0 then
         if DidHunt then
             SelectNextHunt()
             DidHunt = false
@@ -441,7 +464,8 @@ CharacterCondition = {
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
-State = CharacterState.goToHuntBoard
+State = CharacterState.doHunt
+SelectNextHunt()
 while true do
     if not (IsPlayerCasting() or
         GetCharacterCondition(CharacterCondition.betweenAreas) or
