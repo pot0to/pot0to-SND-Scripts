@@ -685,7 +685,7 @@ function Ready()
     if not IsPlayerAvailable() then
         -- do nothing
     elseif Retainers and ARRetainersWaitingToBeProcessed() and GetInventoryFreeSlotCount() > 1 then
-        State = CharacterState.retainers
+        State = CharacterState.processRetainers
         LogInfo("[OrangeCrafters] State Change: ProcessingRetainers")
     elseif GetItemCount(CrafterScripId) >= 3800 then
         State = CharacterState.scripExchange
@@ -711,7 +711,7 @@ CharacterState =
     goToHubCity = GoToHubCity,
     turnIn = TurnIn,
     scripExchange = ScripExchange,
-    retainers = ProcessRetainers,
+    processRetainers = ProcessRetainers,
     gcTurnIn = ExecuteGrandCompanyTurnIn
 }
 
