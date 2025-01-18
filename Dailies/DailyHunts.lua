@@ -374,7 +374,7 @@ function GoToMarker()
             State = CharacterState.mounting
             LogInfo("[DailyHunts] State Change: Mounting")
         elseif not PathIsRunning() and not PathfindInProgress() then
-            PathMoveTo(x, y, z, true)
+            -- PathfindAndMoveTo(x, y, z, true)
             yield("/wait 0.5")
             yield("/vnav flyflag")
         end
@@ -394,13 +394,16 @@ DidHunt = false
 CombatModsOn = false
 LastTargetName = nil
 function DoHunt()
-    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 50 then
-        State = CharacterState.goToMarker
-        LogInfo("[DailyHunts] State Change: GoToMarker")
+    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 200 then
+        if GetCharacterCondition(CharacterCondition.inCombat) then
+            if not HasTarget() then
+                yield("/battletarget")
+            end
+        else
+            State = CharacterState.goToMarker
+            LogInfo("[DailyHunts] State Change: GoToMarker")
+        end
         return
-    -- elseif GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 50 then
-    --     State = CharacterState.goToMarker
-    --     LogInfo("[DailyHunts] State Change: GoToMarker")
     elseif not HasTarget() or GetTargetHP() <= 0 then
         SelectNextHunt()
         local targetingCommand = "/target "..Hunt.name
