@@ -6,7 +6,6 @@
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
-State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
@@ -54,7 +53,7 @@ stuff, repeat.
 
 CrafterClass                = "Culinarian"
 ScripColor                  = "Purple"
-ArtisanIntermediatesListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
+ArtisanListId  = 42199                     --Id of Artisan list for crafting all the intermediate materials (eg black star, claro walnut lumber, etc.)
 ItemToBuy                   = "Crafter's Command Materia XI"
 HomeCommand                 = ""                        --Command you use if you want to hide somewhere. Leave blank to stay in Solution Nine
 HubCity                     = "Solution Nine"           --Options:Limsa/Gridania/Ul'dah/Solution Nine. Where to turn in the scrips and access retainer bell
@@ -423,7 +422,7 @@ function Crafting()
         if not StopFlag then
             if slots > MinInventoryFreeSlots and (ArtisanTimeoutStartTime == 0) then
                 LogInfo("[OrangeCrafters] Attempting to craft intermediate materials")
-                yield("/artisan lists "..ArtisanIntermediatesListId.." start")
+                yield("/artisan lists "..ArtisanListId.." start")
                 ArtisanTimeoutStartTime = os.clock()
             elseif GetItemCount(ItemId) > 0 then
                 LogInfo("[OrangeCrafters] Turning In")
