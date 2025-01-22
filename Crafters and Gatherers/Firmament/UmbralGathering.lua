@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.13                                 *
+*                               Version 1.1.14                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.13  Added UmbralGatheringSlot
+    ->  1.1.14  Fix for UmbralGatheringSlot
+                Added UmbralGatheringSlot
                 Move SkillCheck out from if statement, so now it checks
                     every time. This is hopefully compatible with Pandora
                 Added extra logging around skills
@@ -71,7 +72,7 @@ Retainers = true
 MaxWait = 10
 MinWait = 3
 
-SelectedRoute = "BotanistIslands"
+SelectedRoute = "Random"
 -- Select which route you would like to do. 
     -- Options are:
         -- "RedRoute"     -> MIN perception route, 8 node loop
@@ -930,8 +931,9 @@ function Gather()
 
     if IsAddonVisible("Gathering") and IsAddonReady("Gathering") then
         if GetTargetName():sub(1, 7) == "Clouded" then
-            LogInfo("[UmbralGathering] /callback Gathering true "..UmbralGatheringSlot-1)
-            yield("/callback Gathering true 0")
+            local callback = "/callback Gathering true "..(UmbralGatheringSlot-1)
+            LogInfo("[UmbralGathering] "..callback)
+            yield(callback)
         else
             LogInfo("[UmbralGathering] /callback Gathering true "..RegularGatheringSlot-1)
             yield("/callback Gathering true "..RegularGatheringSlot-1)
