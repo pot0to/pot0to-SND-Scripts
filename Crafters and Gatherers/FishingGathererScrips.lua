@@ -1037,7 +1037,7 @@ StopFlag = false
 
 RequiredPlugins = {
     "Lifestream",
-    "Teleporter",
+    "TeleporterPlugin",
     "vnavmesh",
     "AutoHook",
     "YesAlready"

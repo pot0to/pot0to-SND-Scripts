@@ -723,7 +723,7 @@ RequiredPlugins = {
 -- add optional plugins
 if HomeCommand ~= "" then
     table.insert(RequiredPlugins, "Lifestream")
-    table.insert(RequiredPlugins, "Teleporter")
+    table.insert(RequiredPlugins, "TeleporterPlugin")
 end
 if Retainers then
     table.insert(RequiredPlugins, "AutoRetainer")
