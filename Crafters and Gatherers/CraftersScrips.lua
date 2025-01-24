@@ -726,7 +726,7 @@ if HomeCommand ~= "" then
     table.insert(RequiredPlugins, "Teleporter")
 end
 if Retainers then
-    table.insert(RequiredPlugins, "Autoretainer")
+    table.insert(RequiredPlugins, "AutoRetainer")
 end
 if GrandCompanyTurnIn then
     table.insert(RequiredPlugins, "Deliveroo")
