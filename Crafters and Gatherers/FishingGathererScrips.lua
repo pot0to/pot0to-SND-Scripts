@@ -751,7 +751,7 @@ end
 -- #region Other Tasks
 function ProcessRetainers()
     LogInfo("[FishingGatherer] Handling retainers...")
-    if not LogInfo("[FishingGatherer] check retainers ready") and not ARRetainersWaitingToBeProcessed() or GetInventoryFreeSlotCount() <= 1 then
+    if not LogInfo("[FishingGatherer] check retainers ready") and (not ARRetainersWaitingToBeProcessed() or GetInventoryFreeSlotCount() <= 1) then
         if IsAddonVisible("RetainerList") then
             if IsAddonReady("RetainerList") then
                 yield("/callback RetainerList true -1")
@@ -1033,7 +1033,29 @@ CharacterState = {
     amissReset = GoToResetFishingHole
 }
 
-StopMain = false
+StopFlag = false
+
+RequiredPlugins = {
+    "Lifestream",
+    "Teleporter",
+    "vnavmesh",
+    "AutoHook",
+    "YesAlready"
+}
+if Retainers then
+    table.insert(RequiredPlugins, "Autoretainer")
+end
+if GrandCompanyTurnIn then
+    table.insert(RequiredPlugins, "Deliveroo")
+end
+
+for _, plugin in ipairs(RequiredPlugins) do
+    if not HasPlugin(plugin) then
+        yield("/e Missing required plugin: "..plugin.."! Stopping script. Please install the required plugin and try again.")
+        StopFlag = true
+    end
+end
+
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
 
@@ -1096,7 +1118,7 @@ if GetClassJobId() ~= 18 then
 end
 
 State = CharacterState.ready
-while not StopMain do
+while not StopFlag do
     State()
     yield("/wait 0.1")
 end

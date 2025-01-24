@@ -37,7 +37,7 @@ stuff, repeat.
 1. SND
 2. Artisan
 3. Vnavmesh
-4. Optional: Lifestream (for hiding in inn)
+4. Optional: Lifestream, Teleporter (for hiding in inn)
 
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 ]]
@@ -714,6 +714,31 @@ CharacterState =
     gcTurnIn = ExecuteGrandCompanyTurnIn
 }
 
+StopFlag = false
+
+RequiredPlugins = {
+    "Artisan",
+    "vnavmesh"
+}
+-- add optional plugins
+if HomeCommand ~= "" then
+    table.insert(RequiredPlugins, "Lifestream")
+    table.insert(RequiredPlugins, "Teleporter")
+end
+if Retainers then
+    table.insert(RequiredPlugins, "Autoretainer")
+end
+if GrandCompanyTurnIn then
+    table.insert(RequiredPlugins, "Deliveroo")
+end
+
+for _, plugin in ipairs(RequiredPlugins) do
+    if not HasPlugin(plugin) then
+        yield("/e Missing required plugin: "..plugin.."! Stopping script. Please install the required plugin and try again.")
+        StopFlag = true
+    end
+end
+
 yield("/at y")
 State = CharacterState.ready
 local classId = 0
@@ -768,7 +793,6 @@ if SelectedHubCity == nil then
 end
 
 AtInn = false
-StopFlag = false
 ArtisanTimeoutStartTime = 0
 LogInfo("[OrangeCrafters] Start")
 while not StopFlag do
