@@ -8,30 +8,21 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.1.14                                 *
+*                               Version 1.2.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
-        
-    ->  1.1.14  Fix for UmbralGatheringSlot
+
+    ->  1.2.0   Credit: anon. Turned off bait purchase if fishing option is
+                    turned off, reworked how next node is selected so certain
+                    umbral nodes can be commented out, added silex and barbgrass
+                    routes
+                Fix for UmbralGatheringSlot
                 Added UmbralGatheringSlot
                 Move SkillCheck out from if statement, so now it checks
                     every time. This is hopefully compatible with Pandora
                 Added extra logging around skills
                 Fixed DoFish
-                Added RandomWait feature
-                Updated the wait to 2s
-                Changed food and potion to repeated checks
-                Added diadem re-entry back to main loop
-                Updated to check retainers only when naturally backing out
-                Added function to extract spiritbonded materia
-                Added ability to process retainers and made gathering path
-                    smoother
-                Fixed order for redroute
-                Another fix for aether cannon mounting
-                Added feature to skip target if it doesn't stick
-                Fixed jump to fly properly, added 10s stuck check when using
-                    cannon
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -73,16 +64,18 @@ MaxWait = 10
 MinWait = 3
 
 SelectedRoute = "Random"
--- Select which route you would like to do. 
-    -- Options are:
-        -- "RedRoute"     -> MIN perception route, 8 node loop
-        -- "PinkRoute"    -> BTN perception route, 8 node loop
-        -- "MinerIslands" -> MIN, all the islands
-        -- "BotanistIslands" -> BTN, all the islands
-        -- "Random" -> Randomizes the route each time
+-- Select which route you would like to do.
+-- Options are:
+-- "RedRoute"           -> MIN perception route, 8 node loop
+-- "PinkRoute"          -> BTN perception route, 8 node loop
+-- "MinerIslands"       -> MIN, all the islands
+-- "MinerSilex"      -> MIN, the first two islands
+-- "BotanistIslands"    -> BTN, all the islands
+-- "BotanistBarbgrass"   -> BTN, the first two islands
+-- "Random"             -> Randomizes the route each time
 
 -- This will let you tell the script WHICH item you want to gather. (So if I was gathering the 4th item from the top, I would input 4)
--- This will NOT work with Pandora's Gathering, as a fair warning in itself. 
+-- This will NOT work with Pandora's Gathering, as a fair warning in itself.
 -- Options : 1 | 2 | 3 | 4 | 7 | 8 (1st slot... 2nd slot... ect)
 RegularGatheringSlot = 4
 UmbralGatheringSlot = 1
@@ -96,25 +89,25 @@ DoFish = false -- If false will continuously leave and re-enter the diadem when 
 
 CapGP = true
 -- Bountiful Yield 2 (Min) | Bountiful Harvest 2 (Btn) [+x (based on gathering) to that hit on the node (only once)]
--- If you want this to let your gp cap between rounds, then true 
+-- If you want this to let your gp cap between rounds, then true
 -- If you would like it to use a skill on a node before getting to the final one, so you don't waste GP, set to false
 
 BuffYield2 = true -- Kings Yield 2 (Min) | Bountiful Yield 2 (Btn) [+2 to all hits]
 BuffGift2 = true -- Mountaineer's Gift 2 (Min) | Pioneer's Gift 2 (Btn) [+30% to perception hit]
 BuffGift1 = true -- Mountaineer's Gift 1 (Min) | Pioneer's Gift 1 (Btn) [+10% to perception hit]
 BuffTidings2 = true -- Nald'thal's Tidings (Min) | Nophica's Tidings (Btn) [+1 extra if perception bonus is hit]
--- Here you can select which buffs get activated whenever you get to the mega node (aka the node w/ +5 Integrity) 
--- These are all togglable with true | false 
+-- Here you can select which buffs get activated whenever you get to the mega node (aka the node w/ +5 Integrity)
+-- These are all togglable with true | false
 -- They will go off in the order they are currently typed out, so keep that in mind for GP Usage if that's something you want to consider
 
 SelfRepair = true                              --if false, will go to Limsa mender
-    RepairAmount = 1                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
-    ShouldAutoBuyDarkMatter = true                  --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
+RepairAmount = 1                               --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+ShouldAutoBuyDarkMatter = true                  --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
 ShouldExtractMateria = true                           --should it Extract Materia
 --When do you want to repair your own gear? From 0-100 (it's in percentage, but enter a whole value
 
 debug = false
--- This is for debugging 
+-- This is for debugging
 
 --#endregion Settings
 
@@ -131,12 +124,12 @@ UmbralWeatherNodes = {
         weatherName = "Umbral Flare",
         weatherId = 133,
         gatheringNode =
-            {
-                itemName = "Grade 4 Skybuilders' Umbral Flarerock",
-                x = -429.93103, y = 330.51987, z = -593.2373,
-                nodeName = "Clouded Mineral Deposit",
-                class = "Miner"
-            },
+        {
+            itemName = "Grade 4 Skybuilders' Umbral Flarerock",
+            x = -429.93103, y = 330.51987, z = -593.2373,
+            nodeName = "Clouded Mineral Deposit",
+            class = "Miner"
+        },
         fishingNode = {
             itemName = "Grade 4 Artisanal Skybuilders' Crimson Namitaro",
             baitName = "Diadem Crane Fly",
@@ -150,12 +143,12 @@ UmbralWeatherNodes = {
         weatherName = "Umbral Duststorms",
         weatherId = 134,
         gatheringNode =
-            {
-                itemName = "Grade 4 Skybuilders' Umbral Dirtleaf",
-                x = 384.0722, y = 294.2122, z = 583.4051,
-                nodeName = "Clouded Lush Vegetation Patch",
-                class = "Botanist"
-            },
+        {
+            itemName = "Grade 4 Skybuilders' Umbral Dirtleaf",
+            x = 384.0722, y = 294.2122, z = 583.4051,
+            nodeName = "Clouded Lush Vegetation Patch",
+            class = "Botanist"
+        },
         fishingNode = {
             itemName = "Grade 4 Artisanal Skybuilders' Marrella",
             baitName = "Diadem Hoverworm",
@@ -169,12 +162,12 @@ UmbralWeatherNodes = {
         weatherName = "Umbral Levin",
         weatherId = 135,
         gatheringNode =
-            {
-                itemName = "Grade 4 Skybuilders' Umbral Levinsand",
-                x = 620.3156, y = 252.7179, z = -397.3386,
-                nodeName = "Clouded Rocky Outcrop",
-                class = "Miner"
-            },
+        {
+            itemName = "Grade 4 Skybuilders' Umbral Levinsand",
+            x = 620.3156, y = 252.7179, z = -397.3386,
+            nodeName = "Clouded Rocky Outcrop",
+            class = "Miner"
+        },
         fishingNode = {
             itemName = "Grade 4 Artisanal Skybuilders' Meganeura",
             baitName = "Diadem Red Balloon", -- mooched from Grade 4 Skybuilders' Ghost Faerie
@@ -188,12 +181,12 @@ UmbralWeatherNodes = {
         weatherName = "Umbral Tempest",
         weatherId = 136,
         gatheringNode =
-            {
-                itemName = "Grade 4 Skybuilders' Umbral Galewood",
-                x = -604.29, y = 333.82, z=442.46,
-                nodeName = "Clouded Mature Tree",
-                class = "Botanist"
-            },
+        {
+            itemName = "Grade 4 Skybuilders' Umbral Galewood",
+            x = -604.29, y = 333.82, z=442.46,
+            nodeName = "Clouded Mature Tree",
+            class = "Botanist"
+        },
         fishingNode = {
             itemName = "Grade 4 Artisanal Skybuilders' Griffin",
             baitName = "Diadem Hoverworm", -- mooched from Grade 4 Skybuilders' Ghost Faerie
@@ -205,158 +198,192 @@ UmbralWeatherNodes = {
     }
 }
 
+MinerRoutes = {
+    MinerIslands = true,
+    MinerSilex = true,
+    RedRoute = true
+}
+
+BotanistRoutes = {
+    BotanistIslands = true,
+    BotanistBarbgrass = true,
+    PinkRoute = true
+}
+
 GatheringRoute =
- {
+{
     MinerIslands = {
-            {x = -570.90, y = 45.80, z = -242.08, nodeName = "Mineral Deposit"},
-            {x = -512.28, y = 35.19, z = -256.92, nodeName = "Mineral Deposit"},
-            {x = -448.87, y = 32.54, z = -256.16, nodeName = "Mineral Deposit"},
-            {x = -403.11, y = 11.01, z = -300.24, nodeName = "Rocky Outcrop"}, -- Fly Issue #1
-            {x = -363.65, y = -1.19, z = -353.93, nodeName = "Rocky Outcrop"}, -- Fly Issue #2
-            {x = -337.34, y = -0.38, z = -418.02, nodeName = "Mineral Deposit"},
-            {x = -290.76, y = 0.72, z = -430.48, nodeName = "Mineral Deposit"},
-            {x = -240.05, y = -1.41, z = -483.75, nodeName = "Mineral Deposit"},
-            {x = -166.13, y = -0.08, z = -548.23, nodeName = "Mineral Deposit"},
-            {x = -128.41, y = -17.00, z = -624.14, nodeName = "Mineral Deposit"},
-            {x = -66.68, y = -14.72, z = -638.76, nodeName = "Rocky Outcrop"},
-            {x = 10.22, y = -17.85, z = -613.05, nodeName = "Rocky Outcrop"},
-            {x = 25.99, y = -15.64, z = -613.42, nodeName = "Mineral Deposit"},
-            {x = 68.06, y = -30.67, z = -582.67, nodeName = "Mineral Deposit"},
-            {x = 130.55, y = -47.39, z = -523.51, nodeName = "Mineral Deposit"}, -- End of Island #1
-            {x = 215.01, y = 303.25, z = -730.10, nodeName = "Rocky Outcrop"}, -- Waypoint #1 on 2nd Island (Issue)
-            {x = 279.23, y = 295.35, z = -656.26, nodeName = "Mineral Deposit"},
-            {x = 331.00, y = 293.96, z = -707.63, nodeName = "Rocky Outcrop"}, -- End of Island #2
-            {x = 458.50, y = 203.43, z = -646.38, nodeName = "Rocky Outcrop"},
-            {x = 488.12, y = 204.48, z = -633.06, nodeName = "Mineral Deposit"},
-            {x = 558.27, y = 198.54, z = -562.51, nodeName = "Mineral Deposit"},
-            {x = 540.63, y = 195.18, z = -526.46, nodeName = "Mineral Deposit"}, -- End of Island #3
-            {x = 632.28, y = 253.53, z = -423.41, nodeName = "Rocky Outcrop"}, -- Sole Node on Island #4
-            {x = 714.05, y = 225.84, z = -309.27, nodeName = "Rocky Outcrop"},
-            {x = 678.74, y = 225.05, z = -268.64, nodeName = "Rocky Outcrop"},
-            {x = 601.80, y = 226.65, z = -229.10, nodeName = "Rocky Outcrop"},
-            {x = 651.10, y = 228.77, z = -164.80, nodeName = "Mineral Deposit"},
-            {x = 655.21, y = 227.67, z = -115.23, nodeName = "Mineral Deposit"},
-            {x = 648.83, y = 226.19, z = -74.00, nodeName = "Mineral Deposit"}, -- End of Island #5
-            {x = 472.23, y = -20.99, z = 207.56, nodeName = "Rocky Outcrop"},
-            {x = 541.18, y = -8.41, z = 278.78, nodeName = "Rocky Outcrop"},
-            {x = 616.091, y = -31.53, z = 315.97, nodeName = "Mineral Deposit"},
-            {x = 579.87, y = -26.10, z = 349.43, nodeName = "Rocky Outcrop"},
-            {x = 563.04, y = -25.15, z = 360.33, nodeName = "Mineral Deposit"},
-            {x = 560.68, y = -18.44, z = 411.57, nodeName = "Mineral Deposit"},
-            {x = 508.90, y = -29.67, z = 458.51, nodeName = "Mineral Deposit"},
-            {x = 405.96, y = 1.82, z = 454.30, nodeName = "Mineral Deposit"},
-            {x = 260.22, y = 91.10, z = 530.69, nodeName = "Rocky Outcrop"},
-            {x = 192.97, y = 95.66, z = 606.13, nodeName = "Rocky Outcrop"},
-            {x = 90.06, y = 94.07, z = 605.29, nodeName = "Mineral Deposit"},
-            {x = 39.54, y = 106.38, z = 627.32, nodeName = "Mineral Deposit"},
-            {x = -46.11, y = 116.03, z = 673.04, nodeName = "Mineral Deposit"},
-            {x = -101.43, y = 119.30, z = 631.55, nodeName = "Mineral Deposit"}, -- End of Island #6?
-            {x = -328.20, y = 329.41, z = 562.93, nodeName = "Rocky Outcrop"},
-            {x = -446.48, y = 327.07, z = 542.64, nodeName = "Rocky Outcrop"},
-            {x = -526.76, y = 332.83, z = 506.12, nodeName = "Rocky Outcrop"},
-            {x = -577.23, y = 331.88, z = 519.38, nodeName = "Mineral Deposit"},
-            {x = -558.09, y = 334.52, z = 448.38, nodeName = "Mineral Deposit"}, -- End of Island #7
-            {x = -729.13, y = 272.73, z = -62.52, nodeName = "Mineral Deposit"}
-        },
+        {x = -570.90, y = 45.80, z = -242.08, nodeName = "Mineral Deposit"},
+        {x = -512.28, y = 35.19, z = -256.92, nodeName = "Mineral Deposit"},
+        {x = -448.87, y = 32.54, z = -256.16, nodeName = "Mineral Deposit"},
+        {x = -403.11, y = 11.01, z = -300.24, nodeName = "Rocky Outcrop"}, -- Fly Issue #1
+        {x = -363.65, y = -1.19, z = -353.93, nodeName = "Rocky Outcrop"}, -- Fly Issue #2
+        {x = -337.34, y = -0.38, z = -418.02, nodeName = "Mineral Deposit"},
+        {x = -290.76, y = 0.72, z = -430.48, nodeName = "Mineral Deposit"},
+        {x = -240.05, y = -1.41, z = -483.75, nodeName = "Mineral Deposit"},
+        {x = -166.13, y = -0.08, z = -548.23, nodeName = "Mineral Deposit"},
+        {x = -128.41, y = -17.00, z = -624.14, nodeName = "Mineral Deposit"},
+        {x = -66.68, y = -14.72, z = -638.76, nodeName = "Rocky Outcrop"},
+        {x = 10.22, y = -17.85, z = -613.05, nodeName = "Rocky Outcrop"},
+        {x = 25.99, y = -15.64, z = -613.42, nodeName = "Mineral Deposit"},
+        {x = 68.06, y = -30.67, z = -582.67, nodeName = "Mineral Deposit"},
+        {x = 130.55, y = -47.39, z = -523.51, nodeName = "Mineral Deposit"}, -- End of Island #1
+        {x = 215.01, y = 303.25, z = -730.10, nodeName = "Rocky Outcrop"}, -- Waypoint #1 on 2nd Island (Issue)
+        {x = 279.23, y = 295.35, z = -656.26, nodeName = "Mineral Deposit"},
+        {x = 331.00, y = 293.96, z = -707.63, nodeName = "Rocky Outcrop"}, -- End of Island #2
+        {x = 458.50, y = 203.43, z = -646.38, nodeName = "Rocky Outcrop"},
+        {x = 488.12, y = 204.48, z = -633.06, nodeName = "Mineral Deposit"},
+        {x = 558.27, y = 198.54, z = -562.51, nodeName = "Mineral Deposit"},
+        {x = 540.63, y = 195.18, z = -526.46, nodeName = "Mineral Deposit"}, -- End of Island #3
+        {x = 632.28, y = 253.53, z = -423.41, nodeName = "Rocky Outcrop"}, -- Sole Node on Island #4
+        {x = 714.05, y = 225.84, z = -309.27, nodeName = "Rocky Outcrop"},
+        {x = 678.74, y = 225.05, z = -268.64, nodeName = "Rocky Outcrop"},
+        {x = 601.80, y = 226.65, z = -229.10, nodeName = "Rocky Outcrop"},
+        {x = 651.10, y = 228.77, z = -164.80, nodeName = "Mineral Deposit"},
+        {x = 655.21, y = 227.67, z = -115.23, nodeName = "Mineral Deposit"},
+        {x = 648.83, y = 226.19, z = -74.00, nodeName = "Mineral Deposit"}, -- End of Island #5
+        {x = 472.23, y = -20.99, z = 207.56, nodeName = "Rocky Outcrop"},
+        {x = 541.18, y = -8.41, z = 278.78, nodeName = "Rocky Outcrop"},
+        {x = 616.091, y = -31.53, z = 315.97, nodeName = "Mineral Deposit"},
+        {x = 579.87, y = -26.10, z = 349.43, nodeName = "Rocky Outcrop"},
+        {x = 563.04, y = -25.15, z = 360.33, nodeName = "Mineral Deposit"},
+        {x = 560.68, y = -18.44, z = 411.57, nodeName = "Mineral Deposit"},
+        {x = 508.90, y = -29.67, z = 458.51, nodeName = "Mineral Deposit"},
+        {x = 405.96, y = 1.82, z = 454.30, nodeName = "Mineral Deposit"},
+        {x = 260.22, y = 91.10, z = 530.69, nodeName = "Rocky Outcrop"},
+        {x = 192.97, y = 95.66, z = 606.13, nodeName = "Rocky Outcrop"},
+        {x = 90.06, y = 94.07, z = 605.29, nodeName = "Mineral Deposit"},
+        {x = 39.54, y = 106.38, z = 627.32, nodeName = "Mineral Deposit"},
+        {x = -46.11, y = 116.03, z = 673.04, nodeName = "Mineral Deposit"},
+        {x = -101.43, y = 119.30, z = 631.55, nodeName = "Mineral Deposit"}, -- End of Island #6?
+        {x = -328.20, y = 329.41, z = 562.93, nodeName = "Rocky Outcrop"},
+        {x = -446.48, y = 327.07, z = 542.64, nodeName = "Rocky Outcrop"},
+        {x = -526.76, y = 332.83, z = 506.12, nodeName = "Rocky Outcrop"},
+        {x = -577.23, y = 331.88, z = 519.38, nodeName = "Mineral Deposit"},
+        {x = -558.09, y = 334.52, z = 448.38, nodeName = "Mineral Deposit"}, -- End of Island #7
+        {x = -729.13, y = 272.73, z = -62.52, nodeName = "Mineral Deposit"}
+    },
 
-    BotanistIslands = 
-        {
-            {x = -202, y = -2, z = -310, nodeName = "Mature Tree"},
-            {x = -262, y = -2, z = -346, nodeName = "Mature Tree"},
-            {x = -323, y = -5, z = -322, nodeName = "Mature Tree"},
-            {x = -372, y = 16, z = -290, nodeName = "Lush Vegetation Patch"},
-            {x = -421, y = 23, z = -201, nodeName = "Lush Vegetation Patch"},
-            {x = -471, y = 28, z = -193, nodeName = "Mature Tree"},
-            {x = -549, y = 29, z = -211, nodeName = "Mature Tree"},
-            {x = -627, y = 285, z = -141, nodeName = "Lush Vegetation Patch"},
-            {x = -715, y = 271, z = -49, nodeName = "Mature Tree"},
-
-            {x = -45, y = -48, z = -501, nodeName = "Lush Vegetation Patch"},
-            {x = -63, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
-            {x = -137, y = -7, z = -481, nodeName = "Lush Vegetation Patch"},
-            {x = -191, y = -2, z = -422, nodeName = "Mature Tree"},
-            {x = -149, y = -5, z = -389, nodeName = "Mature Tree"},
-            {x = 114, y = -49, z = -515, nodeName = "Mature Tree"},
-            {x = 46, y = -47, z = -500, nodeName = "Mature Tree"},
-
-            {x = 101, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
-            {x = 58, y = -37, z = -577, nodeName = "Lush Vegetation Patch"},
-            {x = -6, y = -20, z = -641, nodeName = "Lush Vegetation Patch"},
-            {x = -65, y = -19, z = -610, nodeName = "Mature Tree"},
-            {x = -125, y = -19, z = -621, nodeName = "Mature Tree"},
-            {x = -169, y = -7, z = -550, nodeName = "Lush Vegetation Patch"},
-
-            {x = 454, y = 207, z = -615, nodeName = "Lush Vegetation Patch"},
-            {x = 573, y = 191, z = -513, nodeName = "Mature Tree"},
-            {x = 584, y = 191, z = -557, nodeName = "Lush Vegetation Patch"},
-            {x = 540, y = 199, z = -617, nodeName = "Lush Vegetation Patch"},
-            {x = 482, y = 192, z = -674, nodeName = "Lush Vegetation Patch"},
-
-            {x = 433, y = -15, z = 274, nodeName = "Mature Tree"},
-            {x = 467, y = -13, z = 268, nodeName = "Lush Vegetation Patch"},
-            {x = 440, y = -25, z = 208, nodeName = "Mature Tree"},
-            {x = 553, y = -32, z = 419, nodeName = "Lush Vegetation Patch"},
-            {x = 564, y = -31, z = 339, nodeName = "Lush Vegetation Patch"},
-            {x = 529, y = -10, z = 279, nodeName = "Lush Vegetation Patch"},
-            {x = 474, y = -24, z = 197, nodeName = "Lush Vegetation Patch"},
-        },
-    RedRoute =
-        {
-            {x = -161.2715, y = -3.5233, z = -378.8041, nodeName = "Rocky Outcrop", antistutter = 0}, -- Start of the route
-            {x = -169.3415, y = -7.1092, z = -518.7053, nodeName = "Mineral Deposit", antistutter = 0}, -- Around the tree (Rock + Bones?)
-            {x = -78.5548, y = -18.1347, z = -594.6666, nodeName = "Mineral Deposit", antistutter = 0}, -- Log + Rock (Problematic)
-            {x = -54.6772, y = -45.7177, z = -521.7173, nodeName = "Mineral Deposit", antistutter = 0}, -- Down the hill
-            {x = -22.5868, y = -26.5050, z = -534.9953, nodeName = "Rocky Outcrop", antistutter = 0}, -- up the hill (rock + tree)
-            {x = 59.4516, y = -41.6749, z = -520.2413, nodeName = "Rocky Outcrop", antistutter = 0}, -- Spaces out nodes on rock (hate this one)
-            {x = 102.3, y = -47.3, z = -500.1, nodeName = "Mineral Deposit", antistutter = 0}, -- Over the gap
-            {x = -209.1468, y = -3.9325, z = -357.9749, nodeName = "Mineral Deposit", antistutter = 1},
-        },
-    PinkRoute =
-        {
-            {x = -248.6381, y = -1.5664, z = -468.8910, nodeName = "Lush Vegetation Patch", antistutter = 0},
-            {x = -338.3759, y = -0.4761, z = -415.3227, nodeName = "Lush Vegetation Patch", antistutter = 0},
-            {x = -366.2651, y = -1.8514, z = -350.1429, nodeName = "Lush Vegetation Patch", antistutter = 0},
-            {x = -431.2000, y = 27.5000, z = -256.7000, nodeName = "Mature Tree", antistutter = 0}, --tree node
-            {x = -473.4957, y = 31.5405, z = -244.1215, nodeName = "Mature Tree", antistutter = 0},
-            {x = -536.5187, y = 33.2307, z = -253.3514, nodeName = "Lush Vegetation Patch", antistutter = 0},
-            {x = -571.2896, y = 35.2772, z = -236.6808, nodeName = "Lush Vegetation Patch", antistutter = 0},
-            {x = -215.1211, y = -1.3262, z = -494.8219, nodeName = "Lush Vegetation Patch", antistutter = 1}
-        }
-    }
-
-MobTable = 
+    BotanistIslands =
     {
-        {
-            {"Proto-noctilucale"},
-            {"Diadem Bloated Bulb"},
-            {"Diadem Melia"},
-            {"Diadem Icetrap"},
-            {"Diadem Werewood"},
-            {"Diadem Biast"},
-            {"Diadem Ice Bomb"},
-            {"Diadem Zoblyn"},
-            {"Diadem Ice Golem"},
-            {"Diadem Golem"},
-            {"Corrupted Sprite"},
-        },
-        {
-            {"Corrupted Sprite"},
-        },
-        {
-            {"Proto-noctilucale"},
-            {"Diadem Bloated Bulb"},
-            {"Diadem Melia"},
-            {"Diadem Icetrap"},
-            {"Diadem Werewood"},
-            {"Diadem Biast"},
-            {"Diadem Ice Bomb"},
-            {"Diadem Zoblyn"},
-            {"Diadem Ice Golem"},
-            {"Diadem Golem"}
-        }
-    }
+        {x = -202, y = -2, z = -310, nodeName = "Mature Tree"},
+        {x = -262, y = -2, z = -346, nodeName = "Mature Tree"},
+        {x = -323, y = -5, z = -322, nodeName = "Mature Tree"},
+        {x = -372, y = 16, z = -290, nodeName = "Lush Vegetation Patch"},
+        {x = -421, y = 23, z = -201, nodeName = "Lush Vegetation Patch"},
+        {x = -471, y = 28, z = -193, nodeName = "Mature Tree"},
+        {x = -549, y = 29, z = -211, nodeName = "Mature Tree"},
+        {x = -627, y = 285, z = -141, nodeName = "Lush Vegetation Patch"},
+        {x = -715, y = 271, z = -49, nodeName = "Mature Tree"},
 
-spawnisland_table = 
+        {x = -45, y = -48, z = -501, nodeName = "Lush Vegetation Patch"},
+        {x = -63, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
+        {x = -137, y = -7, z = -481, nodeName = "Lush Vegetation Patch"},
+        {x = -191, y = -2, z = -422, nodeName = "Mature Tree"},
+        {x = -149, y = -5, z = -389, nodeName = "Mature Tree"},
+        {x = 114, y = -49, z = -515, nodeName = "Mature Tree"},
+        {x = 46, y = -47, z = -500, nodeName = "Mature Tree"},
+
+        {x = 101, y = -48, z = -535, nodeName = "Lush Vegetation Patch"},
+        {x = 58, y = -37, z = -577, nodeName = "Lush Vegetation Patch"},
+        {x = -6, y = -20, z = -641, nodeName = "Lush Vegetation Patch"},
+        {x = -65, y = -19, z = -610, nodeName = "Mature Tree"},
+        {x = -125, y = -19, z = -621, nodeName = "Mature Tree"},
+        {x = -169, y = -7, z = -550, nodeName = "Lush Vegetation Patch"},
+
+        {x = 454, y = 207, z = -615, nodeName = "Lush Vegetation Patch"},
+        {x = 573, y = 191, z = -513, nodeName = "Mature Tree"},
+        {x = 584, y = 191, z = -557, nodeName = "Lush Vegetation Patch"},
+        {x = 540, y = 199, z = -617, nodeName = "Lush Vegetation Patch"},
+        {x = 482, y = 192, z = -674, nodeName = "Lush Vegetation Patch"},
+
+        {x = 433, y = -15, z = 274, nodeName = "Mature Tree"},
+        {x = 467, y = -13, z = 268, nodeName = "Lush Vegetation Patch"},
+        {x = 440, y = -25, z = 208, nodeName = "Mature Tree"},
+        {x = 553, y = -32, z = 419, nodeName = "Lush Vegetation Patch"},
+        {x = 564, y = -31, z = 339, nodeName = "Lush Vegetation Patch"},
+        {x = 529, y = -10, z = 279, nodeName = "Lush Vegetation Patch"},
+        {x = 474, y = -24, z = 197, nodeName = "Lush Vegetation Patch"},
+    },
+    RedRoute =
+    {
+        {x = -161.2715, y = -3.5233, z = -378.8041, nodeName = "Rocky Outcrop", antistutter = 0}, -- Start of the route
+        {x = -169.3415, y = -7.1092, z = -518.7053, nodeName = "Mineral Deposit", antistutter = 0}, -- Around the tree (Rock + Bones?)
+        {x = -78.5548, y = -18.1347, z = -594.6666, nodeName = "Mineral Deposit", antistutter = 0}, -- Log + Rock (Problematic)
+        {x = -54.6772, y = -45.7177, z = -521.7173, nodeName = "Mineral Deposit", antistutter = 0}, -- Down the hill
+        {x = -22.5868, y = -26.5050, z = -534.9953, nodeName = "Rocky Outcrop", antistutter = 0}, -- up the hill (rock + tree)
+        {x = 59.4516, y = -41.6749, z = -520.2413, nodeName = "Rocky Outcrop", antistutter = 0}, -- Spaces out nodes on rock (hate this one)
+        {x = 102.3, y = -47.3, z = -500.1, nodeName = "Mineral Deposit", antistutter = 0}, -- Over the gap
+        {x = -209.1468, y = -3.9325, z = -357.9749, nodeName = "Mineral Deposit", antistutter = 1},
+    },
+    PinkRoute =
+    {
+        {x = -248.6381, y = -1.5664, z = -468.8910, nodeName = "Lush Vegetation Patch", antistutter = 0},
+        {x = -338.3759, y = -0.4761, z = -415.3227, nodeName = "Lush Vegetation Patch", antistutter = 0},
+        {x = -366.2651, y = -1.8514, z = -350.1429, nodeName = "Lush Vegetation Patch", antistutter = 0},
+        {x = -431.2000, y = 27.5000, z = -256.7000, nodeName = "Mature Tree", antistutter = 0}, --tree node
+        {x = -473.4957, y = 31.5405, z = -244.1215, nodeName = "Mature Tree", antistutter = 0},
+        {x = -536.5187, y = 33.2307, z = -253.3514, nodeName = "Lush Vegetation Patch", antistutter = 0},
+        {x = -571.2896, y = 35.2772, z = -236.6808, nodeName = "Lush Vegetation Patch", antistutter = 0},
+        {x = -215.1211, y = -1.3262, z = -494.8219, nodeName = "Lush Vegetation Patch", antistutter = 1}
+    },
+
+    MinerSilex = {
+        {x = 279.23, y = 295.35, z = -656.26, nodeName = "Mineral Deposit"},
+        {x = 331.00, y = 293.96, z = -707.63, nodeName = "Rocky Outcrop"}, -- End of Island #2
+        {x = 458.50, y = 203.43, z = -646.38, nodeName = "Rocky Outcrop"},
+        {x = 488.12, y = 204.48, z = -633.06, nodeName = "Mineral Deposit"},
+        {x = 558.27, y = 198.54, z = -562.51, nodeName = "Mineral Deposit"},
+        {x = 540.63, y = 195.18, z = -526.46, nodeName = "Mineral Deposit"}, -- End of Island #3
+        {x = 632.28, y = 253.53, z = -423.41, nodeName = "Rocky Outcrop"}, -- Sole Node on Island #4
+        {x = 714.05, y = 225.84, z = -309.27, nodeName = "Rocky Outcrop"},
+    },
+
+    BotanistBarbgrass = {
+        {x = -202, y = -2, z = -310, nodeName = "Mature Tree"},
+        {x = -262, y = -2, z = -346, nodeName = "Mature Tree"},
+        {x = -323, y = -5, z = -322, nodeName = "Mature Tree"},
+        {x = -372, y = 16, z = -290, nodeName = "Lush Vegetation Patch"},
+        {x = -421, y = 23, z = -201, nodeName = "Lush Vegetation Patch"},
+        {x = -471, y = 28, z = -193, nodeName = "Mature Tree"},
+        {x = -549, y = 29, z = -211, nodeName = "Mature Tree"},
+        {x = -627, y = 285, z = -141, nodeName = "Lush Vegetation Patch"},
+    },
+}
+
+MobTable =
+{
+    {
+        {"Proto-noctilucale"},
+        {"Diadem Bloated Bulb"},
+        {"Diadem Melia"},
+        {"Diadem Icetrap"},
+        {"Diadem Werewood"},
+        {"Diadem Biast"},
+        {"Diadem Ice Bomb"},
+        {"Diadem Zoblyn"},
+        {"Diadem Ice Golem"},
+        {"Diadem Golem"},
+        {"Corrupted Sprite"},
+    },
+    {
+        {"Corrupted Sprite"},
+    },
+    {
+        {"Proto-noctilucale"},
+        {"Diadem Bloated Bulb"},
+        {"Diadem Melia"},
+        {"Diadem Icetrap"},
+        {"Diadem Werewood"},
+        {"Diadem Biast"},
+        {"Diadem Ice Bomb"},
+        {"Diadem Zoblyn"},
+        {"Diadem Ice Golem"},
+        {"Diadem Golem"}
+    }
+}
+
+spawnisland_table =
 {
     {x = -605.7039, y = 312.0701, z = -159.7864, antistutter = 0},
 }
@@ -393,11 +420,11 @@ CharacterCondition = {
 }
 
 function Ready()
-    
+
     if not IsInZone(DiademZoneId) and State ~= CharacterState.diademEntry then
         State = CharacterState.diademEntry
         LogInfo("[UmbralGathering] State Change: Diadem Entry")
-    elseif GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30 then
+    elseif DoFish and (GetItemCount(30279) < 30 or GetItemCount(30280) < 30 or GetItemCount(30281) < 30) then
         State = CharacterState.buyFishingBait
         LogInfo("[UmbralGathering] State Change: BuyFishingBait")
     elseif RepairAmount > 0 and NeedsRepair(RepairAmount) then
@@ -442,7 +469,7 @@ function ExtractMateria()
         end
 
         LogInfo("[FATE] Extracting materia...")
-            
+
         if IsAddonVisible("MaterializeDialog") then
             yield("/callback MaterializeDialog true 0")
         else
@@ -542,7 +569,7 @@ function EnterDiadem()
     UmbralGathered = false
     NextNodeId = 1
     JustEntered = true
-    
+
     if IsInZone(DiademZoneId) and IsPlayerAvailable() then
         if not NavIsReady() then
             yield("/echo Waiting for navmesh...")
@@ -689,8 +716,8 @@ function GetRandomRouteType()
         table.insert(routeNames, routeName)
     end
     local randomIndex = math.random(#routeNames)
-    
-    return routeNames[randomIndex] 
+
+    return routeNames[randomIndex]
 end
 
 function SelectNextNode()
@@ -721,12 +748,14 @@ function SelectNextNode()
             State = CharacterState.diademEntry
             LogInfo("[UmbralGathering] Diadem Entry")
         end
-    else
-        GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
-        GatheringRoute[RouteType][NextNodeId].isFishingNode = false
-        LogInfo("[UmbralGathering] Selected regular gathering node: "..GatheringRoute[RouteType][NextNodeId].nodeName)
-        return GatheringRoute[RouteType][NextNodeId]
     end
+
+    -- default
+    GatheringRoute[RouteType][NextNodeId].isUmbralNode = false
+    GatheringRoute[RouteType][NextNodeId].isFishingNode = false
+    LogInfo("[UmbralGathering] Selected regular gathering node: "..GatheringRoute[RouteType][NextNodeId].nodeName)
+    return GatheringRoute[RouteType][NextNodeId]
+
 end
 
 function MoveToNextNode()
@@ -760,15 +789,15 @@ function MoveToNextNode()
 
     JustEntered = false
     if NextNode.isUmbralNode and not NextNode.isFishingNode and
-        ((NextNode.class == "Miner" and GetClassJobId() ~= 16) or
-        (NextNode.class == "Botanist" and GetClassJobId() ~= 17))
+            ((NextNode.class == "Miner" and GetClassJobId() ~= 16) or
+                    (NextNode.class == "Botanist" and GetClassJobId() ~= 17))
     then
         yield("/gs change "..NextNode.class)
         yield("/wait 3")
-    elseif not NextNode.isUmbralNode and (RouteType == "RedRoute" or RouteType == "MinerIslands") and GetClassJobId() ~= 16 then
+    elseif not NextNode.isUmbralNode and MinerRoutes[RouteType] and GetClassJobId() ~= 16 then
         yield("/gs change Miner")
         yield("/wait 3")
-    elseif not NextNode.isUmbralNode and (RouteType == "PinkRoute" or RouteType == "BotanistIslands") and GetClassJobId() ~= 17 then
+    elseif not NextNode.isUmbralNode and BotanistRoutes[RouteType] and GetClassJobId() ~= 17 then
         yield("/gs change Botanist")
         yield("/wait 3")
     elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) < 3 then
@@ -803,13 +832,13 @@ end
 
 function SkillCheck()
     local class = GetClassJobId()
-    if class == 16 then -- Miner Skills 
+    if class == 16 then -- Miner Skills
         Yield2 = "\"King's Yield II\""
         Gift2 = "\"Mountaineer's Gift II\""
         Gift1 = "\"Mountaineer's Gift I\""
         Tidings2 = "\"Nald'thal's Tidings\""
         Bountiful2 = "\"Bountiful Yield II\""
-    elseif class == 17 then -- Botanist Skills 
+    elseif class == 17 then -- Botanist Skills
         Yield2 = "\"Blessed Harvest II\""
         Gift2 = "\"Pioneer's Gift II\""
         Gift1 = "\"Pioneer's Gift I\""
@@ -830,10 +859,10 @@ function Gather()
     local visibleNode = ""
     if IsAddonVisible("_TargetInfoMainTarget") then
         visibleNode = GetNodeText("_TargetInfoMainTarget", 3)
-    elseif IsAddonVisible("_TargetInfo") then 
+    elseif IsAddonVisible("_TargetInfo") then
         visibleNode = GetNodeText("_TargetInfo", 34)
     end
-    
+
     if not HasTarget() or GetTargetName() ~= NextNode.nodeName then
         yield("/target "..NextNode.nodeName)
         yield("/wait 1")
@@ -918,9 +947,9 @@ function Gather()
             UseSkill(Bountiful2)
             return
         end
-    -- elseif visibleNode ~= "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
-    --     LogInfo("[Diadem Gathering] [Node Type] Normal Node")
-    --     DGatheringLoop = true
+        -- elseif visibleNode ~= "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
+        --     LogInfo("[Diadem Gathering] [Node Type] Normal Node")
+        --     DGatheringLoop = true
     end
 
     if (GetGp() >= (GetMaxGp() - 30)) and (GetLevel() >= 68) and visibleNode ~= "Max GP ≥ 858 → Gathering Attempts/Integrity +5" then
@@ -953,7 +982,7 @@ function GoFishing()
         end
         return
     end
-    
+
     if GetCharacterCondition(CharacterCondition.fishing) then
         if (PathfindInProgress() or PathIsRunning()) then
             yield("/vnav stop")
@@ -1072,7 +1101,7 @@ function FireCannon()
                 return
             end
         end
-        
+
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
         return
@@ -1206,7 +1235,7 @@ function Repair()
                 end
                 return
             end
-            
+
             if GetDistanceToPoint(Mender.x, Mender.y, Mender.z) > 3.5 then
                 if not (PathIsRunning() or PathfindInProgress()) then
                     PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
@@ -1260,9 +1289,9 @@ else
     yield("/echo Invalid SelectedRoute : " .. RouteType)
 end
 yield("/echo SelectedRoute : " .. RouteType)
-if (RouteType == "RedRoute" or RouteType == "MinerIslands") and GetClassJobId() ~= 16 then
+if MinerRoutes[RouteType] and GetClassJobId() ~= 16 then
     yield("/gs change Miner")
-elseif (RouteType == "PinkRoute" or RouteType == "BotanistIslands") and GetClassJobId() ~= 17 then
+elseif BotanistRoutes[RouteType] and GetClassJobId() ~= 17 then
     yield("/gs change Botanist")
 end
 yield("/wait 3")
@@ -1307,14 +1336,14 @@ while true do
         State = CharacterState.diademEntry
     end
     if not (IsPlayerCasting() or
-        GetCharacterCondition(CharacterCondition.betweenAreas) or
-        GetCharacterCondition(CharacterCondition.jumping48) or
-        GetCharacterCondition(CharacterCondition.jumpPlatform) or
-        GetCharacterCondition(CharacterCondition.mounting57) or
-        GetCharacterCondition(CharacterCondition.mounting64) or
-        GetCharacterCondition(CharacterCondition.beingMoved) or
-        GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
-        LifestreamIsBusy())
+            GetCharacterCondition(CharacterCondition.betweenAreas) or
+            GetCharacterCondition(CharacterCondition.jumping48) or
+            GetCharacterCondition(CharacterCondition.jumpPlatform) or
+            GetCharacterCondition(CharacterCondition.mounting57) or
+            GetCharacterCondition(CharacterCondition.mounting64) or
+            GetCharacterCondition(CharacterCondition.beingMoved) or
+            GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
+            LifestreamIsBusy())
     then
         State()
     end
