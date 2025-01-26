@@ -19,16 +19,15 @@ Fate farming script with the following features:
 |-------------|---------|------|
 | Something Need Doing [Expanded Edition] | main plugin that runs the code | https://puni.sh/api/repository/croizat |
 | VNavmesh | pathing and moving | https://puni.sh/api/repository/veyn |
-| RotationSolver Reborn | targeting and attacking enemies | https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json |
-| TextAdvance | interacting with Fate NPCs | comes with Dalamud |
+| RotationSolver Reborn OR<br>BossMod Reborn OR<br>Veyn's BossMod OR<br>Wrath Combo | targeting and attacking enemies | https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json<br>https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json<br>https://puni.sh/api/repository/veyn<br>https://love.puni.sh/ment.json |
+| TextAdvance | interacting with Fate NPCs | https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json |
 | Teleporter | teleporting to aetherytes | comes with Dalamud |
 | Lifestream | changing instances | https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json |
 
 ### Optional Plugins
 | Plugin Name | Purpose | Repo |
 |-------------|---------|------|
-| BossModReborn | AI for dodging mechanics | https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json |
-| ChatCoordinates | puts a flag on your map so you can see where you're going next | comes with Dalamud |
+| BossMod Reborn OR Veyn's BossMod | AI for dodging mechanics | https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json<br>https://puni.sh/api/repository/veyn |
 | AutoRetainer | handles retainers when they're ready, then gets back to Fate farming | https://love.puni.sh/ment.json |
 | Deliveroo | turns in gear to your Grand Company when your retainers come back with too much and clog your inventory | https://plugins.carvel.li/ |
 
