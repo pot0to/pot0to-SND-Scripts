@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.4                                 *
+*                                Version 1.4.5                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.4    Separate IsAddonReady and IsAddonVisible
+    -> 1.4.5    Update hard amiss check
+                Separate IsAddonReady and IsAddonVisible
                 Fix typo
                 Added more logging statements
                 Added soft and hard amiss checks
@@ -24,14 +25,6 @@ Loosely based on Ahernika's NonStopFisher
                     face to be further south, fixed coordinates for ul'dah and
                     gridania
                 Added purple scrip exchange code bc i forgot lol
-                Tree
-                Fixed materia extraction bug p2
-                Fixed repair
-                Fixed teleport errors
-                Fixed purple scrips
-                Fixed MinInventoryFreeSlots
-                Updated algorithm to randomly choose any fishing spot in a line
-                    along the coast, fixed self repair
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -410,7 +403,7 @@ function Fishing()
         State = CharacterState.buyFishingBait
         LogInfo("State Change: Buy Fishing Bait")
         return
-    elseif IsAddonVisible("_TextError") and GetNodeText("_TextError", 1) == "The fish sense something amiss." then
+    elseif IsAddonVisible("_TextError") and string.find(GetNodeText("_TextError", 1), "The fish sense something amiss.") ~= nil then
         AmissCount = AmissCount + 1
         if AmissCount < 2 then
             State = CharacterState.goToFishingHole
