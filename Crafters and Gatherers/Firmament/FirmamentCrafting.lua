@@ -96,7 +96,8 @@ function Crafting()
     if slots <= MinInventoryFreeSlots then
         yield("/echo Out of inventory slots")
         ArtisanSetEnduranceStatus(false)
-        if IsAddonVisible("RecipeNote") then
+        if IsAddonVisible("RecipeNote") and GetCharacterCondition(CharacterCondition.preparingToCraft) then
+            yield("/wait 1")
             yield("/echo Closing crafting log 1")
             yield("/callback RecipeNote true -1")
         elseif GetCharacterCondition(CharacterCondition.normal) then

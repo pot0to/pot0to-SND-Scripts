@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.5                                 *
+*                                Version 1.4.6                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.5    Update hard amiss check
+    -> 1.4.6    Updating hard amiss again
+                Update hard amiss check
                 Separate IsAddonReady and IsAddonVisible
                 Fix typo
                 Added more logging statements
@@ -353,7 +354,6 @@ function GoToFishingHole()
 end
 
 function GoToResetFishingHole()
-    AmissCount = 0
     local reset = SelectedFish.fishingSpots.reset
     if GetDistanceToPoint(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z) > 30 and
         not GetCharacterCondition(CharacterCondition.mounted)
@@ -397,21 +397,18 @@ function ResetFishingHole()
     yield("/wait 0.5")
 end
 
-AmissCount = 0
 function Fishing()
     if GetItemCount(29717) == 0 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: Buy Fishing Bait")
         return
+    elseif IsAddonVisible("_TextError") and string.find(GetNodeText("_TextError", 1), "Perhaps it is time to try another location.") ~= nil then
+        State = CharacterState.amissReset
+        LogInfo("[FishingGatherer] State Change: Hard amiss")
+        return
     elseif IsAddonVisible("_TextError") and string.find(GetNodeText("_TextError", 1), "The fish sense something amiss.") ~= nil then
-        AmissCount = AmissCount + 1
-        if AmissCount < 2 then
-            State = CharacterState.goToFishingHole
-            LogInfo("[FishingGatherer] State Change: Soft amiss")
-        else
-            State = CharacterState.amissReset
-            LogInfo("[FishingGatherer] State Change: Hard amiss")
-        end
+        State = CharacterState.goToFishingHole
+        LogInfo("[FishingGatherer] State Change: Soft amiss")
         return
     end
 
@@ -441,7 +438,6 @@ function Fishing()
         end
         return
     elseif GetCharacterCondition(CharacterCondition.gathering) then
-        AmissCount = 0
         if (PathfindInProgress() or PathIsRunning()) then
             yield("/vnav stop")
         end
