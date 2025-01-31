@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.4                                 *
+*                               Version 2.21.5                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.4   Fix for change instances companion script
+    -> 2.21.5   Removed jumps
+                Fix for change instances companion script
                 Adjusted landing logic so hopefully it shouldn't get stuck too
                     high up anymore
                 Added ability to only do bonus fates
@@ -1471,16 +1472,9 @@ function FlyBackToAetheryte()
 end
 
 function Mount()
-    if GetCharacterCondition(CharacterCondition.flying) then
+    if GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MoveToFate")
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
-        if not SelectedZone.flying then
-            State = CharacterState.moveToFate
-            LogInfo("[FATE] State Change: MoveToFate")
-        else
-            yield("/gaction jump")
-        end
     else
         if MountToUse == "mount roulette" then
             yield('/gaction "mount roulette"')
@@ -2059,14 +2053,11 @@ function HandleUnexpectedCombat()
         return
     end
 
-    if GetCharacterCondition(CharacterCondition.flying) then
+    if GetCharacterCondition(CharacterCondition.mounted) then
         if not (PathfindInProgress() or PathIsRunning()) then
             PathfindAndMoveTo(GetPlayerRawXPos(), GetPlayerRawYPos() + 10, GetPlayerRawZPos(), true)
         end
         yield("/wait 10")
-        return
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
-        yield("/gaction jump")
         return
     end
 
