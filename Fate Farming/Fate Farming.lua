@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.5                                 *
+*                               Version 2.21.6                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.5   Removed jumps
+    -> 2.21.6   Fixed the part where you walk back to center after FATE is done
+                Removed jumps
                 Fix for change instances companion script
                 Adjusted landing logic so hopefully it shouldn't get stuck too
                     high up anymore
@@ -1750,7 +1751,7 @@ function CollectionsFateTurnIn()
         yield("/wait 1")
 
         -- if too far from npc to target, then head towards center of fate
-        if (not HasTarget() or GetTargetName()~=CurrentFate.npcName) then
+        if (not HasTarget() or GetTargetName()~=CurrentFate.npcName and GetFateProgress(CurrentFate.fateId) < 100) then
             if not PathfindInProgress() and not PathIsRunning() then
                 PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
             end
