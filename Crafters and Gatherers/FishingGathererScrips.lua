@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.6                                 *
+*                                Version 1.4.7                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.6    Updating hard amiss again
+    -> 1.4.7    Updating amiss to __FlyText instead of __TextError
+                Updating hard amiss again
                 Update hard amiss check
                 Separate IsAddonReady and IsAddonVisible
                 Fix typo
@@ -21,11 +22,6 @@ Loosely based on Ahernika's NonStopFisher
                     fishing range to avoid unfishable area, changed state
                     transition dismount -> goToFishingHole to avoid flying out
                     to pointToFace
-                Added IsAddonReady("RetainerList") check
-                Fixed purple scrip exchange, changed purple fishing point to
-                    face to be further south, fixed coordinates for ul'dah and
-                    gridania
-                Added purple scrip exchange code bc i forgot lol
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -402,11 +398,11 @@ function Fishing()
         State = CharacterState.buyFishingBait
         LogInfo("State Change: Buy Fishing Bait")
         return
-    elseif IsAddonVisible("_TextError") and string.find(GetNodeText("_TextError", 1), "Perhaps it is time to try another location.") ~= nil then
+    elseif IsAddonVisible("_FlyText") and string.find(GetNodeText("_FlyText", 1), "Perhaps it is time to try another location.") ~= nil then
         State = CharacterState.amissReset
         LogInfo("[FishingGatherer] State Change: Hard amiss")
         return
-    elseif IsAddonVisible("_TextError") and string.find(GetNodeText("_TextError", 1), "The fish sense something amiss.") ~= nil then
+    elseif IsAddonVisible("_FlyText") and string.find(GetNodeText("_FlyText", 1), "The fish sense something amiss.") ~= nil then
         State = CharacterState.goToFishingHole
         LogInfo("[FishingGatherer] State Change: Soft amiss")
         return
