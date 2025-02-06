@@ -1,0 +1,2 @@
+Someone else has already made a Kugane Tower one. You can find it at:
+https://github.com/Jaksuhn/SomethingNeedDoing/blob/master/Community%20Scripts/Misc/Kugane%20Tower%20Climb.lua
