@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                    Crafter Scrips (Solution Nine Patch 7.1)                  *
-*                                Version 0.5.5                                 *
+*                                Version 0.5.6                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -10,7 +10,8 @@ Created by: pot0to (https://ko-fi.com/pot0to)
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.5.5    Wait while Artisan Endurance is active, click menus once for
+    -> 0.5.6    Fixed purple scrip selector for turn in
+                Wait while Artisan Endurance is active, click menus once for
                     scrip exchange
                 Fixes for some stuff
                 Fixed Deliveroo interrupt
@@ -501,7 +502,7 @@ function TurnIn()
         else
 			if ScripColor == "Purple" then
                 LogInfo("[OrangeCrafters] Selecting purple scrip item")
-				yield("/callback CollectablesShop true 12 7")
+				yield("/callback CollectablesShop true 12 1")
                 yield("/wait 0.5")
 			end
             LogInfo("[OrangeCrafters] Turnin 15 0")
