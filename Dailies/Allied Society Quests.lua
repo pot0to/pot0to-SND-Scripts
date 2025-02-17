@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Allied Society Quests                              *
-*                               Version 0.1.1                                  *
+*                               Version 0.1.3                                  *
 ********************************************************************************
 Created by: pot0to (https://ko-fi.com/pot0to)
 
@@ -13,7 +13,8 @@ moves on to the next beast tribe.
 *                                     0.1.2                                    *
 ********************************************************************************
 
-0.1.2   Added /qst stop after finishing one set of quests
+0.1.3   Fixed "Arkasodara" tribe name
+        Added /qst stop after finishing one set of quests
         Updated Namazu aetheryte to Dhoro Iloh
         Added ability to change classes for different Allied Socieities
         First working version
@@ -179,7 +180,7 @@ AlliedSocietiesTable =
     },
     arkosodara =
     {
-        alliedSocietyName = "Arkosodara",
+        alliedSocietyName = "Arkasodara",
         questGiver = "Maru",
         x = -68.21,
         y = 39.99,
