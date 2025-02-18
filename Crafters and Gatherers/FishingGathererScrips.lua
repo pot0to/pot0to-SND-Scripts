@@ -7,7 +7,8 @@
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.7    Updating amiss to __FlyText instead of __TextError
+    -> 1.4.7    Added another /wait 1 to scrip exchange
+                Updating amiss to __FlyText instead of __TextError
                 Updating hard amiss again
                 Update hard amiss check
                 Separate IsAddonReady and IsAddonVisible
@@ -721,6 +722,7 @@ function ScripExchange()
             yield("/callback InclusionShop true 13 "..ScripExchangeItem.subcategoryMenu)
             yield("/wait 1")
             yield("/callback InclusionShop true 14 "..ScripExchangeItem.listIndex.." "..math.min(99, GetItemCount(GathererScripId)//ScripExchangeItem.price))
+            yield("/wait 1")
         end
     else
         LogInfo("[FishingGatherer] target and interact with Scrip Exchange")
