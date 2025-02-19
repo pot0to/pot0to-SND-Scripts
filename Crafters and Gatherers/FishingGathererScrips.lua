@@ -1,28 +1,22 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.7                                 *
+*                                Version 1.4.8                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.7    Added another /wait 1 to scrip exchange
-                Updating amiss to __FlyText instead of __TextError
+    -> 1.4.8    Abort old attempts at amiss checks, just set a timer for how
+                    long you want to stay in current instance
+                Added another /wait 1 to scrip exchange
+                Updating amiss to _FlyText instead of _TextError
                 Updating hard amiss again
                 Update hard amiss check
                 Separate IsAddonReady and IsAddonVisible
                 Fix typo
                 Added more logging statements
                 Added soft and hard amiss checks
-                Added stuck checks
-                Added a second dismount check just to make sure
-                Reverted dismount -> fishing
-                Fixed dismounting
-                Adjusted tree coords to give an even wider berth, shortened
-                    fishing range to avoid unfishable area, changed state
-                    transition dismount -> goToFishingHole to avoid flying out
-                    to pointToFace
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -39,9 +33,10 @@ Loosely based on Ahernika's NonStopFisher
 ********************************************************************************
 ]]
 
-ScripColorToFarm                    = "Purple"  --Options: Orange/Purple
-ItemToExchange                      = "Hi-Cordial"
-SwitchLocationsAfter                = 10        --Number of minutes to fish at this spot before changing spots.
+ScripColorToFarm                    = "Orange"  --Options: Orange/Purple
+ItemToExchange                      = "Mount Token"
+MoveSpotsAfter                      = 30        --Number of minutes to fish at this spot before changing spots.
+ResetHardAmissAfter                 = 120       --Number of minutes to farm in current instance before teleporting away and back
 
 Retainers                           = true      --If true, will do AR (autoretainers)
 GrandCompanyTurnIn                  = true      --If true, will do GC deliveries using deliveroo everytime retainers are processed
@@ -104,11 +99,7 @@ FishTable =
                 { x=135.71, y=6.12, z=715.0 },
                 { x=212.5, y=12.2, z=739.26 },
             },
-            pointToFace = { x=134.07, y=6.07, z=10000 },
-            reset = {
-                waypoint = { x=458.1, y=17.06, z=666.35 },
-                pointToFace = { x=458.1, y=17.06, z=10000 }
-            }
+            pointToFace = { x=134.07, y=6.07, z=10000 }
         },
         scripColor = "Orange",
         scripId = 39,
@@ -129,11 +120,7 @@ FishTable =
                 { x=58.87, y=22.22, z=487.95 }, --orange balls
                 { x=71.79, y=22.39, z=477.65 },
             },
-            pointToFace = { x=37.71, y=22.36, z=1000 },
-            reset = {
-                waypoint = { x=477.26, y=66.67, z=520.09 },
-                pointToFace = { x=10000, y=66.67, z=520.09 },
-            }
+            pointToFace = { x=37.71, y=22.36, z=1000 }
         },
         scripColor = "Purple",
         scripId = 38,
@@ -292,6 +279,7 @@ function TeleportToFishingZone()
     elseif not GetCharacterCondition(CharacterCondition.betweenAreas) then
         yield("/wait 3")
         SelectNewFishingHole()
+        ResetHardAmissTime = os.clock()
         State = CharacterState.goToFishingHole
         LogInfo("[FishingGatherer] GoToFishingHole")
     end
@@ -350,62 +338,11 @@ function GoToFishingHole()
     LogInfo("[FishingGatherer] State Change: Fishing")
 end
 
-function GoToResetFishingHole()
-    local reset = SelectedFish.fishingSpots.reset
-    if GetDistanceToPoint(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z) > 30 and
-        not GetCharacterCondition(CharacterCondition.mounted)
-    then
-        Mount()
-        return
-    elseif GetDistanceToPoint(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z) > 5 then
-        if not PathfindInProgress() and not PathIsRunning() then
-            PathfindAndMoveTo(reset.waypoint.x, reset.waypoint.y, reset.waypoint.z, GetCharacterCondition(CharacterCondition.mounted))
-        end
-    elseif PathfindInProgress() or PathIsRunning() then
-        yield("/vnav stop")
-    elseif GetCharacterCondition(CharacterCondition.mounted) then
-        Dismount()
-    else
-        State = CharacterState.resetFishingHole
-        LogInfo("[FishingGatherer] State Change: ResetFishingHole")
-    end
-end
-
-CastSuccess = false
-function ResetFishingHole()
-    if GetItemCount(29717) == 0 then
-        State = CharacterState.buyFishingBait
-        LogInfo("State Change: Buy Fishing Bait")
-        return
-    end
-
-    if GetCharacterCondition(CharacterCondition.gathering) then
-        CastSuccess = true
-    elseif CastSuccess then
-        CastSuccess = false
-        SelectNewFishingHole()
-        State = CharacterState.ready
-    elseif not PathfindInProgress() and not PathIsRunning() then
-        local pointToFace = SelectedFish.fishingSpots.reset.pointToFace
-        PathMoveTo(pointToFace.x, pointToFace.y, pointToFace.z)
-        return
-    end
-    yield("/ac Cast")
-    yield("/wait 0.5")
-end
-
+ResetHardAmissTime = os.clock()
 function Fishing()
     if GetItemCount(29717) == 0 then
         State = CharacterState.buyFishingBait
         LogInfo("State Change: Buy Fishing Bait")
-        return
-    elseif IsAddonVisible("_FlyText") and string.find(GetNodeText("_FlyText", 1), "Perhaps it is time to try another location.") ~= nil then
-        State = CharacterState.amissReset
-        LogInfo("[FishingGatherer] State Change: Hard amiss")
-        return
-    elseif IsAddonVisible("_FlyText") and string.find(GetNodeText("_FlyText", 1), "The fish sense something amiss.") ~= nil then
-        State = CharacterState.goToFishingHole
-        LogInfo("[FishingGatherer] State Change: Soft amiss")
         return
     end
 
@@ -421,7 +358,18 @@ function Fishing()
         return
     end
 
-    if os.clock() - SelectedFishingSpot.startTime > (SwitchLocationsAfter*60) then
+    if os.clock() - ResetHardAmissTime > (ResetHardAmissAfter*60) then
+        if GetCharacterCondition(CharacterCondition.gathering) then
+            if not GetCharacterCondition(CharacterCondition.fishing) then
+                yield("/ac Quit")
+                yield("/wait 1")
+            end
+        else
+            State = CharacterState.turnIn
+            LogInfo("[FishingGatherer] State Change: Forced TurnIn to avoid hard amiss")
+        end
+        return
+    elseif os.clock() - SelectedFishingSpot.startTime > (MoveSpotsAfter*60) then
         LogInfo("[FishingGatherer] Switching fishing spots")
         if GetCharacterCondition(CharacterCondition.gathering) then
             if not GetCharacterCondition(CharacterCondition.fishing) then
@@ -1016,8 +964,7 @@ CharacterState = {
     turnIn = TurnIn,
     scripExchange = ScripExchange,
     goToHubCity = GoToHubCity,
-    buyFishingBait = BuyFishingBait,
-    amissReset = GoToResetFishingHole
+    buyFishingBait = BuyFishingBait
 }
 
 StopFlag = false
