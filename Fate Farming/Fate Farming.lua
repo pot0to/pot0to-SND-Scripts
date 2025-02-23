@@ -2,13 +2,16 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.6                                 *
+*                               Version 2.21.8                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
         
-    -> 2.21.6   Fixed the part where you walk back to center after FATE is done
+    -> 2.21.8   Added logic to change back to original class upon natural ending
+                    of script for companion mode
+                Fixed typo with "PorcentageToHoldBuff"
+                Fixed the part where you walk back to center after FATE is done
                 Removed jumps
                 Fix for change instances companion script
                 Adjusted landing logic so hopefully it shouldn't get stuck too
@@ -25,10 +28,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Fixed flying ban in Outer La Noscea and Southern Thanalan
                 Added feature to walk towards center of fate if you are too far
                     away to target the collections fate npc
-                Added anti-botting changes:
-                    - /slightly/ smoother dismount (not by much tbh)
-                    - added check to prevent vnav from interrupting casters
-                    - turned off vnav pathing for boss fates while in combat
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -100,7 +99,7 @@ RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath
     RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns).
     RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
     RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
-    PorcentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
+    PercentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
 DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
 
 IgnoreForlorns                      = false
@@ -2244,9 +2243,9 @@ function DoFate()
     end
         
     --hold buff thingy
-    if GetFateProgress(CurrentFate.fateId) >= PorcentageToHoldBuff then 
+    if GetFateProgress(CurrentFate.fateId) >= PercentageToHoldBuff then
         TurnOffRaidBuffs()
-    end   
+    end
 end
 
 --#endregion
@@ -2822,4 +2821,7 @@ while not StopScript do
 end
 yield("/vnav stop")
 
+if GetClassJobId() ~= MainClass.classId then
+    yield("/gs change "..MainClass.className)
+end
 --#endregion Main
