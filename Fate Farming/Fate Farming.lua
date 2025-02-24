@@ -23,8 +23,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                     for the rotation plugin.
                 Small adjustment to wait time after choosing nextFate, results
                     in landing further from center of fates upon approach.
-                Logic change for nudging closer to enemies.
-                New extra check in movement to prevent cast cancelling.
+                New extra checks in movement to prevent cast cancelling.
                 May have messed something up when pushed out of the fate.
                 Fixed typo with "should it to Turn" -> "should it do Turn"
         
