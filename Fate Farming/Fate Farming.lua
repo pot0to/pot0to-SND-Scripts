@@ -26,6 +26,7 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 Logic change for nudging closer to enemies.
                 New extra check in movement to prevent cast cancelling.
                 May have messed something up when pushed out of the fate.
+                Fixed typo with "should it to Turn" -> "should it do Turn"
         
     -> 2.21.8   Added logic to change back to original class upon natural ending
                     of script for companion mode
@@ -90,12 +91,12 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 ]]
 
 --Pre Fate Settings
-Food                                = "Boiled Egg"  --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+Food                                = ""            --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion                              = ""            --Leave "" Blank if you don't want to use any potions.
 ShouldSummonChocobo                 = true          --Summon chocobo?
     ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
     ChocoboStance                   = "Healer"      --Options: Follow/Free/Defender/Healer/Attacker
-    ShouldAutoBuyGysahlGreens       = false          --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
+    ShouldAutoBuyGysahlGreens       = true          --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
 MountToUse                          = "mount roulette"       --The mount you'd like to use when flying between fates
 FatePriority                        = {"DistanceTeleport", "Progress", "DistanceTeleport", "Bonus", "TimeLeft", "Distance"}
 
@@ -109,7 +110,7 @@ CompletionToJoinBossFate            = 0             --If the boss fate has less 
 JoinCollectionsFates                = true          --Set to false if you never want to do collections fates
 BonusFatesOnly                      = false         --If true, will only do bonus fates and ignore everything else
 
-MeleeDist                           = 2.5            --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
+MeleeDist                           = 2.5           --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
 RangedDist                          = 20            --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
 
 RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath/None
@@ -120,7 +121,7 @@ RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath
     RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
     RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
     PercentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
-DodgingPlugin                       = "VBM"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
+DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
 
 IgnoreForlorns                      = false
     IgnoreBigForlornOnly            = false
@@ -133,19 +134,19 @@ DownTimeWaitAtNearestAetheryte      = false         --When waiting for fates to 
 EnableChangeInstance                = true          --should it Change Instance when there is no Fate (only works on DT fates)
     WaitIfBonusBuff                 = true          --Don't change instances if you have the Twist of Fate bonus buff
     NumberOfInstances               = 2
-ShouldExchangeBicolorGemstones      = false         --Should it exchange Bicolor Gemstone Vouchers?
+ShouldExchangeBicolorGemstones      = true         --Should it exchange Bicolor Gemstone Vouchers?
     ItemToPurchase                  = "Turali Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
-SelfRepair                          = true         --if false, will go to Limsa mender
+SelfRepair                          = false         --if false, will go to Limsa mender
     RepairAmount                    = 20            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
     ShouldAutoBuyDarkMatter         = true          --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
 ShouldExtractMateria                = true          --should it Extract Materia
-Retainers                           = false          --should it do Retainers
+Retainers                           = true          --should it do Retainers
 ShouldGrandCompanyTurnIn            = false         --should it do Turn ins at the GC (requires Deliveroo)
     InventorySlotsLeft              = 5             --how much inventory space before turning in
 
 Echo                                = "All"         --Options: All/Gems/None
 
-CompanionScriptMode                 = true         --Set to true if you are using the fate script with a companion script (such as the Atma Farmer)
+CompanionScriptMode                 = false         --Set to true if you are using the fate script with a companion script (such as the Atma Farmer)
 
 --#endregion Settings
 
