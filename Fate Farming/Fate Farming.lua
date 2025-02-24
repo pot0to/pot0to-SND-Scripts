@@ -128,13 +128,13 @@ IgnoreForlorns                      = false
 
 --Post Fate Settings
 MinWait                             = 3             --Min number of seconds it should wait until mounting up for next fate.
-MaxWait                             = 6             --Max number of seconds it should wait until mounting up for next fate.
+MaxWait                             = 10            --Max number of seconds it should wait until mounting up for next fate.
                                                         --Actual wait time will be a randomly generated number between MinWait and MaxWait.
 DownTimeWaitAtNearestAetheryte      = false         --When waiting for fates to pop, should you fly to the nearest Aetheryte and wait there?
 EnableChangeInstance                = true          --should it Change Instance when there is no Fate (only works on DT fates)
     WaitIfBonusBuff                 = true          --Don't change instances if you have the Twist of Fate bonus buff
     NumberOfInstances               = 2
-ShouldExchangeBicolorGemstones      = true         --Should it exchange Bicolor Gemstone Vouchers?
+ShouldExchangeBicolorGemstones      = true          --Should it exchange Bicolor Gemstone Vouchers?
     ItemToPurchase                  = "Turali Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
 SelfRepair                          = false         --if false, will go to Limsa mender
     RepairAmount                    = 20            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
@@ -2109,7 +2109,6 @@ function HandleUnexpectedCombat()
 
     if GetCharacterCondition(CharacterCondition.mounted) then
         if not (PathfindInProgress() or PathIsRunning()) then
-            yield("/echo Unexpected Combat Move 1")
             PathfindAndMoveTo(GetPlayerRawXPos(), GetPlayerRawYPos() + 10, GetPlayerRawZPos(), true)
         end
         yield("/wait 10")
@@ -2125,7 +2124,6 @@ function HandleUnexpectedCombat()
     if HasTarget() then
         if GetDistanceToTarget() > (MaxDistance + GetTargetHitboxRadius()) then
             if not (PathfindInProgress() or PathIsRunning()) then
-                yield("/echo Unexpected Combat Move 2")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying) and SelectedZone.flying)
             end
         else
@@ -2133,7 +2131,6 @@ function HandleUnexpectedCombat()
                 yield("/vnav stop")
             elseif not GetCharacterCondition(CharacterCondition.inCombat) then
                 --inch closer 3 seconds
-                yield("/echo Unexpected Combat Move 3")
                 PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.flying) and SelectedZone.flying)
                 yield("/wait 3")
             end
@@ -2265,16 +2262,14 @@ function DoFate()
             if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
                 if PathfindInProgress() or PathIsRunning() then
                     yield("/vnav stop")
-                    yield("/wait 5.002") -- wait 5s before inching any closer                           --Allison: If wait for casting, then should just check for casting
+                    yield("/wait 5.002") -- wait 5s before inching any closer
                 elseif (GetDistanceToTarget() > (1 + GetTargetHitboxRadius())) and not GetCharacterCondition(CharacterCondition.casting) then -- never move into hitbox
-                    yield("/echo Move 1")
                     PathfindAndMoveTo(x, y, z)
                     yield("/wait 1") -- inch closer by 1s
                 end
             elseif not (PathfindInProgress() or PathIsRunning()) then
                 yield("/wait 5.003") -- give 5s for enemy AoE casts to go off before attempting to move closer
                 if (x ~= 0 and z~=0 and not GetCharacterCondition(CharacterCondition.inCombat)) and not GetCharacterCondition(CharacterCondition.casting) then
-                    yield("/echo Move 2")
                     PathfindAndMoveTo(x, y, z)
                 end
             end
@@ -2283,7 +2278,6 @@ function DoFate()
             TargetClosestFateEnemy()
             yield("/wait 1") -- wait in case target doesn't stick
             if (not HasTarget()) and not GetCharacterCondition(CharacterCondition.casting) then
-                yield("/echo Move 3")
                 PathfindAndMoveTo(CurrentFate.x, CurrentFate.y, CurrentFate.z)
             end
         end
@@ -2297,7 +2291,6 @@ function DoFate()
                 yield("/wait 5.004")
                 local x,y,z = GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos()
                 if (x ~= 0 and z~=0)  and not GetCharacterCondition(CharacterCondition.casting) then
-                    yield("/echo Move 4")
                     PathfindAndMoveTo(x,y,z, GetCharacterCondition(CharacterCondition.flying) and SelectedZone.flying)
                 end
             end
