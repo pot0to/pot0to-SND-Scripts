@@ -2398,7 +2398,7 @@ function Ready()
             else
                 LogInfo("[FATE] Waiting for fate rewards")
             end
-        elseif (not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget()) and DownTimeWaitAtNearestAetheryte > 20 then
+        elseif (not HasTarget() or GetTargetName() ~= "aetheryte" or GetDistanceToTarget() > 20) and DownTimeWaitAtNearestAetheryte then
             State = CharacterState.flyBackToAetheryte
             LogInfo("[FATE] State Change: FlyBackToAetheryte")
         else
