@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.2.1                                 *
+*                               Version 1.2.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
-    ->  1.2.1   Force AutoHook to swap baits
+    ->  1.2.2   Fixed stuck checks
+                Force AutoHook to swap baits
                 Credit: anon. Turned off bait purchase if fishing option is
                     turned off, reworked how next node is selected so certain
                     umbral nodes can be commented out, added silex and barbgrass
@@ -64,7 +65,7 @@ Retainers = true
 MaxWait = 10
 MinWait = 3
 
-SelectedRoute = "Random"
+SelectedRoute = "MinerSilex"
 -- Select which route you would like to do.
 -- Options are:
 -- "RedRoute"           -> MIN perception route, 8 node loop
@@ -85,7 +86,7 @@ TargetType = 1
 -- This will let you tell the script which target to use Aethercannon.
 -- Options : 0 | 1 | 2 | 3 (Option: 0 is don't use cannon, Option: 1 is any target, Option: 2 only sprites, Option: 3 is don't include sprites)
 
-PrioritizeUmbral = true
+PrioritizeUmbral = false
 DoFish = false -- If false will continuously leave and re-enter the diadem when finishing an Umbral Node to take advantage of the node reset, if true will go fish after finishing an Umbral Node while the window is up
 
 CapGP = true
@@ -801,7 +802,7 @@ function MoveToNextNode()
     elseif not NextNode.isUmbralNode and BotanistRoutes[RouteType] and GetClassJobId() ~= 17 then
         yield("/gs change Botanist")
         yield("/wait 3")
-    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) < 3 then
+    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) < 3 then -- hard enter gathering if soft gathering missed
         if NextNode.isFishingNode then
             State = CharacterState.fishing
             LogInfo("[UmbralGathering] State Change: Fishing")
@@ -811,20 +812,43 @@ function MoveToNextNode()
             LogInfo("[UmbralGathering] State Change: Gathering")
             return
         end
-    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) <= 20 then
+    elseif GetDistanceToPoint(NextNode.x, NextNode.y, NextNode.z) <= 20 then -- soft enter gathering upon approach to make target repathing more natural
         if not NextNode.isFishingNode then
             if HasTarget() and GetTargetName() == NextNode.nodeName then
-                PathfindAndMoveTo(GetTargetRawXPos(), GetTargetRawYPos(), GetTargetRawZPos(), GetCharacterCondition(CharacterCondition.mounted))
+                if GetCharacterCondition(CharacterCondition.mounted) then
+                        yield("/vnav flytarget")
+                else
+                    yield("/vnav movetarget")
+                end
+
                 State = CharacterState.gathering
                 LogInfo("[UmbralGathering] State Change: Gathering")
+                return
             else
                 yield("/target "..NextNode.nodeName)
             end
-            return
         end
-    elseif not (PathfindInProgress() or PathIsRunning())
-    then
+    elseif not (PathfindInProgress() or PathIsRunning()) then
         PathfindAndMoveTo(NextNode.x, NextNode.y, NextNode.z, true)
+    end
+
+    local now = os.clock()
+    if now - LastStuckCheckTime > 10 then
+        local x = GetPlayerRawXPos()
+        local y = GetPlayerRawYPos()
+        local z = GetPlayerRawZPos()
+
+        local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
+
+        if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
+            yield("/vnav stop")
+            yield("/wait 1")
+            LogInfo("[UmbralGathering] Antistuck")
+            PathfindAndMoveTo(randomX, y, randomZ)
+        end
+
+        LastStuckCheckTime = now
+        LastStuckCheckPosition = {x=x, y=y, z=z}
     end
 end
 --#endregion Movement
@@ -1081,16 +1105,15 @@ function FireCannon()
 
         local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
 
-        LastStuckCheckTime = now
-        LastStuckCheckPosition = {x=x, y=y, z=z}
-
         if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
             yield("/vnav stop")
             yield("/wait 1")
             LogInfo("[UmbralGathering] Antistuck")
             PathfindAndMoveTo(randomX, y, randomZ)
-            return
         end
+
+        LastStuckCheckTime = now
+        LastStuckCheckPosition = {x=x, y=y, z=z}
     end
 
     if not HasTarget() then

@@ -113,7 +113,8 @@ AlliedSocietiesTable =
         y = -48.00,
         z = -171.64,
         zoneId = 398,
-        aetheryteName = "Tailfeather"
+        aetheryteName = "Tailfeather",
+        preset = "qst:v1:MjI1NTsyMjU2OzIyNTc7MjI1ODsyMjYwOzIyNjE7MjI2MjsyMjYzOzIyNjQ7MjI2NTsyMjY2OzIyNjc7MjI2ODsyMjY5OzIyNzA7MjI3MTsyMjcyOzIyNzM7MjI3NDsyMjc1OzIyNzY7MjI3NzsyMjc4OzIyNzk7MjI4MA=="
     },
     moogles = {
         alliedSocietyName = "Moogles",
