@@ -9,12 +9,13 @@ automatically teleport you to the correct zone, fly over, dig, kill enemies,
 and open the chest. It will NOT do portals for you.
 
 ********************************************************************************
-*                               Version 1.1.0                                  *
+*                               Version 1.1.1                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
-    ->  1.1.0   Added ability to go to Dravanian Hinterlands via Idyllshire
+    ->  1.1.1   Fixed some wait times related to Dravanian Hinterland tp
+                Added ability to go to Dravanian Hinterlands via Idyllshire
                 First release
 
 ********************************************************************************
@@ -105,9 +106,11 @@ function GoToMapLocation()
                 else
                     yield("/vnav stop")
                     yield("/li Western Hinterlands")
+                    yield("/wait 3")
                     while LifestreamIsBusy() do
                         yield("/wait 1")
                     end
+                    yield("/wait 3")
                     while GetCharacterCondition(CharacterCondition.betweenAreas) or GetCharacterCondition(CharacterCondition.betweenAreas51) do
                         LogInfo("[TreasureHuntHelper] Between areas...")
                         yield("/wait 1")
@@ -135,6 +138,12 @@ end
 
 DidMap = false
 function Main()
+    if IsAddonVisible("_TextError") and GetNodeText("_TextError", 1) == "You do not possess a treasure map." then
+        yield("/echo You do not possess a treasure map.")
+        StopFlag = true
+        return
+    end
+
     if GetCharacterCondition(CharacterCondition.inCombat) and not HasTarget() then
         yield("/battletarget")
         return
@@ -144,6 +153,9 @@ function Main()
     end
 
     yield("/tmap")
+    repeat
+        yield("/wait 1")
+    until IsAddonVisible("AreaMap")
 
     if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 5 then
         GoToMapLocation()
