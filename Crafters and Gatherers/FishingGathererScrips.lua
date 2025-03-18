@@ -80,6 +80,48 @@ ScripExchangeItems = {
         listIndex = 0,
         price = 20
     },
+    {
+        itemName = "Gatherer's Guerdon Materia XI",
+        categoryMenu = 5,
+        subcategoryMenu = 1,
+        listIndex = 0,
+        price = 250
+    },
+    {
+        itemName = "Gatherer's Guile Materia XI",
+        categoryMenu = 5,
+        subcategoryMenu = 1,
+        listIndex = 1,
+        price = 250
+    },
+    {
+        itemName = "Gatherer's Grasp Materia XI",
+        categoryMenu = 5,
+        subcategoryMenu = 1,
+        listIndex = 2,
+        price = 250
+    },
+    {
+        itemName = "Gatherer's Guerdon Materia XII",
+        categoryMenu = 5,
+        subcategoryMenu = 2,
+        listIndex = 0,
+        price = 500
+    },
+    {
+        itemName = "Gatherer's Guile Materia XII",
+        categoryMenu = 5,
+        subcategoryMenu = 2,
+        listIndex = 1,
+        price = 500
+    },
+    {
+        itemName = "Gatherer's Grasp Materia XII",
+        categoryMenu = 5,
+        subcategoryMenu = 2,
+        listIndex = 2,
+        price = 500
+    },
 }
 
 FishTable =
