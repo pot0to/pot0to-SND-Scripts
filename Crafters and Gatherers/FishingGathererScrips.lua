@@ -81,6 +81,48 @@ ScripExchangeItems = {
         listIndex = 0,
         price = 20
     },
+    {
+        itemName = "Gatherer's Guerdon Materia XI",
+        categoryMenu = 5,
+        subcategoryMenu = 1,
+        listIndex = 0,
+        price = 250
+    },
+    {
+        itemName = "Gatherer's Guile Materia XI",
+        categoryMenu = 5,
+        subcategoryMenu = 1,
+        listIndex = 1,
+        price = 250
+    },
+    {
+        itemName = "Gatherer's Grasp Materia XI",
+        categoryMenu = 5,
+        subcategoryMenu = 1,
+        listIndex = 2,
+        price = 250
+    },
+    {
+        itemName = "Gatherer's Guerdon Materia XII",
+        categoryMenu = 5,
+        subcategoryMenu = 2,
+        listIndex = 0,
+        price = 500
+    },
+    {
+        itemName = "Gatherer's Guile Materia XII",
+        categoryMenu = 5,
+        subcategoryMenu = 2,
+        listIndex = 1,
+        price = 500
+    },
+    {
+        itemName = "Gatherer's Grasp Materia XII",
+        categoryMenu = 5,
+        subcategoryMenu = 2,
+        listIndex = 2,
+        price = 500
+    },
 }
 
 FishTable =
@@ -112,7 +154,7 @@ FishTable =
         baitName = "Versatile Lure",
         zoneId = 959,
         zoneName = "Mare Lamentorum",
-        autohookPreset = "AH4_H4sIAAAAAAAACu1YS1PjOBD+K5TP8VRsS35wCxlgqQoMRcLuYWoPst1OVDhWRpZZ2Cn++7T8SOzEIVNThOLAhTIt6euHvm5156cxKpQYs1zl42RunP40zjMWpjBKU+NUyQIGhl6c8Aw2i3GzdIVfth8MjFvJheTq2Ti1UJqfP0VpEUO8Eev9LxXWtRDRQoOVH7b+KnFcf2BcrmYLCflCpCixhsMO8uvQJUbgdU4MDxozXhTLxgJiDckBE5pTIk0hUnsigjhW+5R92AohY87S0pDsEWQj6G4e9CmzbNcNtqwmXau7To1C8Yh3mbA0b9Rf8Hxx/gx5KxB0C5LSDqTb3CV7gOmCJ+qM8TIcWpA3gqli0QOiIlh9w7u4bdSgRr1likMW7WMcmuduw7jde7IbJMn/hzFTFeEaI7ZP21u37NSnZwuWcvaQX7BHITVAR9B45wy68juIMMK439Ix68sYNGGbaE7HgCa8Z3x+yZZlHEbZPAWZN0o1p/Qxb0h2vOlA+S+Idf6kJKvzW1/MTEz/Y6urTBVccZFdMp418TGRupNCwjXkOZujasMYGDelEcaNwCowqBCeVyjRgerBm4hc/THeLToC/RYaprFnvdJYrm/sma4wRyVLx4WUkKk38nIL9c187bV2x+Ne7eWuCyEjKLMOtzV0K4Wxltbl0cICWVFpqsRKJz7P5lMFeMJqe1nTbSTfxrk2XGntfcZ/FKBxDcvGfHatoZlAbJuEhK4ZONQyLUaH1CaebTNiIN6E5+pbonUg/79XRNYOrDO78m6fjX+jfqwrKZzoHRrwRsglS/8S4kFDNEXnH2Dl/1qO9q/ztyyYTT7Xi+1Qa9GML0FuZfw1z9ZL+hH7gjZes6e2LPiChaKGrOJHLE8Xw8amqZIia73Ox1c/dFrqJzCHLGby+QPEpTTsqygQ6sBNvali2w3Weje3cTQVvxPxIyifSb5657h61HbWmo8V2Y6S949trV5X3FGiQI5ZMV9gT73UPROW1b5SXHbdWKjKpkx/tNqN6uWnwW632n36X+k7dcPcPJ5NBbyDHwWXEKMmVei2TXfkfWXx+GXuXavZZ3X6rE6f1emDVadWgxiROGAhdc0kTGKTAFhmCBaYQ9tlxI6SmMTUePm36RDr3xe+rwVVk4gdY7tbdFziOfu7xYsUQKHHJ2eSZXGnt7X2BkvPe1cxtuU8wg4dQ6SVfcvS5/sc7rMY5GawbX5a0adHS1FkrYD3jbw02B7zHK3tq8jUmCFiWntdv1+bePra2kImDMtrqruyesSnAT0wBVM8+WF+q9lMJn88j+jDWjLW0S4D3Z5Q6rlEf1bizbbdBBh2+OkmNrhOAGbo+Z5JfMs3fY8kJrWtwA89iDxPDzC7/KP7PbiDuVCC5/Cb1LN6mNfPrtfo9Cpt+mnZy6LDtPxk1352dcgFDiUe82Mz8JLAJF5IzdCNfZyOQz+0me97iVUWv4q1veXrxDy5LSS2vifTCFvgvDt/+0no+K6fmCyxQpMwykzmMYp/qE9iIISyyHj5BQWv79UpFgAA",
+        autohookPreset = "AH4_H4sIAAAAAAAACu1YTVPjOBD9K5TP8ZS/bXELGWCpCgxFwu5hag+K3U5UOFZGllnYKf77tGwrsROHTE0RigM3py29/tBT+3V+GsNS8hEtZDFK58bpT+M8p7MMhllmnEpRwsBQL8csh83LRL+6wicnIgPjVjAumHw2Tm20FudPcVYmkGzMav1LjXXNebxQYNWDo54qnCAaGJer6UJAseAZWmzL6iC/Dl1hkLCzwzoYzGhRLnUEnm15B0LQu3iWQSz3VARx7PYu53AUXCSMZlUg+SMIbeguHvQ5s50gIFtRe92ou0kNZ/wRzzKlWaHdX7Bicf4MRasQ/hak73cgA32W9AEmC5bKM8qqcihDoQ0TSeMHREWw5oR3cduopEG9pZJBHu9jHIYXbMME3XNyNJJg/8OIyppwOojt3c7WKbvN7umCZow+FBf0kQsF0DHo7NxB134HMVYY19uqZn03BkPYJprbCUCX94zNL+myqsMwn2cgCu1UcUptCy1vJ5sOVPSCWOdPUtDmfquDmfLJf3R1lcuSScbzS8pyXR8TqTsuBVxDUdA5ujaMgXFTBWHccOwCgxrheYUWVagevDEv5B/j3WIi0B+hYRp73tceq/ebeCYrvKOCZqNSCMjlG2W5hfpmufZGu5Nxr/dq1QUXMVS3DpdpulXGRFmb9mhjg6ypNJF8pS4+y+cTCbjDbmfZ0G0o3ia5NlwV7X3OfpSgcA3iOjQEyzMdElumF6SOSfzANS3iOb6b2mmUOAbijVkhv6XKB/L/e01klcD6ZtfZ7Yvxb/SPfSWDE7VCAd5wsaTZX5w/KAjddP4BWv1Wdox/fX+rhqnvc/OyXWplmrIliK0bf83y9Sv1EfuCMV7Tp7aNfMFG0UDW9fPsUDVDHdNECp63vs7Hd2+5LfdjmEOeUPH8AepSBfaVlwh14KTe1LETkLXfzWkczcXvVPwIzqeCrd65rqHvuGvPx6psx8n711a7xxW8RM30pCSHWqZ68DCVIEa0nC9QZS+VisJG29ecKx2OrauSaeqhJUBqLeCTXf3aFQOvKFElofXnVPfEO/hRMgEJepKlEnJKo/c1yuM3vnftb5/96rNfffarD9ad2pLRjokTOLHpzMBByQixSSIvMiPHBuLOXC+CmfHyr9aMzT8O39eGWjaihmzrRzfwQne/frzIACRmfHImaJ501K69t1hqArxKUKizGDU7lkg5+5Znz/cF3OcJiM2oq/9sUbuHS17mrYL3DcE+2R78XOXtK8/liCJi1mTdfNE29YxUtKVIKbbXTOm0Zuj3iX9gLvZx54f592Yzq/zxhKI2K8tIVbsqdHtmaSYV9VibN8t2L4DV4SekLtA4Sk0IrdT0EhxuZkCQpJAEbhTQgEYRTiC7/PP3Z3AHcy45K+A3qWf3MK+fXa/R6VXa9NOyl0WHafnJrv3s6pAr9KiTBkFiztw4ML04IiaxPcukgQWJ68dBQurmV7O2t32dmCe3pUAxfDKJURQX3Ync9jybBHFo2mGM7ZXYIbbXNDEpsZyZP6OEhIHx8gtuKGkNOxYAAA==",
         fishingSpots = {
             maxHeight = 35,
             waypoints = {
