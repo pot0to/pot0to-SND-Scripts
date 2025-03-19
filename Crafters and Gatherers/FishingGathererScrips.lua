@@ -1,13 +1,14 @@
 --[[
 ********************************************************************************
 *                            Fishing Gatherer Scrips                           *
-*                                Version 1.4.8                                 *
+*                                Version 1.4.9                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Loosely based on Ahernika's NonStopFisher
 
-    -> 1.4.8    Abort old attempts at amiss checks, just set a timer for how
+    -> 1.4.9    Remove the whole "false if none" part
+                Abort old attempts at amiss checks, just set a timer for how
                     long you want to stay in current instance
                 Added another /wait 1 to scrip exchange
                 Updating amiss to _FlyText instead of _TextError
@@ -43,8 +44,8 @@ GrandCompanyTurnIn                  = true      --If true, will do GC deliveries
 ReturnToGCTown                      = true      --if true will use fast return to GC town for retainers and scrip exchange (that assumes you set return location to your gc town else turn it false), else falase
 --needs a yesalready set up like "/Return to New Gridania/"
 
-Food                                = ""        --what food to eat (false if none)
-Potion                              = "Superior Spiritbond Potion <hq>"     --what potion to use (false if none)
+Food                                = ""        --what food to eat
+Potion                              = "Superior Spiritbond Potion <hq>"     --what potion to use
 
 --things you want to enable
 ExtractMateria                      = true      --If true, will extract materia if possible

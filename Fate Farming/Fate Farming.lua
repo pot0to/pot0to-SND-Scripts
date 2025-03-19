@@ -95,8 +95,8 @@ RangedDist                          = 20            --Distance for ranged. Range
 RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath/None
     RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
 
-    -- For BMR/VBM only
-    RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns).
+    -- For BMR/VBM/Wrath
+    RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns). TURN OFF AUTOMATIC TARGETING FOR THIS PRESET
     RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
     RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
     PercentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
@@ -2785,37 +2785,42 @@ if ShouldSummonChocobo and GetBuddyTimeRemaining() > 0 then
 end
 
 while not StopScript do
-    if NavIsReady() then
-        if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
-            State = CharacterState.dead
-            LogInfo("[FATE] State Change: Dead")
-        elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate and
-            State ~= CharacterState.waitForContinuation and State ~= CharacterState.collectionsFateTurnIn and
-            (not IsInFate() or (IsInFate() and IsCollectionsFate(GetFateName(GetNearestFate())) and GetFateProgress(GetNearestFate()) == 100)) and
-            GetCharacterCondition(CharacterCondition.inCombat)
-        then
-            State = CharacterState.unexpectedCombat
-            LogInfo("[FATE] State Change: UnexpectedCombat")
-        end
-        
-        BicolorGemCount = GetItemCount(26807)
+    if not NavIsReady() then
+        yield("/echo [FATE] Waiting for vnavmesh to build...")
+        LogInfo("[FATE] Waiting for vnavmesh to build...")
+        repeat
+            yield("/wait 1")
+        until NavIsReady()
+    end
+    if State ~= CharacterState.dead and GetCharacterCondition(CharacterCondition.dead) then
+        State = CharacterState.dead
+        LogInfo("[FATE] State Change: Dead")
+    elseif State ~= CharacterState.unexpectedCombat and State ~= CharacterState.doFate and
+        State ~= CharacterState.waitForContinuation and State ~= CharacterState.collectionsFateTurnIn and
+        (not IsInFate() or (IsInFate() and IsCollectionsFate(GetFateName(GetNearestFate())) and GetFateProgress(GetNearestFate()) == 100)) and
+        GetCharacterCondition(CharacterCondition.inCombat)
+    then
+        State = CharacterState.unexpectedCombat
+        LogInfo("[FATE] State Change: UnexpectedCombat")
+    end
+    
+    BicolorGemCount = GetItemCount(26807)
 
-        if not (IsPlayerCasting() or
-            GetCharacterCondition(CharacterCondition.betweenAreas) or
-            GetCharacterCondition(CharacterCondition.jumping48) or
-            GetCharacterCondition(CharacterCondition.jumping61) or
-            GetCharacterCondition(CharacterCondition.mounting57) or
-            GetCharacterCondition(CharacterCondition.mounting64) or
-            GetCharacterCondition(CharacterCondition.beingMoved) or
-            GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
-            LifestreamIsBusy())
-        then
-            if WaitingForFateRewards ~= 0 and not IsFateActive(WaitingForFateRewards) then
-                WaitingForFateRewards = 0
-                LogInfo("[FATE] WaitingForFateRewards: "..tostring(WaitingForFateRewards))
-            end
-            State()
+    if not (IsPlayerCasting() or
+        GetCharacterCondition(CharacterCondition.betweenAreas) or
+        GetCharacterCondition(CharacterCondition.jumping48) or
+        GetCharacterCondition(CharacterCondition.jumping61) or
+        GetCharacterCondition(CharacterCondition.mounting57) or
+        GetCharacterCondition(CharacterCondition.mounting64) or
+        GetCharacterCondition(CharacterCondition.beingMoved) or
+        GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
+        LifestreamIsBusy())
+    then
+        if WaitingForFateRewards ~= 0 and not IsFateActive(WaitingForFateRewards) then
+            WaitingForFateRewards = 0
+            LogInfo("[FATE] WaitingForFateRewards: "..tostring(WaitingForFateRewards))
         end
+        State()
     end
     yield("/wait 0.1")
 end

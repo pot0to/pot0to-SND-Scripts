@@ -50,7 +50,7 @@ and are meant to give you more control over different fate farming scenarios.
 Let's take the `Atma Farming.lua` script as an example.
 
 1. Set up both `Atma Farming.lua` and `Fate Farming.lua` as macros in your your SND.
-2. Make sure that the `CompanionScriptMode` setting in `Fate Farming.lua` is set to `true`
+2. Make sure that the `CompanionScriptMode` setting in `Fate Farming.lua` is set to `true`. Optional: You may also with to turn off `WaitIfBonusBuff`.
 3. Make sure the `FateMacro` setting in `Atma Farming.lua` matches whatever you named your fate macro
 4. Hit play on `Atma Farming.lua`
 
