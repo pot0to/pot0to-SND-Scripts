@@ -19,7 +19,7 @@ Please download Godbert (https://github.com/ufx/SaintCoinach/releases) and
 search through the "Item" page to find the item codes.
 ]]
 
-PackName = "Platinum Triad Card"
+PackName = "Gold Triad Card"
 PackId = 10077
 ShopSlot = 38
 CardsToLookFor = {
