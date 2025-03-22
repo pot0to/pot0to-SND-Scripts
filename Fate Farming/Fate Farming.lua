@@ -2,12 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.9                                 *
+*                               Version 2.21.10                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
+Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
+    -> 2.21.10  Fix call to vbmai preset
     -> 2.21.9   By Allison
                 Added priority for checking distance to FATE accounting for a
                     possible lower distance if you teleported.
@@ -26,27 +28,6 @@ State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/Fa
                 New extra checks in movement to prevent cast cancelling.
                 May have messed something up when pushed out of the fate.
                 Fixed typo with "should it to Turn" -> "should it do Turn"
-        
-    -> 2.21.8   Added logic to change back to original class upon natural ending
-                    of script for companion mode
-                Fixed typo with "PorcentageToHoldBuff"
-                Fixed the part where you walk back to center after FATE is done
-                Removed jumps
-                Fix for change instances companion script
-                Adjusted landing logic so hopefully it shouldn't get stuck too
-                    high up anymore
-                Added ability to only do bonus fates
-                Adjusted coordinates for Old Sharlayan bicolor gemstone vendor
-                Support for multi-zone farming
-                Added some thanalan npc fates
-                Cleanup for Yak'tel fates and landing condition when flying back
-                    to aetheryte
-                Added height limit check for flying  back to aetheryte
-                Rework bicolor exchange
-                Added checks and debugs for bicolor gemstone shopkeeper
-                Fixed flying ban in Outer La Noscea and Southern Thanalan
-                Added feature to walk towards center of fate if you are too far
-                    away to target the collections fate npc
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -2020,8 +2001,10 @@ function TurnOnCombatMods(rotationMode)
                 yield("/rotation auto on")
                 LogInfo("[FATE] TurnOnCombatMods /rotation auto on")
             end
-        elseif RotationPlugin == "BMR" or RotationPlugin == "VBM" then
+        elseif RotationPlugin == "BMR" then
             yield("/bmrai setpresetname "..RotationAoePreset)
+        elseif RotationPlugin == "VBM" then
+            yield("/vbmai setpresetname "..RotationAoePreset)
         elseif RotationPlugin == "Wrath" then
             yield("/wrath auto on")
         end
