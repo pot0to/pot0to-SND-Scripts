@@ -119,18 +119,15 @@ function HasMapAllowance()
 end
 
 function Gather()
-    yield("/echo gathering")
     if LifestreamIsBusy() then
         return
     end
 
     if GetItemCount(MapInfo.itemId) > 0 then
-        yield("/echo Acquired map.")
         State = CharacterState.ready
         return
     end
 
-    yield("/echo gathering")
     if not GBRAutoOn then
         yield("/gbr auto on")
         GBRAutoOn = true
@@ -143,7 +140,6 @@ function MailMap()
         return
     end
 
-    yield("/echo mailing")
     if GetItemCount(MapInfo.itemId) == 0 then
         if IsAddonVisible("LetterList") then
             yield("/callback LetterList true -1")
@@ -205,20 +201,16 @@ function MailMap()
 end
 
 function SwapCharacters()
-    yield("/echo swapping")
     if GBRAutoOn then
         yield("/gbr auto off")
         GBRAutoOn = false
     end
-
-    yield("/echo swapping characters")
     yield("/ays multi d")
     yield("/ays disable")
 	for i=1, #Characters do
 		if Characters[i].visited == nil then
 			Characters[i].visited = true
 			local nextCharacterName = Characters[i].characterName.."@"..Characters[i].worldName
-            yield("/echo "..nextCharacterName)
 			if GetCharacterName(true) ~= nextCharacterName then
 				yield("/ays relog "..nextCharacterName)
 				-- yield("/wait 3")
@@ -236,7 +228,6 @@ function SwapCharacters()
 end
 
 function Ready()
-    yield("/echo ready")
     if IsAddonVisible("Gathering") then
         yield("/callback Gathering true -1")
         return

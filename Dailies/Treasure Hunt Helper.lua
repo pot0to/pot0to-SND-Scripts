@@ -157,8 +157,11 @@ function Main()
         yield("/wait 1")
     until IsAddonVisible("AreaMap")
 
-    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 5 then
+    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 15 then
         GoToMapLocation()
+        return
+    elseif PathfindInProgress() or PathIsRunning() then
+        yield("/vnav stop")
         return
     end
 
