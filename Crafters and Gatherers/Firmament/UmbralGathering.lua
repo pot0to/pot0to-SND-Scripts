@@ -8,12 +8,13 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.2.2                                 *
+*                               Version 1.2.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
-    ->  1.2.2   Fixed stuck checks
+    ->  1.2.3   Skip fire cannon if stuck (try again after next node)
+                Fixed stuck checks
                 Force AutoHook to swap baits
                 Credit: anon. Turned off bait purchase if fishing option is
                     turned off, reworked how next node is selected so certain
@@ -1103,17 +1104,19 @@ function FireCannon()
         local y = GetPlayerRawYPos()
         local z = GetPlayerRawZPos()
 
-        local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
+        -- local randomX, _, randomZ = RandomAdjustCoordinates(x, y, z, 10)
 
         if GetDistanceToPoint(LastStuckCheckPosition.x, LastStuckCheckPosition.y, LastStuckCheckPosition.z) < 3 then
             yield("/vnav stop")
             yield("/wait 1")
-            LogInfo("[UmbralGathering] Antistuck")
-            PathfindAndMoveTo(randomX, y, randomZ)
+            LogInfo("[UmbralGathering] Antistuck: MoveToNextNode")
+            State = CharacterState.moveToNextNode
+            -- PathfindAndMoveTo(randomX, y, randomZ)
         end
 
         LastStuckCheckTime = now
         LastStuckCheckPosition = {x=x, y=y, z=z}
+        return
     end
 
     if not HasTarget() then
