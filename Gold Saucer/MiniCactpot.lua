@@ -38,7 +38,11 @@ end
 local Npc = { name = "Mini Cactpot Broker", x=-50, y=1, z=22 }
 RewardClaimed = false
 function GoToCashier()
-    
+    if GetDistanceToPoint(-1, 3, -1) <= 8 and PathIsRunning() then
+        yield("/gaction jump")
+        yield("/wait 3")
+        return
+    end
 
     if GetDistanceToPoint(Npc.x, Npc.y, Npc.z) > 5 then
         if not PathfindInProgress() and not PathIsRunning() then
