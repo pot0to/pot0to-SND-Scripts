@@ -71,6 +71,7 @@ function GoToCompanyWorkshop()
         yield("/target \"Entrance to Additional Chambers\"")
         yield("/wait 0.5")
         if GetTargetName() == "Entrance to Additional Chambers" then
+            FC = GetZoneID()
             if GetDistanceToTarget() > 3 then
                 if not PathfindInProgress() and not PathIsRunning() then
                     yield("/vnav movetarget")
@@ -84,6 +85,7 @@ function GoToCompanyWorkshop()
                     yield("/callback SelectString true 0")
                 else
                     yield("/interact")
+                    yield("/wait 1")
                 end
             end
         else
