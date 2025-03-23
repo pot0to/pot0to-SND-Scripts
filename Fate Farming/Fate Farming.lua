@@ -1948,7 +1948,7 @@ function TurnOnAoes()
         elseif RotationPlugin == "BMR" then
             yield("/bmrai setpresetname "..RotationAoePreset)
         elseif RotationPlugin == "VBM" then
-            yield("/vbmai setpresetname "..RotationAoePreset)
+            yield("/vbm ar toggle "..RotationAoePreset)
         end
         AoesOn = true
     end
@@ -1963,7 +1963,7 @@ function TurnOffAoes()
         elseif RotationPlugin == "BMR" then
             yield("/bmrai setpresetname "..RotationSingleTargetPreset)
         elseif RotationPlugin == "VBM" then
-            yield("/vbmai setpresetname "..RotationSingleTargetPreset)
+            yield("/vbm ar toggle "..RotationSingleTargetPreset)
         end
         AoesOn = false
     end
@@ -1974,7 +1974,7 @@ function TurnOffRaidBuffs()
         if RotationPlugin == "BMR" then
             yield("/bmrai setpresetname "..RotationHoldBuffPreset)
         elseif RotationPlugin == "VBM" then
-            yield("/vbmai setpresetname "..RotationHoldBuffPreset)
+            yield("/vbm ar toggle "..RotationHoldBuffPreset)
         end
     end
 end
@@ -2004,7 +2004,7 @@ function TurnOnCombatMods(rotationMode)
         elseif RotationPlugin == "BMR" then
             yield("/bmrai setpresetname "..RotationAoePreset)
         elseif RotationPlugin == "VBM" then
-            yield("/vbmai setpresetname "..RotationAoePreset)
+            yield("/vbm ar toggle "..RotationAoePreset)
         elseif RotationPlugin == "Wrath" then
             yield("/wrath auto on")
         end
@@ -2057,6 +2057,7 @@ function TurnOffCombatMods()
                 yield("/bmrai followcombat off")
                 yield("/bmrai followoutofcombat off")
             elseif DodgingPlugin == "VBM" then
+                yield("/vbm ar disable")
                 yield("/vbmai off")
                 yield("/vbmai followtarget off")
                 yield("/vbmai followcombat off")
