@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Island Sanctuary Dailies                           *
-*                                Version 0.0.6                                 *
+*                                Version 0.0.7                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -257,6 +257,7 @@ function CollectGarden()
 end
 
 PathToFurball = "H4sIAAAAAAAACu1WTY/TMBD9K5XPIYodO4lzQ2VbFbRL2S0qLOLgEreJlHiK44BWVf874yT7UeDAFbW+eN6TPfM8ebJzIDeq0SQnS+XKyuwmWwvNZK5sYbSdOJjMOrtRdU0CMrfQ7XHlR7PzkS6QmwEUJI8Ccq1Mp+o+XCm7026O+bRdON305Fo97KEyriX5lwNZQlu5CgzJD+QTyV8xIcNMsiQNyGeSCxFSiQPRPckpj8JYCkGPCMHoxRvkIiECcquKqsOEcegFwA/daONIzoL+MNvKoDRnOx2QhXHaqm9uXbnyvU8QnXJjD8gp+5vKyJdBef18388oqS3h5+MmXItytqpuX9TsE9CAXDXg9GNtbMsYvu5XjOBDp1v3Mr7T34f2wmak7xzsp2CKURky76q6nkLnj47oFjqnn88zLZWbQtMo3wxPeL1rVblnoR7NwJ4m9eSqavR1ewKvVn82A5uwaJelMg6ap6T+C5DcdHWNxumtgOZaPexRlpR+ww0U+mm1B29hg+mOwV/cEcmQpVzwviIXYcwzniaDO5IoTGQiL+44X3dkYUoFZYM7WJgyyTgf3JElIac0yy53x7m6I8G7I2JcDO7Akn4M7mAxviw0SsTFHWfsjjiVcTK4g44vO6MY8Zj/86OC4PLL8d8a4+vxFx+sRHEGCwAA"
+TalkedToFurball = false
 function TalkToFurball()
     local npc = Locations.sanctuary.furball
     if GetDistanceToPoint(npc.x, npc.y, npc.z) > 20 then
@@ -278,11 +279,15 @@ function TalkToFurball()
         yield("/ac dismount")
         yield("/wait 1")
     elseif not GetCharacterCondition(CharacterCondition.occupiedInQuestEvent) then
-        yield("/interact")
+        if TalkedToFurball then
+            State = CharacterState.export
+            LogInfo("[IslandSanctuary] State Change: Export")
+        else
+            yield("/interact")
+        end
     elseif IsAddonVisible("SelectString") then
+        TalkedToFurball = true
         yield("/callback SelectString true 2")
-        State = CharacterState.export
-        LogInfo("[IslandSanctuary] State Change: Export")
     end
 end
 
