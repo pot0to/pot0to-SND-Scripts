@@ -27,7 +27,7 @@ function Teleport(aetheryteName)
     end
 end
 
-function Start()
+function StartTripleTriad()
     if not IsInZone(144) then
         Teleport("Gold Saucer")
     else
@@ -96,14 +96,14 @@ end
 
 CharacterStates =
 {
-    start = Start,
+    startTripleTriad = StartTripleTriad,
     goToCashier = GoToCashier,
     playMiniCactpot = PlayMiniCactpot,
     endState = EndState
 }
 
 StopFlag = false
-State = CharacterStates.start
+State = CharacterStates.startTripleTriad
 yield("/at y")
 while not StopFlag do
     State()

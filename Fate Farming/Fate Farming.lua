@@ -2,13 +2,20 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.10                                 *
+*                               Version 2.21.11                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
+    -> 2.21.11  Added 1s wait after mount so you're firmly on the mount. Seems
+                    like some languages like Chinese execute log and echo
+                    messages faster than English, causing the next Pathfind step
+                    to happen too fast, before you are properly mounted, while
+                    you are in the middle of the jump. This forces vnav to give
+                    you a walking path, instead of a flying path, so you
+                    sometimes get stuck.
     -> 2.21.10  Fix call to vbmai preset
     -> 2.21.9   By Allison
                 Added priority for checking distance to FATE accounting for a
@@ -1502,6 +1509,7 @@ end
 
 function Mount()
     if GetCharacterCondition(CharacterCondition.mounted) then
+        yield("/wait 1") -- wait a second to make sure you're firmly on the mount
         State = CharacterState.moveToFate
         LogInfo("[FATE] State Change: MoveToFate")
     else
