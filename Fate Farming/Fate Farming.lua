@@ -289,7 +289,7 @@ BicolorExchangeData =
             { itemName = "Luncheon Toad Skin", itemIndex = 18, price = 2 },
             { itemName = "Saiga Hide", itemIndex = 19, price = 2 },
             { itemName = "Kumbhira Skin", itemIndex = 20, price = 2 },
-            { itemName = "OPhiotauros Hide", itemIndex = 21, price = 2 },
+            { itemName = "Ophiotauros Hide", itemIndex = 21, price = 2 },
             { itemName = "Berkanan Sap", itemIndex = 22, price = 2 },
             { itemName = "Dynamite Ash", itemIndex = 23, price = 2 },
             { itemName = "Lunatender Blossom", itemIndex = 24, price = 2 },
