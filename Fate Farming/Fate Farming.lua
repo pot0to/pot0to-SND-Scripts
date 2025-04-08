@@ -276,7 +276,25 @@ BicolorExchangeData =
         x=78, y=5, z=-37,
         shopItems =
         {
-            { itemName = "Bicolor Gemstone Voucher", itemIndex = 8, price = 100 }
+            { itemName = "Bicolor Gemstone Voucher", itemIndex = 8, price = 100 },
+            { itemName = "Ovibos Milk", itemIndex = 9, price = 2 },
+            { itemName = "Hamsa Tenderloin", itemIndex = 10, price = 2 },
+            { itemName = "Yakow Chuck", itemIndex = 11, price = 2 },
+            { itemName = "Bird of Elpis Breast", itemIndex = 12, price = 2 },
+            { itemName = "Egg of Elpis", itemIndex = 13, price = 2 },
+            { itemName = "Amra", itemIndex = 14, price = 2 },
+            { itemName = "Dynamis Crystal", itemIndex = 15, price = 2 },
+            { itemName = "Almasty Fur", itemIndex = 16, price = 2 },
+            { itemName = "Gaja Hide", itemIndex = 17, price = 2 },
+            { itemName = "Luncheon Toad Skin", itemIndex = 18, price = 2 },
+            { itemName = "Saiga Hide", itemIndex = 19, price = 2 },
+            { itemName = "Kumbhira Skin", itemIndex = 20, price = 2 },
+            { itemName = "Ophiotauros Hide", itemIndex = 21, price = 2 },
+            { itemName = "Berkanan Sap", itemIndex = 22, price = 2 },
+            { itemName = "Dynamite Ash", itemIndex = 23, price = 2 },
+            { itemName = "Lunatender Blossom", itemIndex = 24, price = 2 },
+            { itemName = "Mousse Flesh", itemIndex = 25, price = 2 },
+            { itemName = "Petalouda Scales", itemIndex = 26, price = 2 },
         }
     },
     {
@@ -292,7 +310,23 @@ BicolorExchangeData =
         shopItems =
         {
             { itemName = "Turali Bicolor Gemstone Voucher", itemIndex = 6, price = 100 },
-            { itemName = "Rroneek Chuck", itemIndex = 9, price = 3 }
+            { itemName = "Alpaca Fillet", itemIndex = 7, price = 3 },
+            { itemName = "Swampmonk Thigh", itemIndex = 8, price = 3 },
+            { itemName = "Rroneek Chuck", itemIndex = 9, price = 3 },
+            { itemName = "Megamaguey Pineapple", itemIndex = 10, price = 3 },
+            { itemName = "Branchbearer Fruit", itemIndex = 11, price = 3 },
+            { itemName = "Nopalitender Tuna", itemIndex = 12, price = 3 },
+            { itemName = "Rroneek Fleece", itemIndex = 13, price = 3 },
+            { itemName = "Silver Lobo Hide", itemIndex = 14, price = 3 },
+            { itemName = "Hammerhead Crocodile Skin", itemIndex = 15, price = 3 },
+            { itemName = "Br'aax Hide", itemIndex = 16, price = 3 },
+            { itemName = "Gomphotherium Skin", itemIndex = 17, price = 3 },
+            { itemName = "Gargantua Hide", itemIndex = 18, price = 3 },
+            { itemName = "Ty'aitya Wingblade", itemIndex = 19, price = 3 },
+            { itemName = "Poison Frog Secretions", itemIndex = 20, price = 3 },
+            { itemName = "Alexandrian Axe Beak Wing", itemIndex = 21, price = 3 },
+            { itemName = "Lesser Apollyon Shell", itemIndex = 22, price = 3 },
+            { itemName = "Tumbleclaw Weeds", itemIndex = 23, price = 3 },
         }
     }
 }
