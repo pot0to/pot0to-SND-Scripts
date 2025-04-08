@@ -155,6 +155,7 @@ for _, zone in ipairs(AllResidentialZones) do
     end
 end
 while ARSubsWaitingToBeProcessed() do
+    yield("/echo Subs waiting to be processed? "..tostring(ARSubsWaitingToBeProcessed()))
     if GetCharacterCondition(CharacterCondition.betweenAreas) then
         yield("/wait 1")
     elseif not IsInCompanyWorkshop() then

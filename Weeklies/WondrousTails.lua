@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                             Wondrous Tails Doer                              *
-*                                Version 0.2.1                                 *
+*                                Version 0.2.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -25,6 +25,7 @@ Alliance Raids/PVP/Treasure Maps/Palace of the Dead
 - Skips them all
 
 
+    -> 0.2.1    Duty names updated after patch 7.2
     -> 0.2.0    Fixes for ex trials
                 Update for patch 7.1
 
@@ -96,15 +97,17 @@ WonderousTailsDuties = {
         { dutyName="Eden's Gate", dutyId=849, minLevel=80 },
         { dutyName="Eden's Verse", dutyId=903, minLevel=80 },
         { dutyName="Eden's Promise", dutyId=942, minLevel=80 },
+        -- { dutyName="AAC Light-heavyweight M1 or M2", dutyId=1225, minLevel=100 },
+        -- { dutyName="AAC Light-heavyweight M3 or M4", dutyId=1229, minLevel=100 }
     },
     { -- type 5: leveling dungeons
         { dutyName="Leveling Dungeons (Lv. 1-49)", dutyId=172, minLevel=15 }, --The Aurum Vale
-        { dutyName="Leveling Dungeons (Lv. 51-79)", dutyId=434, minLevel=51 }, --The Dusk Vigil
-        { dutyName="Leveling Dungeons (Lv. 81-99)", dutyId=952, minLevel=81 }, --The Tower of Zot
+        { dutyName="Leveling Dungeons (Lv. 51-59/61-69/71-79)", dutyId=434, minLevel=51 }, --The Dusk Vigil
+        { dutyName="Leveling Dungeons (Lv. 81-89/91-99)", dutyId=952, minLevel=81 }, --The Tower of Zot
     },
     { -- type 6: expansion cap dungeons
-        { dutyName="High-level Dungeons (Lv. 50-60)", dutyId=362, minLevel=50 }, --Brayflox Longstop (Hard)
-        { dutyName="High-level Dungeons (Lv. 70-80)", dutyId=1146, minLevel=70 }, --Ala Mhigo
+        { dutyName="High-level Dungeons (Lv. 50 & 60)", dutyId=362, minLevel=50 }, --Brayflox Longstop (Hard)
+        { dutyName="High-level Dungeons (Lv. 70 & 80)", dutyId=1146, minLevel=70 }, --Ala Mhigo
         { dutyName="High-level Dungeons (Lv. 90)", dutyId=973, minLevel=90 }, --The Dead Ends
         
     },
