@@ -126,6 +126,15 @@ function GoToMapLocation()
 
     if not GetCharacterCondition(CharacterCondition.mounted) then
         yield('/gaction "mount roulette"')
+        yield("/wait 1")
+        repeat
+            yield("/wait 1")
+        until not GetCharacterCondition(CharacterCondition.casting)
+        yield("/wait 1")
+        repeat
+            yield("/wait 1")
+        until not GetCharacterCondition(CharacterCondition.jumping48)
+        yield("/wait 1")
         return
     end
     
