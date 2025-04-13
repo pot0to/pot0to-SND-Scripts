@@ -123,11 +123,21 @@ function PurchaseCeruleumTanks()
     if IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
     elseif IsAddonVisible("FreeCompanyCreditShop") then
-        yield("/callback FreeCompanyCreditShop true 0 99")
+        yield("/callback FreeCompanyCreditShop true 0 0 99")
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif GetTargetName() == "Mammet Voyager #004A" then
-        yield("/interact")
+        if GetDistanceToTarget() > 7 then
+            if not PathfindInProgress() and not PathIsRunning() then
+                yield("/vnav movetarget")
+            end
+        else
+            if PathfindInProgress() or PathIsRunning() then
+                yield("/vnav stop")
+            else
+                yield("/interact")
+            end
+        end
     else
         yield("/target Mammet Voyager #004A")
     end
