@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                    Crafter Scrips (Solution Nine Patch 7.1)                  *
-*                                Version 0.5.7                                 *
+*                                Version 0.5.6                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -10,7 +10,8 @@ Created by: pot0to (https://ko-fi.com/pot0to)
 Crafts orange scrip item matching whatever class you're on, turns it in, buys
 stuff, repeat.
 
-    -> 0.5.7    Added max purchase quantity check
+    -> 0.5.7    Add nil checks and logging to mats and crystals check
+                Added max purchase quantity check
                 Fixed purple scrip selector for turn in
                 Wait while Artisan Endurance is active, click menus once for
                     scrip exchange
@@ -376,18 +377,25 @@ function OutOfMaterials()
         local materialCountNQ = GetNodeText("RecipeNote", 18 + i, 8)
         local materialCountHQ = GetNodeText("RecipeNote", 18 + i, 5)
         local materialRequirement = GetNodeText("RecipeNote", 18 + i, 15)
-        if materialCountNQ ~= "" and materialCountHQ ~= "" and materialRequirement ~= "" then
+        if materialCountNQ ~= "" and materialCountHQ ~= "" and materialRequirement ~= "" and
+            materialCountNQ ~= nil and materialCountHQ ~= nil and materialRequirement ~= nil
+        then
+            LogInfo("[OrangeCrafters] materialCountNQ: "..materialCountNQ..", materialCountHQ: "..materialCountHQ..", materialRequirement: "..materialRequirement)
             if tonumber(materialCountNQ) + tonumber(materialCountHQ) < tonumber(materialRequirement) then
                 return true
             end
         end
     end
 
+    LogInfo("[Orange Crafters] Regular mats available. Checking crystals.")
+
     if OutOfCrystals() then
         yield("/echo Out of crystals. Stopping script.")
         StopFlag = true
         return true
     end
+
+    LogInfo("[Orange Crafters] All mats and crystals available.")
     return false
 end
 

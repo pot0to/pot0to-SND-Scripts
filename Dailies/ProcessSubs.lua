@@ -147,8 +147,50 @@ function CraftRepairKits()
     if ArtisanIsListRunning() then
         yield("/wait 3")
         return
+    elseif GetItemCount(10386) < 900 then -- purchase Grade 6 Dark Matter from estate Junkmonger
+        if IsInCompanyWorkshop() then
+            if IsAddonVisible("SelectYesno") then
+                yield("/callback SelectYesno true 0")
+            elseif GetTargetName() ~= "Stairway to Main Hall" then
+                yield("/target Stairway to Main Hall")
+            elseif GetDistanceToTarget() > 7 and not PathfindInProgress() and not PathIsRunning() then
+                yield("/vnav movetarget")
+            elseif PathIsRunning() or PathfindInProgress() then
+                yield("/vnav stop")
+            else
+                yield("/interact")
+            end
+        elseif GetCharacterCondition(CharacterCondition.betweenAreas) then
+            --wait
+        elseif IsInZone(FCZone) then
+            if GetTargetName() ~= "Entrance" then
+                yield("/target Entrance")
+            elseif GetDistanceToTarget() > 7 and not PathfindInProgress() and not PathIsRunning() then
+                yield("/vnav movetarget")
+            elseif PathIsRunning() or PathfindInProgress() then
+                yield("/vnav stop")
+            else
+                yield("/interact")
+            end
+        else
+            if IsAddonVisible("SelectYesno") then
+                yield("/callback SelectYesno true 0")
+            elseif IsAddonVisible("SelectIconString") then
+                yield("/callback SelectIconString true 1")
+            elseif IsAddonVisible("Shop") then
+                yield("/callback Shop true 0 5 99")
+            elseif GetTargetName() ~= "Junkmonger" then
+                yield("/target Junkmonger")
+            else
+                yield("/interact")
+            end
+        end
     else
-        yield("/artisan lists "..ArtisanMagitekRepairListId.." start")
+        if IsAddonVisible("Shop") then
+            yield("/callback Shop true -1")
+        else
+            yield("/artisan lists "..ArtisanMagitekRepairListId.." start")
+        end
     end
 end
 
@@ -165,15 +207,14 @@ for _, zone in ipairs(AllResidentialZones) do
     end
 end
 while ARSubsWaitingToBeProcessed() do
-    yield("/echo Subs waiting to be processed? "..tostring(ARSubsWaitingToBeProcessed()))
     if GetCharacterCondition(CharacterCondition.betweenAreas) then
         yield("/wait 1")
+    elseif GetItemCount(10373) < 24 then
+        CraftRepairKits()
     elseif not IsInCompanyWorkshop() then
         GoToCompanyWorkshop()
     elseif GetItemCount(10155) < 12 then
         PurchaseCeruleumTanks()
-    elseif GetItemCount(10373) < 24 then
-        CraftRepairKits()
     elseif IsInCompanyWorkshop() then
         yield("/target Voyage Control Panel")
         yield("/wait 0.5")

@@ -32,7 +32,11 @@ function Teleport(aetheryteName)
     end
 end
 
-function StartTripleTriad()
+function Start()
+    if LifestreamIsBusy() then
+        return
+    end
+
     if not IsInZone(144) then
         Teleport("Gold Saucer")
         return
@@ -105,14 +109,14 @@ end
 
 CharacterStates =
 {
-    startTripleTriad = StartTripleTriad,
+    start = Start,
     claimPrize = ClaimPrize,
     purchaseNewTickets = PurchaseNewTickets,
     endState = EndState
 }
 
 StopFlag = false
-State = CharacterStates.startTripleTriad
+State = CharacterStates.start
 yield("/at y")
 while not StopFlag do
     State()

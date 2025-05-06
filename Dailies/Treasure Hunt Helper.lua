@@ -134,12 +134,16 @@ function GoToMapLocation()
         repeat
             yield("/wait 1")
         until not GetCharacterCondition(CharacterCondition.jumping48)
-        yield("/wait 1")
+        yield("/wait 3")
+        LogInfo("[TreasureHuntHelper] Finished mounting.")
         return
     end
     
     if not PathfindInProgress() and not PathIsRunning() then
         yield("/vnav flyflag")
+        yield("/wait 1")
+    else
+        yield("/wait 3")
     end
 end
 
@@ -162,6 +166,7 @@ function Main()
     end
 
     yield("/tmap")
+    yield("/wait 1")
     repeat
         yield("/wait 1")
     until IsAddonVisible("AreaMap")

@@ -19,15 +19,17 @@ Description: Teleports to Gold Saucer, runs mini cactpot.
 
 function Teleport(aetheryteName)
     yield("/tp "..aetheryteName)
-    while not GetCharacterCondition(45) do
+    yield("/wait 1")
+    while GetCharacterCondition(27) do
         yield("/wait 0.1")
     end
+    yield("/wait 1")
     while GetCharacterCondition(45) do
         yield("/wait 0.1")
     end
 end
 
-function StartTripleTriad()
+function Ready()
     if not IsInZone(144) then
         Teleport("Gold Saucer")
     else
@@ -96,14 +98,14 @@ end
 
 CharacterStates =
 {
-    startTripleTriad = StartTripleTriad,
+    ready = Ready,
     goToCashier = GoToCashier,
     playMiniCactpot = PlayMiniCactpot,
     endState = EndState
 }
 
 StopFlag = false
-State = CharacterStates.startTripleTriad
+State = CharacterStates.ready
 yield("/at y")
 while not StopFlag do
     State()
