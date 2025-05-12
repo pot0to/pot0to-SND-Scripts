@@ -1,6 +1,7 @@
 --[[
 ********************************************************************************
 *                              Daily Hunts Doer                                *
+*                                   1.0.1                                      *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -160,7 +161,12 @@ function RandomAdjustCoordinates(x, y, z, maxDistance)
 end
 
 function Mount()
-    if GetCharacterCondition(CharacterCondition.mounted) then
+    if  GetCharacterCondition(CharacterCondition.mounting57) or
+        GetCharacterCondition(CharacterCondition.mounting64) or
+        IsPlayerCasting()
+    then
+        -- wait
+    elseif GetCharacterCondition(CharacterCondition.mounted) then
         State = CharacterState.goToMarker
         LogInfo("[DailyHunts] State Change: GoToMarker")
     else
@@ -394,7 +400,10 @@ DidHunt = false
 CombatModsOn = false
 LastTargetName = nil
 function DoHunt()
-    if not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 200 then
+    if IsPlayerCasting() then
+        yield("/wait 1")
+        return
+    elseif not IsInZone(GetFlagZone()) or GetDistanceToPoint(GetFlagXCoord(), GetPlayerRawYPos(), GetFlagYCoord()) > 200 then
         if GetCharacterCondition(CharacterCondition.inCombat) then
             if not HasTarget() then
                 yield("/battletarget")
@@ -468,15 +477,11 @@ CharacterCondition = {
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
-State = CharacterState.goToHuntBoard
--- SelectNextHunt()
+-- State = CharacterState.goToHuntBoard
+SelectNextHunt()
+State = CharacterState.goToMarker
 while true do
-    if not (IsPlayerCasting() or
-        GetCharacterCondition(CharacterCondition.betweenAreas) or
-        GetCharacterCondition(CharacterCondition.jumping48) or
-        GetCharacterCondition(CharacterCondition.jumping61) or
-        GetCharacterCondition(CharacterCondition.mounting57) or
-        GetCharacterCondition(CharacterCondition.mounting64) or
+    if not (GetCharacterCondition(CharacterCondition.betweenAreas) or
         GetCharacterCondition(CharacterCondition.beingMoved) or
         GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
         LifestreamIsBusy())
