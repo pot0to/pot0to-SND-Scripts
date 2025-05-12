@@ -127,7 +127,7 @@ function PurchaseCeruleumTanks()
     elseif IsAddonVisible("SelectIconString") then
         yield("/callback SelectIconString true 0")
     elseif GetTargetName() == "Mammet Voyager #004A" then
-        if GetDistanceToTarget() > 7 then
+        if GetDistanceToTarget() > 4 then
             if not PathfindInProgress() and not PathIsRunning() then
                 yield("/vnav movetarget")
             end
@@ -181,6 +181,10 @@ function CraftRepairKits()
                 yield("/callback Shop true 0 5 99")
             elseif GetTargetName() ~= "Junkmonger" then
                 yield("/target Junkmonger")
+            elseif PathfindInProgress() or PathIsRunning() then
+                yield("/wait 1")
+            elseif GetDistanceToTarget() > 7 then
+                yield("/vnav movetarget")
             else
                 yield("/interact")
             end
@@ -213,7 +217,7 @@ while ARSubsWaitingToBeProcessed() do
         CraftRepairKits()
     elseif not IsInCompanyWorkshop() then
         GoToCompanyWorkshop()
-    elseif GetItemCount(10155) < 12 then
+    elseif GetItemCount(10155) < 21 then
         PurchaseCeruleumTanks()
     elseif IsInCompanyWorkshop() then
         yield("/target Voyage Control Panel")

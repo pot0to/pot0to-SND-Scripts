@@ -8,12 +8,14 @@ Does DiademV2 gathering until umbral weather happens, then gathers umbral node
 and goes fishing until umbral weather disappears.
 
 ********************************************************************************
-*                               Version 1.2.3                                 *
+*                               Version 1.2.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
-    ->  1.2.3   Skip fire cannon if stuck (try again after next node)
+    ->  1.2.4   Added an extra check to make sure gathering weapon is fully put
+                    away before attempting to fire cannon
+                Skip fire cannon if stuck (try again after next node)
                 Fixed stuck checks
                 Force AutoHook to swap baits
                 Credit: anon. Turned off bait purchase if fishing option is
@@ -447,7 +449,7 @@ function Ready()
     elseif GetDiademAetherGaugeBarCount() > 0 and TargetType > 0 then
         ClearTarget()
         State = CharacterState.fireCannon
-        LogInfo("State Change: Fire Cannon")
+        LogInfo("[UmbralGathering] State Change: Fire Cannon")
     else
         State = CharacterState.moveToNextNode
         LogInfo("[UmbralGathering] State Change: MoveToNextNode")
@@ -889,7 +891,7 @@ function Gather()
         visibleNode = GetNodeText("_TargetInfo", 34)
     end
 
-    if not HasTarget() or GetTargetName() ~= NextNode.nodeName then
+    if (not HasTarget() or GetTargetName() ~= NextNode.nodeName) and not GetCharacterCondition(CharacterCondition.gathering42) then
         yield("/target "..NextNode.nodeName)
         yield("/wait 1")
         if not HasTarget() then

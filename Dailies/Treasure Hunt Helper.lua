@@ -141,7 +141,7 @@ function GoToMapLocation()
     
     if not PathfindInProgress() and not PathIsRunning() then
         yield("/vnav flyflag")
-        yield("/wait 1")
+        yield("/wait 10")
     else
         yield("/wait 3")
     end
@@ -165,6 +165,7 @@ function Main()
         return
     end
 
+    yield("/wait 1")
     yield("/tmap")
     yield("/wait 1")
     repeat
@@ -234,6 +235,6 @@ repeat
         LifestreamIsBusy())
     then
         Main()
-        yield("/wait 0.1")
+        yield("/wait 1")
     end
 until StopFlag
