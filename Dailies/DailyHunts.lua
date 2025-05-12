@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                              Daily Hunts Doer                                *
-*                                   1.0.1                                      *
+*                                   1.0.2                                      *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -34,6 +34,15 @@ THIS CANNOT BE AFK'D FOR THE FOLLOWING REASONS:
 2. Rotation Solver Reborn
 3. BossModReborn (BMR)
 
+********************************************************************************
+*                                   Settings                                   *
+********************************************************************************
+]]
+
+ShouldPickUpHunts = true    -- Set to false if you want it to start doing the
+                            -- hunt bills you already have
+
+--[[
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
 ********************************************************************************
@@ -477,9 +486,13 @@ CharacterCondition = {
 
 LastStuckCheckTime = os.clock()
 LastStuckCheckPosition = {x=GetPlayerRawXPos(), y=GetPlayerRawYPos(), z=GetPlayerRawZPos()}
--- State = CharacterState.goToHuntBoard
-SelectNextHunt()
-State = CharacterState.goToMarker
+
+if ShouldPickUpHunts then
+    State = CharacterState.goToHuntBoard
+else
+    SelectNextHunt()
+    State = CharacterState.goToMarker
+end
 while true do
     if not (GetCharacterCondition(CharacterCondition.betweenAreas) or
         GetCharacterCondition(CharacterCondition.beingMoved) or
