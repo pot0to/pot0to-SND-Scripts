@@ -2,14 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.11                                 *
+*                               Version 2.21.12                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
-    -> 2.21.11  Added 1s wait after mount so you're firmly on the mount. Seems
+    -> 2.21.12  Added more logging for FlyBackToAetheryte
+                Added 1s wait after mount so you're firmly on the mount. Seems
                     like some languages like Chinese execute log and echo
                     messages faster than English, causing the next Pathfind step
                     to happen too fast, before you are properly mounted, while
@@ -1278,6 +1279,7 @@ function GetClosestAetheryte(x, y, z, teleportTimePenalty)
     local closestAetheryte = nil
     local closestTravelDistance = math.maxinteger
     for _, aetheryte in ipairs(SelectedZone.aetheryteList) do
+        LogInfo("[FATE] Considering aetheryte "..aetheryte.aetheryteName)
         local distanceAetheryteToFate = DistanceBetween(aetheryte.x, y, aetheryte.z, x, y, z)
         local comparisonDistance = distanceAetheryteToFate + teleportTimePenalty
         LogInfo("[FATE] Distance via "..aetheryte.aetheryteName.." adjusted for tp penalty is "..tostring(comparisonDistance))
@@ -1287,6 +1289,11 @@ function GetClosestAetheryte(x, y, z, teleportTimePenalty)
             closestTravelDistance = comparisonDistance
             closestAetheryte = aetheryte
         end
+    end
+    if closestAetheryte ~= nil then
+        LogInfo("[FATE] Final selected aetheryte is: "..closestAetheryte.aether)
+    else
+        LogInfo("[FATE] Closest aetheryte is nil")
     end
 
     return closestAetheryte

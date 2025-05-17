@@ -80,7 +80,7 @@ WonderousTailsDuties = {
         { instanceId=20092, dutyId=1169, dutyName="The Abyssal Fracture (Extreme)", minLevel=90 }
     },
     { -- type 1: expansion cap dungeons
-        { dutyName="Dungeons (Lv. 100)", dutyId=1199, minLevel=100 } --Alexandria
+        { dutyName="Dungeons (Lv. 100)", dutyId=1266, minLevel=100 } --Underkeep
     },
     2,
     3,
@@ -220,6 +220,9 @@ if not HasWeeklyBingoJournal() or IsWeeklyBingoExpired() or WeeklyBingoNumPlaced
     yield("/wait 1")
 end
 
+yield("/bmrai on")
+yield("/vbmai on")
+
 -- skip 13: Shadowbringers raids (not doable solo unsynced)
 -- skip 14: Endwalker raids (not doable solo unsynced)
 -- skip 15: PVP
@@ -262,7 +265,6 @@ for i = 0, 12 do
             if duty.dutyId ~= nil then
                 yield("/echo Queuing duty TerritoryId#"..duty.dutyId.." for Wonderous Tails #"..(i+1))
                 yield("/autoduty run "..dutyMode.." "..duty.dutyId.." 1 true")
-                yield("/bmrai on")
                 yield("/rotation auto")
                 yield("/wait 10")
                 while GetCharacterCondition(34) or GetCharacterCondition(51) or GetCharacterCondition(56) do -- wait for duty to be finished
