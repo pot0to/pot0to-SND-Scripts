@@ -153,7 +153,7 @@ function CraftRepairKits()
                 yield("/callback SelectYesno true 0")
             elseif GetTargetName() ~= "Stairway to Main Hall" then
                 yield("/target Stairway to Main Hall")
-            elseif GetDistanceToTarget() > 7 and not PathfindInProgress() and not PathIsRunning() then
+            elseif GetDistanceToTarget() > 4 and not PathfindInProgress() and not PathIsRunning() then
                 yield("/vnav movetarget")
             elseif PathIsRunning() or PathfindInProgress() then
                 yield("/vnav stop")

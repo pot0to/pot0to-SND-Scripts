@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                              Daily Hunts Doer                                *
-*                                   1.0.2                                      *
+*                                   1.0.3                                      *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -118,7 +118,7 @@ function TeleportTo(aetheryteName)
         LogInfo("[DailyHunts] Casting teleport...")
         yield("/wait 1")
     end
-    yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
+    yield("/wait 3") -- wait for that microsecond in between the cast finishing and the transition beginning
     while GetCharacterCondition(CharacterCondition.betweenAreas) do
         LogInfo("[DailyHunts] Teleporting...")
         yield("/wait 1")
@@ -352,8 +352,15 @@ function GoToDravanianHinterlands()
         if not GetCharacterCondition(CharacterCondition.mounted) then
             State = CharacterState.mounting
             LogInfo("[DailyHunts] State Change: Mounting")
-        elseif not PathIsRunning() and not PathfindInProgress() then
+        else
             PathfindAndMoveTo(148.51, 207.0, 118.47)
+            while PathfindInProgress() or PathIsRunning() do
+                yield("/wait 3")
+            end
+            while GetCharacterCondition(CharacterCondition.betweenAreas) do
+                yield("/wait 1")
+            end
+            yield("/wait 1")
         end
     else
         TeleportTo("Idyllshire")
@@ -435,6 +442,7 @@ function DoHunt()
         yield("/bmrai followtarget on")
         yield("/bmrai followcombat on")
         yield("/rotation manual")
+        CombatModsOn = true
     end
 
     if GetCharacterCondition(CharacterCondition.inCombat) then
@@ -501,5 +509,7 @@ while true do
     then
         State()
         yield("/wait 0.1")
+    else
+        yield("/wait 1")
     end
 end
