@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                           Allied Society Quests                              *
-*                               Version 0.1.3                                  *
+*                               Version 0.2.0                                  *
 ********************************************************************************
 Created by: pot0to (https://ko-fi.com/pot0to)
 
@@ -13,6 +13,7 @@ moves on to the next beast tribe.
 *                                     0.1.2                                    *
 ********************************************************************************
 
+0.2.0   Added MamoolJas for patch 7.25 (credit: Leonhart)
 0.1.3   Fixed "Arkasodara" tribe name
         Added /qst stop after finishing one set of quests
         Updated Namazu aetheryte to Dhoro Iloh
@@ -218,6 +219,16 @@ AlliedSocietiesTable =
         z=-261.0889,
         zoneId=1188,
         aetheryteName="Dock Poga",
+    },
+    mamoolja =
+    {
+        alliedSocietyName = "MamoolJa",
+        questGiver = "Kageel Ja",
+        x=589.3,
+        y=-142.9,
+        z=730.5,
+        zoneId = 1189,
+        aetheryteName = "Mamook"
     }
 }
 
