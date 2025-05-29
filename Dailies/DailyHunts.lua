@@ -502,7 +502,8 @@ else
     State = CharacterState.goToMarker
 end
 while true do
-    if not (GetCharacterCondition(CharacterCondition.betweenAreas) or
+    if not (NavIsReady() or
+        GetCharacterCondition(CharacterCondition.betweenAreas) or
         GetCharacterCondition(CharacterCondition.beingMoved) or
         GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
         LifestreamIsBusy())
