@@ -1,8 +1,8 @@
 --[[
 
 ********************************************************************************
-*                                Atma Farming                                  *
-*                                Version 1.0.0                                 *
+*                          Occult Demiatma Farming                             *
+*                                Version 1.0.1                                 *
 ********************************************************************************
 
 Atma farming script meant to be used with `Fate Farming.lua`. This will go down
@@ -12,6 +12,7 @@ farming script.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
         
+    -> 1.0.1    Added ability to move to next zone if no eligible fates
     -> 1.0.0    First release
 
 --#region Settings
@@ -49,11 +50,24 @@ CharacterCondition = {
     betweenAreas=45
 }
 
+FarmingZoneIndex = 1
+FullPass = true
 function GetNextAtmaTable()
-    for _, atmaTable in pairs(Atmas) do
-        if GetItemCount(atmaTable.itemId) < NumberToFarm then
-            return atmaTable
-        end
+    -- ffwd to next zone index, or end of list
+    while FarmingZoneIndex <= #Atmas and GetItemCount(Atmas[FarmingZoneIndex].itemId) >= NumberToFarm do
+        FarmingZoneIndex = FarmingZoneIndex + 1
+    end
+
+    if FarmingZoneIndex <= #Atmas then
+        FullPass = false
+        return Atmas[FarmingZoneIndex]
+    elseif FullPass then
+        return nil
+    else
+        FarmingZoneIndex = 1
+        FullPass = true
+        return GetNextAtmaTable()   --second run it either finds something, or
+                                    --hits the end with FullPass-true
     end
 end
 
@@ -73,6 +87,7 @@ function TeleportTo(aetheryteName)
 end
 
 yield("/at y")
+OldBicolorGemCount = GetItemCount(26807)
 NextAtmaTable = GetNextAtmaTable()
 while NextAtmaTable ~= nil do
     if not IsPlayerOccupied() and not IsMacroRunningOrQueued(FateMacro) then
@@ -82,6 +97,19 @@ while NextAtmaTable ~= nil do
             TeleportTo(GetAetheryteName(GetAetherytesInZone(NextAtmaTable.zoneId)[0]))
         else
             yield("/snd run "..FateMacro)
+
+            repeat
+                yield("/wait 1")
+            until not IsMacroRunningOrQueued(FateMacro)
+            LogInfo("[DemiatmaFarmer] FateMacro has stopped")
+            NewBicolorGemCount = GetItemCount(26807)
+            -- yield("/echo Bicolor Count: "..NewBicolorGemCount)
+            if NewBicolorGemCount == OldBicolorGemCount then
+                FarmingZoneIndex  = FarmingZoneIndex + 1
+                NextAtmaTable = GetNextAtmaTable()
+            else
+                OldBicolorGemCount = NewBicolorGemCount
+            end
         end
     end
     yield("/wait 1")
