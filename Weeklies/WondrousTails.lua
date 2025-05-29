@@ -252,7 +252,7 @@ for i = 0, 12 do
             elseif type == 4 then -- raids
                 yield("/autoduty cfg Unsynced true")
                 dutyMode = "Raid"
-            elseif CurrentLevel - duty.minLevel <= 20 then
+            elseif CurrentLevel - duty.minLevel < 20 then
                 -- yield("/autoduty cfg dutyModeEnum 1") -- TODO: test this when it gets released
                 -- yield("/autoduty cfg Unsynced false")
                 dutyMode = "Support"
