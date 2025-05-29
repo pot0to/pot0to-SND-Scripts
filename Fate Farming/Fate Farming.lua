@@ -2,14 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.22.0                                 *
+*                               Version 2.22.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
-    -> 2.22.0   Updated vnav to use flag navigation, since it works better in
+    -> 2.22.1   Fixed to pick between /vnav flyflag and /vnav moveflag
+                Updated vnav to use flag navigation, since it works better in
                     occult. Updated to prevent textadvance spam
                 Added more logging for FlyBackToAetheryte
                 Added 1s wait after mount so you're firmly on the mount. Seems
@@ -1770,7 +1771,11 @@ function MoveToFate()
     end
 
     if GetDistanceToPoint(nearestLandX, nearestLandY, nearestLandZ) > 5 then
-        yield("/vnav moveflag")
+        if HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying then
+            yield("/vnav flyflag")
+        else
+            yield("/vnav moveflag")
+        end
         -- LogInfo("[FATE] Moving to: "..nearestLandX..", "..nearestLandY.." "..nearestLandZ..", "..tostring(HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying))
         -- PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
     else
