@@ -2,14 +2,16 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.21.13                                 *
+*                               Version 2.22.0                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
-    -> 2.21.13  Added more logging for FlyBackToAetheryte
+    -> 2.22.0   Updated vnav to use flag navigation, since it works better in
+                    occult. Updated to prevent textadvance spam
+                Added more logging for FlyBackToAetheryte
                 Added 1s wait after mount so you're firmly on the mount. Seems
                     like some languages like Chinese execute log and echo
                     messages faster than English, causing the next Pathfind step
@@ -81,7 +83,7 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --Pre Fate Settings
 Food                                = ""            --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
 Potion                              = ""            --Leave "" Blank if you don't want to use any potions.
-ShouldSummonChocobo                 = true          --Summon chocobo?
+ShouldSummonChocobo                 = false         --Summon chocobo?
     ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
     ChocoboStance                   = "Healer"      --Options: Follow/Free/Defender/Healer/Attacker
     ShouldAutoBuyGysahlGreens       = true          --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
@@ -119,7 +121,7 @@ MinWait                             = 3             --Min number of seconds it s
 MaxWait                             = 10            --Max number of seconds it should wait until mounting up for next fate.
                                                         --Actual wait time will be a randomly generated number between MinWait and MaxWait.
 DownTimeWaitAtNearestAetheryte      = false         --When waiting for fates to pop, should you fly to the nearest Aetheryte and wait there?
-EnableChangeInstance                = true          --should it Change Instance when there is no Fate (only works on DT fates)
+EnableChangeInstance                = false          --should it Change Instance when there is no Fate (only works on DT fates)
     WaitIfBonusBuff                 = true          --Don't change instances if you have the Twist of Fate bonus buff
     NumberOfInstances               = 2
 ShouldExchangeBicolorGemstones      = true          --Should it exchange Bicolor Gemstone Vouchers?
@@ -128,7 +130,7 @@ SelfRepair                          = false         --if false, will go to Limsa
     RepairAmount                    = 20            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
     ShouldAutoBuyDarkMatter         = true          --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
 ShouldExtractMateria                = true          --should it Extract Materia
-Retainers                           = true          --should it do Retainers
+Retainers                           = false         --should it do Retainers
 ShouldGrandCompanyTurnIn            = false         --should it do Turn ins at the GC (requires Deliveroo)
     InventorySlotsLeft              = 5             --how much inventory space before turning in
 
@@ -187,7 +189,9 @@ elseif RotationPlugin == "VBM" and DodgingPlugin ~= "VBM"  then
     DodgingPlugin = "VBM"
 end
 
-yield("/at y")
+if not CompanionScriptMode then
+    yield("/at y")
+end
 
 --snd property
 function setSNDProperty(propertyName, value)
@@ -1750,6 +1754,7 @@ function MoveToFate()
     end
 
     if TeleportToClosestAetheryteToFate(CurrentFate) then
+        LogInfo("Executed teleport to closer aetheryte")
         return
     end
 
@@ -1765,7 +1770,9 @@ function MoveToFate()
     end
 
     if GetDistanceToPoint(nearestLandX, nearestLandY, nearestLandZ) > 5 then
-        PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
+        yield("/vnav moveflag")
+        -- LogInfo("[FATE] Moving to: "..nearestLandX..", "..nearestLandY.." "..nearestLandZ..", "..tostring(HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying))
+        -- PathfindAndMoveTo(nearestLandX, nearestLandY, nearestLandZ, HasFlightUnlocked(SelectedZone.zoneId) and SelectedZone.flying)
     else
         State = CharacterState.middleOfFateDismount
     end

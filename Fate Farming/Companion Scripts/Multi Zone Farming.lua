@@ -63,6 +63,7 @@ function TeleportTo(aetheryteName)
     yield("/wait 1")
 end
 
+yield("/at y")
 FarmingZoneIndex = 1
 OldBicolorGemCount = GetItemCount(26807)
 while true do

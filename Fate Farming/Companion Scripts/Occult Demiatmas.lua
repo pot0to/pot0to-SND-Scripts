@@ -72,6 +72,7 @@ function TeleportTo(aetheryteName)
     yield("/wait 1")
 end
 
+yield("/at y")
 NextAtmaTable = GetNextAtmaTable()
 while NextAtmaTable ~= nil do
     if not IsPlayerOccupied() and not IsMacroRunningOrQueued(FateMacro) then
