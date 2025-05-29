@@ -151,7 +151,7 @@ end
 
 DidMap = false
 function Main()
-    if IsAddonVisible("_TextError") and GetNodeText("_TextError", 1) == "You do not possess a treasure map." then
+    if IsAddonVisible("_TextError") and GetNodeText("_TextError", 1) == "You do not possess a treasure map." and not GetCharacterCondition(CharacterCondition.boundByDuty34) then
         yield("/echo You do not possess a treasure map.")
         StopFlag = true
         return
@@ -160,7 +160,7 @@ function Main()
     if GetCharacterCondition(CharacterCondition.inCombat) and not HasTarget() then
         yield("/battletarget")
         return
-    elseif DidMap and not GetCharacterCondition(CharacterCondition.boundByDuty34) then -- if combat is over
+    elseif DidMap and not GetCharacterCondition(CharacterCondition.boundByDuty34) and not GetCharacterCondition(CharacterCondition.inCombat) then -- if combat is over
         StopFlag = true
         return
     end
