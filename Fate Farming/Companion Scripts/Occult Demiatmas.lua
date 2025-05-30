@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                          Occult Demiatma Farming                             *
-*                                Version 1.0.1                                 *
+*                                Version 1.0.2                                 *
 ********************************************************************************
 
 Atma farming script meant to be used with `Fate Farming.lua`. This will go down
@@ -11,7 +11,9 @@ atmas in your inventory, then teleport to the next zone and restart the fate
 farming script.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
-        
+    
+    -> 1.0.2    Added a 10s wait if you go through all zones without a FATE,
+                    meant to prevent you from burning gil on teleports
     -> 1.0.1    Added ability to move to next zone if no eligible fates
     -> 1.0.0    First release
 
@@ -23,8 +25,9 @@ Created by: pot0to (https://ko-fi.com/pot0to)
 ********************************************************************************
 ]]
 
-FateMacro = "Fate Farming"
-NumberToFarm = 3                -- How many of each atma to farm
+FateMacro =             "Fate Farming"
+NumberToFarm =          3               -- How many of each atma to farm
+WaitTimeBeforeLooping = 10              -- If there are no active fates in any of your areas, wait X seconds before looping through them again
 
 --#endregion Settings
 
@@ -52,6 +55,7 @@ CharacterCondition = {
 
 FarmingZoneIndex = 1
 FullPass = true
+DidFateOnPass = false
 function GetNextAtmaTable()
     -- ffwd to next zone index, or end of list
     while FarmingZoneIndex <= #Atmas and GetItemCount(Atmas[FarmingZoneIndex].itemId) >= NumberToFarm do
@@ -64,8 +68,13 @@ function GetNextAtmaTable()
     elseif FullPass then
         return nil
     else
+        if not DidFateOnPass then
+            yield("/wait "..WaitTimeBeforeLooping)
+            yield("/echo Went through all zones without a FATE. Waiting "..WaitTimeBeforeLooping.." seconds before going through the zones again.")
+        end
         FarmingZoneIndex = 1
         FullPass = true
+        DidFateOnPass = false
         return GetNextAtmaTable()   --second run it either finds something, or
                                     --hits the end with FullPass-true
     end
@@ -108,6 +117,7 @@ while NextAtmaTable ~= nil do
                 FarmingZoneIndex  = FarmingZoneIndex + 1
                 NextAtmaTable = GetNextAtmaTable()
             else
+                DidFateOnPass = true
                 OldBicolorGemCount = NewBicolorGemCount
             end
         end
