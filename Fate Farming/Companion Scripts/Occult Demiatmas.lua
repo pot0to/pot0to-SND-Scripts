@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                          Occult Demiatma Farming                             *
-*                                Version 1.0.2                                 *
+*                                Version 1.0.3                                 *
 ********************************************************************************
 
 Atma farming script meant to be used with `Fate Farming.lua`. This will go down
@@ -12,7 +12,8 @@ farming script.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
     
-    -> 1.0.2    Added a 10s wait if you go through all zones without a FATE,
+    -> 1.0.3    Moved the wait message before the wait time, fix a looping bug
+                Added a 10s wait if you go through all zones without a FATE,
                     meant to prevent you from burning gil on teleports
     -> 1.0.1    Added ability to move to next zone if no eligible fates
     -> 1.0.0    First release
@@ -69,10 +70,10 @@ function GetNextAtmaTable()
         return nil
     else
         if not DidFateOnPass then
-            yield("/wait "..WaitTimeBeforeLooping)
             yield("/echo Went through all zones without a FATE. Waiting "..WaitTimeBeforeLooping.." seconds before going through the zones again.")
+            yield("/wait "..WaitTimeBeforeLooping)
         end
-        FarmingZoneIndex = 1
+        FarmingZoneIndex = (FarmingZoneIndex % #Atmas) + 1
         FullPass = true
         DidFateOnPass = false
         return GetNextAtmaTable()   --second run it either finds something, or
