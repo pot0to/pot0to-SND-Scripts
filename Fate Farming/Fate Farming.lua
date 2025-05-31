@@ -887,7 +887,9 @@ FatesData = {
                 { fateName="The Serpentlord Suffers", npcName="Br'uk Vaw of the Setting Sun" },
                 { fateName="That's Me and the Porter", npcName="Pelupelu Peddler" },
             },
-            fatesWithContinuations = {},
+            fatesWithContinuations = {
+                "The Serpentlord Sires"
+            },
             specialFates = {
                 "The Serpentlord Seethes" -- big snake fate
             },
