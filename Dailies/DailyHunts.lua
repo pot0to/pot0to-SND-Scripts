@@ -1,7 +1,6 @@
 --[[
 ********************************************************************************
 *                              Daily Hunts Doer                                *
-*                                   1.0.3                                      *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -21,8 +20,9 @@ THIS CANNOT BE AFK'D FOR THE FOLLOWING REASONS:
    elite, stop the script, complete the mark manually, then restart the script.
    
 ********************************************************************************
-*                                 Version 1.0.2                                *
+*                                 Version 1.0.4                                *
 ********************************************************************************
+    1.0.4   Fixed NavIsReady check
     1.0.2   Fixed 3-star hunt pickups
             Fixed n+1 hunt requirement
 
@@ -502,8 +502,7 @@ else
     State = CharacterState.goToMarker
 end
 while true do
-    if not (NavIsReady() or
-        GetCharacterCondition(CharacterCondition.betweenAreas) or
+    if NavIsReady() and not (GetCharacterCondition(CharacterCondition.betweenAreas) or
         GetCharacterCondition(CharacterCondition.beingMoved) or
         GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) or
         LifestreamIsBusy())
