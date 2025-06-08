@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                          Occult Demiatma Farming                             *
-*                                Version 1.0.3                                 *
+*                                Version 1.0.4                                 *
 ********************************************************************************
 
 Atma farming script meant to be used with `Fate Farming.lua`. This will go down
@@ -12,6 +12,7 @@ farming script.
 
 Created by: pot0to (https://ko-fi.com/pot0to)
     
+    -> 1.0.4    Added more logging
     -> 1.0.3    Moved the wait message before the wait time, fix a looping bug
                 Added a 10s wait if you go through all zones without a FATE,
                     meant to prevent you from burning gil on teleports
@@ -67,6 +68,7 @@ function GetNextAtmaTable()
         FullPass = false
         return Atmas[FarmingZoneIndex]
     elseif FullPass then
+        LogInfo("[DemiatmaFarmer] Did fullpass, returning nil")
         return nil
     else
         if not DidFateOnPass then
@@ -115,9 +117,11 @@ while NextAtmaTable ~= nil do
             NewBicolorGemCount = GetItemCount(26807)
             -- yield("/echo Bicolor Count: "..NewBicolorGemCount)
             if NewBicolorGemCount == OldBicolorGemCount then
+                LogInfo("[DemiatmaFarmer] FateMacro exited without doing any fates.")
                 FarmingZoneIndex  = FarmingZoneIndex + 1
                 NextAtmaTable = GetNextAtmaTable()
             else
+                LogInfo("[DemiatmaFarmer] FateMacro did a fate.")
                 DidFateOnPass = true
                 OldBicolorGemCount = NewBicolorGemCount
             end
@@ -125,3 +129,4 @@ while NextAtmaTable ~= nil do
     end
     yield("/wait 1")
 end
+LogInfo("[DemiatmaFarmer] NextAtmaTable was nil")
