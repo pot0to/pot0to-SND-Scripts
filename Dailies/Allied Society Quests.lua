@@ -10,10 +10,11 @@ moves on to the next beast tribe.
 
 ********************************************************************************
 *                                    Version                                   *
-*                                     0.1.2                                    *
+*                                     0.2.1                                    *
 ********************************************************************************
 
-0.2.0   Added MamoolJas for patch 7.25 (credit: Leonhart)
+0.2.1   Fixed Mamool Ja name and removed main quests from presets
+0.2.0   Added Mamool Jas for patch 7.25 (credit: Leonhart)
 0.1.3   Fixed "Arkasodara" tribe name
         Added /qst stop after finishing one set of quests
         Updated Namazu aetheryte to Dhoro Iloh
@@ -222,13 +223,14 @@ AlliedSocietiesTable =
     },
     mamoolja =
     {
-        alliedSocietyName = "MamoolJa",
+        alliedSocietyName = "Mamool Ja",
         questGiver = "Kageel Ja",
         x=589.3,
         y=-142.9,
         z=730.5,
         zoneId = 1189,
-        aetheryteName = "Mamook"
+        aetheryteName = "Mamook",
+        preset = "qst:v1:NTI2MTs1MjYyOzUyNjM7NTI2NDs1MjY1OzUyNjY7NTI2Nzs1MjY4OzUyNjk7NTI3MDs1MjcxOzUyNzI7NTI3Mzs1Mjc0OzUyNzU7NTI3Njs1Mjc3OzUyNzg7NTI3OTs1MjgwOzUyODE7NTI4Mjs1MjgzOzUyODQ7NTI4NTs1Mjg2OzUyODc7NTI4OA=="
     }
 }
 
@@ -288,8 +290,16 @@ function CheckAllowances()
     return 0
 end
 
+if HasPlugin("Lifestream") then
+    TeleportCommand = "/li tp"
+elseif HasPlugin("Teleporter") then
+    TeleportCommand = "/tp"
+else
+    yield("/error Please install either Teleporter or Lifestream")
+    yield("/snd stop")
+end
 function TeleportTo(aetheryteName)
-    yield("/tp "..aetheryteName)
+    yield(TeleportCommand.." "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
         LogInfo("[FATE] Casting teleport...")
@@ -315,12 +325,12 @@ for _, alliedSociety in ipairs(ToDoList) do
             TeleportTo(alliedSocietyTable.aetheryteName)
         end
     
-        if not GetCharacterCondition(4) then
+        if not GetCharacterCondition(CharacterCondition.mounted) then
             yield('/gaction "mount roulette"')
         end
         repeat
             yield("/wait 1")
-        until GetCharacterCondition(4)
+        until GetCharacterCondition(CharacterCondition.mounted)
         PathfindAndMoveTo(alliedSocietyTable.x, alliedSocietyTable.y, alliedSocietyTable.z, true)
         repeat
             yield("/wait 1")
@@ -329,19 +339,26 @@ for _, alliedSociety in ipairs(ToDoList) do
         yield("/gs change "..alliedSociety.class)
         yield("/wait 3")
     
-        -- accept 3 allocations
-        local quests = {}
-        for i=1,3 do
-            yield("/target "..alliedSocietyTable.questGiver)
-            yield("/interact")
+        
 
-            repeat
-                yield("/wait 1")
-            until IsAddonVisible("SelectIconString")
-            yield("/callback SelectIconString true 0")
-            repeat
-                yield("/wait 1")
-            until not IsPlayerOccupied()
+        if alliedSocietyTable.preset ~= nil then
+            yield("/echo loading preset")
+            QuestionableImportQuestPriority(alliedSocietyTable.preset)
+        else
+            -- accept 3 allocations
+            local quests = {}
+            for i=1,3 do
+                yield("/target "..alliedSocietyTable.questGiver)
+                yield("/interact")
+
+                repeat
+                    yield("/wait 1")
+                until IsAddonVisible("SelectIconString")
+                yield("/callback SelectIconString true 0")
+                repeat
+                    yield("/wait 1")
+                until not IsPlayerOccupied()
+            end
         end
 
         yield("/qst start")
