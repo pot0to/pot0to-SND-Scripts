@@ -2,14 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                               Version 2.22.1                                 *
+*                               Version 2.22.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
-    -> 2.22.1   Fixed to pick between /vnav flyflag and /vnav moveflag
+    -> 2.22.2   Added option to turn off auto return on death
+                Fixed to pick between /vnav flyflag and /vnav moveflag
                 Updated vnav to use flag navigation, since it works better in
                     occult. Updated to prevent textadvance spam
                 Added more logging for FlyBackToAetheryte
@@ -134,6 +135,8 @@ ShouldExtractMateria                = true          --should it Extract Materia
 Retainers                           = false         --should it do Retainers
 ShouldGrandCompanyTurnIn            = false         --should it do Turn ins at the GC (requires Deliveroo)
     InventorySlotsLeft              = 5             --how much inventory space before turning in
+
+ReturnOnDeath                       = true          --should auto accept return on death
 
 Echo                                = "All"         --Options: All/Gems/None
 
@@ -2489,16 +2492,26 @@ function HandleDeath()
     end
 
     if GetCharacterCondition(CharacterCondition.dead) then --Condition Dead
-        if Echo and not DeathAnnouncementLock then
-            DeathAnnouncementLock = true
-            if Echo == "All" then
-                yield("/echo [FATE] You have died. Returning to home aetheryte.")
+        if ReturnOnDeath then
+            if Echo and not DeathAnnouncementLock then
+                DeathAnnouncementLock = true
+                if Echo == "All" then
+                    yield("/echo [FATE] You have died. Returning to home aetheryte.")
+                end
             end
-        end
 
-        if IsAddonVisible("SelectYesno") then --rez addon yes
-            yield("/callback SelectYesno true 0")
-            yield("/wait 0.1")
+            if IsAddonVisible("SelectYesno") then --rez addon yes
+                yield("/callback SelectYesno true 0")
+                yield("/wait 0.1")
+            end
+        else
+            if Echo and not DeathAnnouncementLock then
+                DeathAnnouncementLock = true
+                if Echo == "All" then
+                    yield("/echo [FATE] You have died. Waiting until script detects you're alive again...")
+                end
+            end
+            yield("/wait 1")
         end
     else
         State = CharacterState.ready
