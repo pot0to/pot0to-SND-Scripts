@@ -13,4 +13,9 @@ local numerator, denominator = fraction:match("(%d+)/(%d+)")
 numerator = tonumber(numerator)
 denominator = tonumber(denominator)
 
-yield("/autoduty run Support "..DutyToRun.." "..((denominator - numerator)//50).." true")
+while IsAddonVisible("Currency") do
+    yield("/callback Currency true -1")
+    yield("/wait 2")
+end
+
+yield("/autoduty run Support "..DutyToRun.." "..(math.ceil((denominator - numerator)/50)).." true")
