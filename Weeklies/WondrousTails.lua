@@ -1,7 +1,7 @@
 --[[
 ********************************************************************************
 *                             Wondrous Tails Doer                              *
-*                                Version 0.2.2                                 *
+*                                Version 0.2.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -24,7 +24,8 @@ each one once anyways
 Alliance Raids/PVP/Treasure Maps/Palace of the Dead
 - Skips them all
 
-
+    -> 0.2.3    Changed Final Coil to do Turn 4 instead of Turn 1
+    -> 0.2.2    Allowed unsync lvl 80
     -> 0.2.1    Duty names updated after patch 7.2
     -> 0.2.0    Fixes for ex trials
                 Update for patch 7.1
@@ -87,7 +88,7 @@ WonderousTailsDuties = {
     { -- type 4: normal raids
         { dutyName="Binding Coil of Bahamut", dutyId=241, minLevel=50 },
         { dutyName="Second Coil of Bahamut", dutyId=355, minLevel=50 },
-        { dutyName="Final Coil of Bahamut", dutyId=193, minLevel=50 },
+        { dutyName="Final Coil of Bahamut", dutyId=196, minLevel=50 },
         { dutyName="Alexander: Gordias", dutyId=442, minLevel=60 },
         { dutyName="Alexander: Midas", dutyId=520, minLevel=60 },
         { dutyName="Alexander: The Creator", dutyId=580, minLevel=60 },
