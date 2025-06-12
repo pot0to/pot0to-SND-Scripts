@@ -7,11 +7,12 @@
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 
-Plays the Gold Saucer minigame "Any Way the Wind Blows". There's a special spot
-on the stage that is statistically less likely to get hit based on the aoe
-patterns (though never guaranteed to win). This script will AFK in front of
-where the NPC will spawn, talk to him to enter the minigame, place you at the
-special spot for 5min (long enough for to finish the minigame), then repeat.
+Plays the Gold Saucer GATE "Any Way the Wind Blows" over and over to farm the
+achievement WTF Fungah I, II, III. There's a special spot on the stage that is
+statistically less likely to get hit based on the aoe patterns (though never
+guaranteed to win). This script will AFK in front of where the NPC will spawn,
+talk to him to enter the GATE, place you at the special spot for 5 min (long
+enough to finish the GATE or lose), then repeat.
 
 ********************************************************************************
 *                               Required Plugins                               *
