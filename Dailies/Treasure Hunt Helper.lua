@@ -25,17 +25,10 @@ Created by: pot0to (https://ko-fi.com/pot0to)
 Plugins that are needed for it to work:
 
     -> Something Need Doing [Expanded Edition] : Main Plugin for everything to work   (https://puni.sh/api/repository/croizat)
-    -> Globetrotter :   For finding the treasure map spot
-    -> VNavmesh :       For Pathing/Moving    (https://puni.sh/api/repository/veyn)
-    -> RSR :            For fighting things
-
-********************************************************************************
-*                                Optional Plugins                              *
-********************************************************************************
-
-This Plugins are optional and not needed unless you have it enabled in the settings:
-
-    -> Teleporter :  (for Teleporting to Ishgard/Firmament if you're not already in that zone)
+    -> Globetrotter :               For finding the treasure map spot
+    -> VNavmesh :                   For Pathing/Moving    (https://puni.sh/api/repository/veyn)
+    -> RSR :                        For fighting things
+    -> Teleporter OR Lifestream :   For teleporting
 
 ]]
 
@@ -69,7 +62,11 @@ CharacterCondition = {
 -- #region Movement
 
 function TeleportTo(aetheryteName)
-    yield("/tp "..aetheryteName)
+    if HasPlugin("Lifestream") then
+        yield("/li tp "..aetheryteName)
+    else
+        yield("/tp "..aetheryteName)
+    end
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
         LogInfo("[TreasureHuntHelper] Casting teleport...")
