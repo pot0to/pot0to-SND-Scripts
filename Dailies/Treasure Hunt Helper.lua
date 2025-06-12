@@ -9,11 +9,11 @@ automatically teleport you to the correct zone, fly over, dig, kill enemies,
 and open the chest. It will NOT do portals for you.
 
 ********************************************************************************
-*                               Version 1.1.1                                  *
+*                               Version 1.1.2                                  *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
-        
+    ->  1.1.2   Added Lifestream or Teleporter option
     ->  1.1.1   Fixed some wait times related to Dravanian Hinterland tp
                 Added ability to go to Dravanian Hinterlands via Idyllshire
                 First release
