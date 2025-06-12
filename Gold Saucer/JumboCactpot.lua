@@ -1,29 +1,29 @@
 --[[
 
-****************************************
-*            Jumbo Cactpot             * 
-****************************************
+********************************************************************************
+*                                Jumbo Cactpot                                 *
+*                                Version 1.0.0                                 *
+********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if you had any), and
 purchases 3 new tickets using random numbers.
 
-***********
-* Version *
-*  1.0.0  *
-***********
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
 
-*********************
-*  Required Plugins *
-*********************
-1. Telepoter
-2. Lifestream
-3. TextAdvance
-4. Vnavmesh
+1. Lifestream
+2. TextAdvance
+3. Vnavmesh
+
+********************************************************************************
+*            Code: Don't touch this unless you know what you're doing          *
+********************************************************************************
 ]]
 
 function Teleport(aetheryteName)
-    yield("/tp "..aetheryteName)
+    yield("/li tp "..aetheryteName)
     while not GetCharacterCondition(45) do
         yield("/wait 0.1")
     end

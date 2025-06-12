@@ -8,17 +8,22 @@
 Created by: pot0to (https://ko-fi.com/pot0to)
 Description: Teleports to Gold Saucer, runs mini cactpot.
 
-*********************
-*  Required Plugins *
-*********************
-1. Telepoter
+********************************************************************************
+*                               Required Plugins                               *
+********************************************************************************
+
+1. Lifestream
 3. TextAdvance
 4. Vnavmesh
 5. Saucy
+
+********************************************************************************
+*            Code: Don't touch this unless you know what you're doing          *
+********************************************************************************
 ]]
 
 function Teleport(aetheryteName)
-    yield("/tp "..aetheryteName)
+    yield("/li tp "..aetheryteName)
     yield("/wait 1")
     while GetCharacterCondition(27) do
         yield("/wait 0.1")
