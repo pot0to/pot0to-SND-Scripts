@@ -20,7 +20,7 @@ enough to finish the GATE or lose), then repeat.
 
 1. SND
 2. Vnavmesh
-3. Teleporter
+3. Lifestream
 4. TextAdvance
 
 ********************************************************************************
@@ -76,7 +76,7 @@ function Main()
 end
 
 function TeleportTo(aetheryteName)
-    yield("/tp "..aetheryteName)
+    yield("/li tp "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
         LogInfo("[FATE] Casting teleport...")
