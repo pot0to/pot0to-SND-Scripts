@@ -63,12 +63,12 @@ function TeleportTo(aetheryteName)
     yield("/tp "..aetheryteName)
     yield("/wait 1") -- wait for casting to begin
     while GetCharacterCondition(CharacterCondition.casting) do
-        LogInfo("[FATE] Casting teleport...")
+        LogInfo("[AnimaFarming] Casting teleport...")
         yield("/wait 1")
     end
     yield("/wait 1") -- wait for that microsecond in between the cast finishing and the transition beginning
     while GetCharacterCondition(CharacterCondition.betweenAreas) do
-        LogInfo("[FATE] Teleporting...")
+        LogInfo("[AnimaFarming] Teleporting...")
         yield("/wait 1")
     end
     yield("/wait 1")
@@ -80,7 +80,7 @@ function GoToDravanianHinterlands()
     elseif IsInZone(478) then
         if not GetCharacterCondition(CharacterCondition.mounted) then
             State = CharacterState.mounting
-            LogInfo("[DailyHunts] State Change: Mounting")
+            LogInfo("[AnimaFarming] State Change: Mounting")
         elseif not PathIsRunning() and not PathfindInProgress() then
             PathfindAndMoveTo(148.51, 207.0, 118.47)
         end
