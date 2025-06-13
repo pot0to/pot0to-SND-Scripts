@@ -2,6 +2,13 @@ ShouldExtractMateria =  true
 SelfRepair =            true
 RepairAmount =          5
     ShouldAutoBuyDarkMatter =   true
+ShouldDumpSilver  =           true
+    ItemToPurchase = "Aetherspun Silver"
+
+ShopItems =
+{
+    { itemName = "Aetherspun Silver", menuIndex=1, itemIndex = 5, price = 1200 },
+}
 
 CharacterCondition = {
     dead=2,
@@ -96,6 +103,13 @@ BaseAetheryte = { x=830.75, y=72.98, z=-695.98 }
 function Repair()
     TurnOffOCH()
 
+    -- if occupied by repair, then just wait
+    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
+        LogInfo("[OCHHelper] Repairing...")
+        yield("/wait 1")
+        return
+    end
+
     if IsAddonVisible("SelectYesno") then
         yield("/callback SelectYesno true 0")
         return
@@ -108,14 +122,7 @@ function Repair()
             yield("/callback Repair true 0") -- select repair
         end
         return
-    end
-
-    -- if occupied by repair, then just wait
-    if GetCharacterCondition(CharacterCondition.occupiedMateriaExtractionAndRepair) then
-        LogInfo("[OCHHelper] Repairing...")
-        yield("/wait 1")
-        return
-    end
+    end 
 
     if SelfRepair then
         if GetItemCount(DarkMatterItemId) > 0 then
@@ -147,7 +154,7 @@ function Repair()
                 return
             elseif distanceToMender > 7 then
                 if not (PathfindInProgress() or PathIsRunning()) then
-                    PathfindAndMoveTo(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z)
+                    PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
                 end
             else
                 if not HasTarget() or GetTargetName() ~= Mender.name then
@@ -175,7 +182,7 @@ function Repair()
                 return
             elseif distanceToMender > 7 then
                 if not (PathfindInProgress() or PathIsRunning()) then
-                    PathfindAndMoveTo(darkMatterVendor.x, darkMatterVendor.y, darkMatterVendor.z)
+                    PathfindAndMoveTo(Mender.x, Mender.y, Mender.z)
                 end
             elseif IsAddonVisible("SelectIconString") then
                 yield("/callback SelectIconString true 1")
@@ -234,7 +241,53 @@ function ZoneIn()
     end
 end
 
+ESilverItemId = 45043
+EGoldItemId = 45044
+--Trader = { name="Expedition Trader", x=823.33, y=72.57, z=-727.81 }
+EsotericShop = {name="Expedition Antiquarian", x=833.83, y=72.73, z=-719.51 }
+function DumpSilver()
+    local silverCount = GetItemCount(ESilverItemId)
+    if silverCount < SilverDumpLimit then
+        if IsAddonVisible("ShopExchangeCurrency") then
+            yield("/callback ShopExchangeCurrency true -1")
+        else
+            State = CharacterState.ready
+            LogInfo("[OCHHelper] State Change: Ready")
+        end
+    else
+        TurnOffOCH()
+
+        if IsAddonVisible("SelectYesno") then
+            yield("/callback SelectYesno true 0")
+        elseif IsAddonVisible("ShopExchangeCurrency") then
+            local qty = silverCount//ShopItem.price
+            LogInfo("[OCHHelper] Attempting to buy "..qty.." "..ShopItem.itemName)
+            yield("/callback ShopExchangeCurrency true 0 "..ShopItem.itemIndex.." "..qty.. " 0")
+        elseif IsAddonVisible("SelectIconString") then
+            yield("/callback SelectIconString true "..ShopItem.menuIndex)
+        else
+            local baseToShop = DistanceBetween(EsotericShop.x, EsotericShop.y, EsotericShop.z, BaseAetheryte.x, BaseAetheryte.y, BaseAetheryte.z) + 50
+            local distanceToShop = GetDistanceToPoint(EsotericShop.x, EsotericShop.y, EsotericShop.z)
+            if distanceToShop > baseToShop then
+                ReturnToBase()
+            elseif distanceToShop > 7 then
+                if not (PathfindInProgress() or PathIsRunning()) then
+                    PathfindAndMoveTo(EsotericShop.x, EsotericShop.y, EsotericShop.z)
+                end
+            else
+                if not HasTarget() or GetTargetName() ~= EsotericShop.name then
+                    yield("/target "..EsotericShop.name)
+                else
+                    yield("/interact")
+                    yield("/wait 0.5")
+                end
+            end
+        end
+    end
+end
+
 IllegalMode = false
+SilverDumpLimit = 9500
 function Ready()
     if not IsInZone(OccultCrescentZoneId) then
         State = CharacterState.zoneIn
@@ -246,6 +299,10 @@ function Ready()
         LogInfo("[OCHHelper] State Change: Repair")
     elseif ShouldExtractMateria and CanExtractMateria(100) and GetInventoryFreeSlotCount() > 1 then
         State = CharacterState.extractMateria
+        LogInfo("[OCHHelper] State Change: ExtractMateria")
+    elseif ShouldDumpSilver and GetItemCount(ESilverItemId) > SilverDumpLimit then
+        State = CharacterState.dumpSilver
+        LogInfo("[OCHHelper] State Change: DumpSilver")
     elseif not IllegalMode then
         TurnOnOCH()
     end
@@ -257,9 +314,15 @@ CharacterState = {
     -- dead = HandleDeath,
     -- unexpectedCombat = HandleUnexpectedCombat,
     extractMateria = ExtractMateria,
-    repair = Repair
+    repair = Repair,
+    dumpSilver = DumpSilver
 }
 
+for _, item in ipairs(ShopItems) do
+    if item.itemName == ItemToPurchase then
+        ShopItem = item
+    end
+end
 State = CharacterState.ready
 while true do
     State()
