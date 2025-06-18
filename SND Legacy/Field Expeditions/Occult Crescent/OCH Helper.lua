@@ -234,6 +234,7 @@ function ZoneIn()
     elseif IsInZone(OccultCrescentZoneId) then
         if IsPlayerAvailable() then
             Talked = false
+            TurnOnOCH()
             yield("/rsr auto")
             State = CharacterState.ready
             LogInfo("[OCHHelper] State Change: Ready")
