@@ -111,7 +111,7 @@ function PlayMiniCactpot()
 end
 
 function EndState()
-    if Addons.GetAddon("SelectString") then
+    if Addons.GetAddon("SelectString").Ready then
         yield("/callback SelectString true -1")
     else
         StopFlag = true
