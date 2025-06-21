@@ -1,7 +1,8 @@
 --[[SND Metadata]]
-author: pot0to (https://ko-fi.com/pot0to)
+author: pot0to
 version: 2.0.1
 description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if you had any), and purchases 3 new tickets using random numbers.
+https://ko-fi.com/pot0to
 plugin_dependencies: vnavmesh, TextAdvance, Lifestream
 --[[End Metadata]]
 --[[
