@@ -1,13 +1,14 @@
 --[[
 
 ********************************************************************************
+*                                                                              *
 *                                Jumbo Cactpot                                 *
-*                                Version 1.0.0                                 *
+*                                                                              *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
-Description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if you had any), and
-purchases 3 new tickets using random numbers.
+Description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if
+you had any), and purchases 3 new tickets using random numbers.
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -21,6 +22,16 @@ purchases 3 new tickets using random numbers.
 *            Code: Don't touch this unless you know what you're doing          *
 ********************************************************************************
 ]]
+
+--[[SND Metadata]]
+author: pot0to (https://ko-fi.com/pot0to)
+version: 1.0.0
+description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if you had any), and purchases 3 new tickets using random numbers.
+
+https://github.com/pot0to/pot0to-SND-Scripts/blob/main/New%20SND/Gold%20Saucer/Jumbo%20Cactpot.lua
+
+plugin_dependencies: vnavmesh, TextAdvance, Lifestream
+--[[End Metadata]]
 
 import("System.Numerics")
 
