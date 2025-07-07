@@ -2,7 +2,7 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                                Version 3.0.0                                 *
+*                                Version 3.0.1                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
@@ -1910,7 +1910,7 @@ function MoveToFate()
         if not Svc.Condition[CharacterCondition.mounted] then
             Dalamud.Log("[FATE] Check 12")
             State = CharacterState.mounting
-            Dalmud.Log("[FATE] State Change: Mounting")
+            Dalamud.Log("[FATE] State Change: Mounting")
             return
         elseif not IPC.vnavmesh.PathfindInProgress() and not IPC.vnavmesh.IsRunning() then
             if Player.CanFly and SelectedZone.flying then
