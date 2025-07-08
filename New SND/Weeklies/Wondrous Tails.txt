@@ -1,0 +1,1 @@
+Wondrous Tails script has been adopted by Censored. You can find it here: https://github.com/CensoredFFXIV/snd-scripts/blob/main/wondrousTails.lua
