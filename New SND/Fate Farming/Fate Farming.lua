@@ -2,44 +2,16 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                                Version 3.0.1                                 *
+*                                Version 3.0.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
-    -> 2.22.2   Added option to turn off auto return on death
-                Fixed to pick between /vnav flyflag and /vnav moveflag
-                Updated vnav to use flag navigation, since it works better in
-                    occult. Updated to prevent textadvance spam
-                Added more logging for FlyBackToAetheryte
-                Added 1s wait after mount so you're firmly on the mount. Seems
-                    like some languages like Chinese execute log and echo
-                    messages faster than English, causing the next Pathfind step
-                    to happen too fast, before you are properly mounted, while
-                    you are in the middle of the jump. This forces vnav to give
-                    you a walking path, instead of a flying path, so you
-                    sometimes get stuck.
-    -> 2.21.10  Fix call to vbmai preset
-    -> 2.21.9   By Allison
-                Added priority for checking distance to FATE accounting for a
-                    possible lower distance if you teleported.
-                Added FatePriority Setting. Default works the same as before 
-                    but with new check from above. 
-                    Progress -> Bonus -> Time Left -> Distance
-                Added setting for if you should wait at the Aetheryte when no 
-                    FATE is found. If you disable, you wait where the FATE 
-                    finished.
-                Added MinWait setting because sometimes 3 seconds felt to long.
-                Changed name of WaitUpTo to match MinWait.
-                Added check to disable targeting with VBM if you are using RSR
-                    for the rotation plugin.
-                Small adjustment to wait time after choosing nextFate, results
-                    in landing further from center of fates upon approach.
-                New extra checks in movement to prevent cast cancelling.
-                May have messed something up when pushed out of the fate.
-                Fixed typo with "should it to Turn" -> "should it do Turn"
+    -> 3.0.2    Fixed HasPlugin check
+    -> 3.0.1    Fixed typo causing it to crash
+    -> 3.0.0    Updated for SND2
 
 ********************************************************************************
 *                               Required Plugins                               *
@@ -151,35 +123,6 @@ CompanionScriptMode                 = false         --Set to true if you are usi
 ]]
 
 import("System.Numerics")
-
---#region Plugin Checks and Setting Init
-
-if DodgingPlugin == "None" then
-    -- do nothing
-elseif RotationPlugin == "BMR" and DodgingPlugin ~= "BMR" then
-    DodgingPlugin = "BMR"
-elseif RotationPlugin == "VBM" and DodgingPlugin ~= "VBM"  then
-    DodgingPlugin = "VBM"
-end
-
-if not IPC.IsInstalled("BossMod") and not IPC.IsInstalled("BossMod Reborn") then
-    DodgingPlugin = "None"
-    yield("/echo [FATE] Warning: you do not have an AI dodging plugin, so your character will stand in AOEs. Please install either Veyn's BossMod or BossMod Reborn")
-end
-
-if Retainers and not IPC.IsInstalled("AutoRetainer") then
-    Retainers = false
-    yield("/echo [FATE] Warning: you have enabled the feature to process retainers, but you do not have AutoRetainer installed.")
-end
-
-if ShouldGrandCompanyTurnIn and not IPC.IsInstalled("Deliveroo") then
-    ShouldGrandCompanyTurnIn = false
-    yield("/echo [FATE] Warning: you have enabled the feature to process GC turn ins, but you do not have Deliveroo installed.")
-end
-
-if not CompanionScriptMode then
-    yield("/at y")
-end
 
 --#endregion Plugin Checks and Setting Init
 
@@ -920,7 +863,7 @@ FatesData = {
 
 --#endregion Data
 
--- TODO
+--#region Utils
 function mysplit(inputstr)
   for str in string.gmatch(inputstr, "[^%.]+") do
     return str
@@ -1020,6 +963,15 @@ function MoveToTargetHitbox()
     Dalamud.Log("[FATE] Check 56")
 end
 
+function HasPlugin(name)
+    for plugin in luanet.each(Svc.PluginInterface.InstalledPlugins) do
+        if plugin.InternalName == name then
+            return true
+        end
+    end
+    return false
+end
+--#endregion Utils
 
 --#region Fate Functions
 function IsCollectionsFate(fateName)
@@ -3040,6 +2992,33 @@ CharacterState = {
 --#region Main
 
 Dalamud.Log("[FATE] Starting fate farming script.")
+
+if DodgingPlugin == "None" then
+    -- do nothing
+elseif RotationPlugin == "BMR" and DodgingPlugin ~= "BMR" then
+    DodgingPlugin = "BMR"
+elseif RotationPlugin == "VBM" and DodgingPlugin ~= "VBM"  then
+    DodgingPlugin = "VBM"
+end
+
+if not HasPlugin("BossMod") and not HasPlugin("BossModReborn") then
+    DodgingPlugin = "None"
+    yield("/echo [FATE] Warning: you do not have an AI dodging plugin, so your character will stand in AOEs. Please install either Veyn's BossMod or BossMod Reborn")
+end
+
+if Retainers and not HasPlugin("AutoRetainer") then
+    Retainers = false
+    yield("/echo [FATE] Warning: you have enabled the feature to process retainers, but you do not have AutoRetainer installed.")
+end
+
+if ShouldGrandCompanyTurnIn and not HasPlugin("Deliveroo") then
+    ShouldGrandCompanyTurnIn = false
+    yield("/echo [FATE] Warning: you have enabled the feature to process GC turn ins, but you do not have Deliveroo installed.")
+end
+
+if not CompanionScriptMode then
+    yield("/at y")
+end
 
 StopScript = false
 DidFate = false
