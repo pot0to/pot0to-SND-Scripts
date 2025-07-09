@@ -2,13 +2,14 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                                Version 3.0.2                                 *
+*                                Version 3.0.3                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
+    -> 3.0.3    Remove noisy logging
     -> 3.0.2    Fixed HasPlugin check
     -> 3.0.1    Fixed typo causing it to crash
     -> 3.0.0    Updated for SND2
@@ -1041,15 +1042,12 @@ function IsFateActive(fate)
 end
 
 function InActiveFate()
-    Dalamud.Log("[FATE] Check 28")
     local activeFates = Fates.GetActiveFates()
     for i=0, activeFates.Count-1 do
         if activeFates[i].InFate and IsFateActive(activeFates[i]) then
-            Dalamud.Log("[FATE] Check 29")
             return true
         end
     end
-    Dalamud.Log("[FATE] Check 30")
     return false
 end
 
