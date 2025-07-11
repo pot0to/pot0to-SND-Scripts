@@ -29,26 +29,28 @@ plugin_dependencies:
 configs:
   Food:
     default: 
-    description: Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+    description: Leave blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
     type: string
   Potion:
     default:
-    description: Leave "" Blank if you don't want to use any potions.
+    description: Leave blank if you don't want to use any potions. If its HQ include <hq> next to the name "Superior Spiritbond Potion <hq>"
     type: string
   Summon Chocobo Companion?:
-    default: true
-    type: boolean
-    required: true
-  Chocobo Companion Stance:
     default: "Healer"
-    description: Options: Follow/Free/Defender/Healer/Attacker
-    type: boolean
+    description: Options - Follow/Free/Defender/Healer/Attacker/None. Will not summon chocobo if set to "None"
+    type: string
   Buy Gysahl Greens?:
     default: true
-    description: Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
+    description: Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if none in inventory
     type: boolean
   Ignore FATE if progress is over (%):
     default: 80
+    type: int
+    min: 0
+    max: 100
+    required: true
+  Ignore FATE if duration is less than (mins):
+    default: 3
     type: int
     min: 0
     max: 100
@@ -64,27 +66,62 @@ configs:
     type: int
     min: 0
     max: 100
-    required true
+    required: true
   Ignore Special FATEs until progress is at least (%):
     default: 20
     type: int
     min: 0
     max: 100
-    required true
-  Do collection FATEs:
+    required: true
+  Do collection FATEs?:
     default: true
     type: boolean
-  Do only bonus FATEs:
+  Do only bonus FATEs?:
     default: false
-    type:boolean
+    type: boolean
   Max melee distance:
     default: 2.5
     type: float
+    min: 0
+    max: 30
     required: true
   Max ranged distance:
     default: 20
     type: float
+    min: 0
+    max: 30
     required: true
+  Forlorns:
+    default: All
+    type: string
+    description: Options - All/Small/None
+    required: true
+  Change instances if no FATEs?:
+    default: true
+    type: boolean
+  Exchange bicolor gemstones for:
+    default: Turali Bicolor Gemstone Voucher
+    type: string
+    description: Leave blank if you don't want to spend your bicolors
+  Self repair?:
+    default: true
+    description: If checked, will attempt to repair your gear. If not checked, will go to Limsa mender.
+    type: boolean
+  Pause for retainers?:
+    default: true
+    type: boolean
+  Dump extra gear at GC?:
+    default: true
+    type: boolean
+    description: Used with retainers, in case they come back with too much stuff and clog your inventory.
+  Return on death?:
+    default: true
+    type: boolean
+    description: Auto accept the box to return to home aetheryte when you die.
+  Echo logs:
+    default: All
+    type: string
+    description: Options - All/Gems/None
 [[End Metadata]]
 --]=====]
 --[[
@@ -139,68 +176,6 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 *                                   Settings                                   *
 ********************************************************************************
 ]]
-
---Pre Fate Settings
-Food = Config.Get("Food")
-Potion = Config.Get("Potion")
-ShouldSummonChocobo = Config.Get("Summon Chocobo Companion?")
-ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
-ChocoboStance = Config.Get("Chocobo Companion Stance")      --
-ShouldAutoBuyGysahlGreens = Config.Get("Buy Gysahl Greens?")    --
-MountToUse                          = "mount roulette"       --The mount you'd like to use when flying between fates
-FatePriority                        = {"DistanceTeleport", "Progress", "DistanceTeleport", "Bonus", "TimeLeft", "Distance"}
-
---Fate Combat Settings
-CompletionToIgnoreFate = Config.Get("Ignore FATE if progress is over (%)")
-MinTimeLeftToIgnoreFate = Config.Get("Ignore FATE if duration is less than (mins)")*60
-CompletionToJoinBossFate = Config.Get("Ignore boss FATEs until progress is at least (%)")
-CompletionToJoinSpecialBossFates = Config.Get("Ignore Special FATEs until progress is at least (%)")
-ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
-                                                        --for the class. Ex: "PLD"
-JoinCollectionsFates = Config.Get("Do collection FATEs")
-BonusFatesOnly = Config.Get("Do only bonus FATEs")         --If true, will only do bonus fates and ignore everything else
-
-MeleeDist = Config.Get("Max melee distance")
-RangedDist = Config.Get("Max ranged distance")
-
-RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath/None
-    RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
-
-    -- For BMR/VBM/Wrath
-    RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns). TURN OFF AUTOMATIC TARGETING FOR THIS PRESET
-    RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
-    RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
-    PercentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
-DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
-
-IgnoreForlorns                      = false
-    IgnoreBigForlornOnly            = false
-
---Post Fate Settings
-MinWait                             = 3             --Min number of seconds it should wait until mounting up for next fate.
-MaxWait                             = 10            --Max number of seconds it should wait until mounting up for next fate.
-                                                        --Actual wait time will be a randomly generated number between MinWait and MaxWait.
-DownTimeWaitAtNearestAetheryte      = false         --When waiting for fates to pop, should you fly to the nearest Aetheryte and wait there?
-EnableChangeInstance                = false          --should it Change Instance when there is no Fate (only works on DT fates)
-    WaitIfBonusBuff                 = true          --Don't change instances if you have the Twist of Fate bonus buff
-    NumberOfInstances               = 2
-ShouldExchangeBicolorGemstones      = true          --Should it exchange Bicolor Gemstone Vouchers?
-    ItemToPurchase                  = "Turali Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
-SelfRepair                          = true          --if false, will go to Limsa mender
-    RemainingDurabilityToRepair     = 10            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
-    ShouldAutoBuyDarkMatter         = true          --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
-ShouldExtractMateria                = true          --should it Extract Materia
-Retainers                           = false         --should it do Retainers
-ShouldGrandCompanyTurnIn            = false         --should it do Turn ins at the GC (requires Deliveroo)
-    InventorySlotsLeft              = 5             --how much inventory space before turning in
-
-ReturnOnDeath                       = true          --should auto accept return on death
-
-Echo                                = "All"         --Options: All/Gems/None
-
-CompanionScriptMode                 = false         --Set to true if you are using the fate script with a companion script (such as the Atma Farmer)
-
---#endregion Settings
 
 --[[
 ********************************************************************************
@@ -3081,6 +3056,90 @@ CharacterState = {
 --#region Main
 
 Dalamud.Log("[FATE] Starting fate farming script.")
+
+Food = Config.Get("Food")
+Potion = Config.Get("Potion")
+ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
+ChocoboStance = Config.Get("Chocobo Companion Stance")
+ShouldSummonChocobo = true
+if ChocoboStance ~= "Follow" and ChocoboStance ~= "Free" and
+    ChocoboStance ~= "Defender" and ChocoboStance ~= "Healer" and
+    ChocoboStance ~= "Attacker"
+then
+    ShouldSummonChocobo = false
+end
+
+ShouldAutoBuyGysahlGreens = Config.Get("Buy Gysahl Greens?")    --
+MountToUse                          = "mount roulette"       --The mount you'd like to use when flying between fates
+FatePriority                        = {"DistanceTeleport", "Progress", "DistanceTeleport", "Bonus", "TimeLeft", "Distance"}
+
+--Fate Combat Settings
+CompletionToIgnoreFate = Config.Get("Ignore FATE if progress is over (%)")
+MinTimeLeftToIgnoreFate = Config.Get("Ignore FATE if duration is less than (mins)")*60
+CompletionToJoinBossFate = Config.Get("Ignore boss FATEs until progress is at least (%)")
+CompletionToJoinSpecialBossFates = Config.Get("Ignore Special FATEs until progress is at least (%)")
+ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
+                                                        --for the class. Ex: "PLD"
+JoinCollectionsFates = Config.Get("Do collection FATEs")
+BonusFatesOnly = Config.Get("Do only bonus FATEs")         --If true, will only do bonus fates and ignore everything else
+
+MeleeDist = Config.Get("Max melee distance")
+RangedDist = Config.Get("Max ranged distance")
+
+if HasPlugin("Wrath") then
+    RotationPlugin = "Wrath"         --Options: RSR/BMR/VBM/Wrath/None
+elseif HasPlugin("RotationSolverReborn") then
+    RotationPlugin = "RSR"
+elseif HasPlugin("BossMod") then
+    RotationPlugin = "VBM"
+elseif HasPlugin("BossModReborn") then
+    RotationPlugin = "BMR"
+end
+    RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
+
+    -- For BMR/VBM/Wrath
+    RotationSingleTargetPreset      = ""            --Preset name with single target strategies (for forlorns). TURN OFF AUTOMATIC TARGETING FOR THIS PRESET
+    RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
+    RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
+    PercentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
+DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
+
+IgnoreForlorns = false
+IgnoreBigForlornOnly = false
+Forlorns = Config.Get("Forlorns")
+if Forlorns == "None" then
+    IgnoreForlorns = true
+elseif Forlorns == "Small" then
+    IgnoreBigForlornOnly = true
+end
+
+--Post Fate Settings
+MinWait                             = 3             --Min number of seconds it should wait until mounting up for next fate.
+MaxWait                             = 10            --Max number of seconds it should wait until mounting up for next fate.
+                                                        --Actual wait time will be a randomly generated number between MinWait and MaxWait.
+DownTimeWaitAtNearestAetheryte      = false         --When waiting for fates to pop, should you fly to the nearest Aetheryte and wait there?
+EnableChangeInstance = Config.Get("Change instances if no FATEs?")
+WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
+NumberOfInstances = 2
+ShouldExchangeBicolorGemstones = Config.Get("Exchange bicolor gemstones?")
+ItemToPurchase = Config.Get("Exchange bicolor gemstones for")
+ShouldExchangeBicolorGemstones = true
+if ItemToPurchase == "" or ItemToPurchase == nil then
+    ShouldExchangeBicolorGemstones = false
+end
+SelfRepair = Config.Get("Self repair?")
+RemainingDurabilityToRepair     = 10            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+ShouldAutoBuyDarkMatter         = true          --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
+ShouldExtractMateria                = true          --should it Extract Materia
+Retainers = Config.Get("Pause for retainers?")
+ShouldGrandCompanyTurnIn = Config.Get("Dump extra gear at GC?")         --should it do Turn ins at the GC (requires Deliveroo)
+    InventorySlotsLeft              = 5             --how much inventory space before turning in
+
+ReturnOnDeath = Config.Get("Return on death?")
+
+Echo = Config.Get("Echo logs")
+CompanionScriptMode                 = false         --Set to true if you are using the fate script with a companion script (such as the Atma Farmer)
+
 
 if DodgingPlugin == "None" then
     -- do nothing
