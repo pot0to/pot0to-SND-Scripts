@@ -2528,11 +2528,15 @@ function Ready()
             yield("/wait 10")
         end
         return
-    elseif not Dalamud.Log("[FATE] Ready -> ExchangingVouchers") and WaitingForFateRewards == nil and
+    elseif not Dalamud.Log("[FATE] Ready -> ExchangingVouchers") and
         ShouldExchangeBicolorGemstones and (BicolorGemCount >= 1400) and not shouldWaitForBonusBuff
     then
-        State = CharacterState.exchangingVouchers
-        Dalamud.Log("[FATE] State Change: ExchangingVouchers")
+        if WaitingForFateRewards == nil then
+            State = CharacterState.exchangingVouchers
+            Dalamud.Log("[FATE] State Change: ExchangingVouchers")
+        else
+            Dalamud.Log("[FATE] Waiting for fate rewards: "..WaitingForFateRewards.fateId)
+        end
     elseif not Dalamud.Log("[FATE] Ready -> ProcessRetainers") and WaitingForFateRewards == nil and
         Retainers and ARRetainersWaitingToBeProcessed() and Inventory.GetFreeInventorySlots() > 1  and not shouldWaitForBonusBuff
     then
