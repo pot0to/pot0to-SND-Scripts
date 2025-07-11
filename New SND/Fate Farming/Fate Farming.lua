@@ -1,7 +1,7 @@
 --[=====[
 [[SND Metadata]]
 author: pot0to
-version: 3.0.6
+version: 3.0.7
 description: >-
   Fate farming script with the following features:
 
@@ -962,7 +962,6 @@ function GetTargetName()
 end
 
 function AttemptToTargetClosestFateEnemy()
-    Dalamud.Log("[FATE] Check 24")
     --Svc.Targets.Target = Svc.Objects.OrderBy(DistanceToObject).FirstOrDefault(o => o.IsTargetable && o.IsHostile() && !o.IsDead && (distance == 0 || DistanceToObject(o) <= distance) && o.Struct()->FateId > 0);
     local closestTarget = nil
     local closestTargetDistance = math.maxinteger
@@ -981,18 +980,15 @@ function AttemptToTargetClosestFateEnemy()
     if closestTarget ~= nil then
         Svc.Targets.Target = closestTarget
     end
-    Dalamud.Log("[FATE] Check 36")
 end
 
 -- Calculates a point on the line from 'start' to 'end',
 -- stopping 'd' units before reaching 'end'
 function MoveToTargetHitbox()
-    Dalamud.Log("[FATE] Check 51")
     if Svc.Targets.Target == nil then
         return
     end
 
-    Dalamud.Log("[FATE] Check 52")
     -- Vector from start to end
     local distance = GetDistanceToTarget()
 
@@ -1001,27 +997,22 @@ function MoveToTargetHitbox()
         return
     end
 
-    Dalamud.Log("[FATE] Check 53")
     -- Scale direction vector to (distance - d)
     local newDistance = distance - GetTargetHitboxRadius()
     if newDistance <= 0 then
         return
     end
 
-    Dalamud.Log("[FATE] Check 54")
     -- Calculate normalized direction vector
     local norm = (Svc.Targets.Target.Position - Svc.ClientState.LocalPlayer.Position) / distance
     local edgeOfHitbox = (norm*newDistance) + Svc.ClientState.LocalPlayer.Position
     local newPos = nil
     local halfExt = 10
     while newPos == nil do
-        Dalamud.Log("[FATE] Check 55")
         newPos = IPC.vnavmesh.PointOnFloor(edgeOfHitbox, false, halfExt)
         halfExt = halfExt + 10
     end
     yield("/vnav moveto "..newPos.X.." "..newPos.Y.." "..newPos.Z)
-
-    Dalamud.Log("[FATE] Check 56")
 end
 
 function HasPlugin(name)
@@ -1104,7 +1095,7 @@ end
 function InActiveFate()
     local activeFates = Fates.GetActiveFates()
     for i=0, activeFates.Count-1 do
-        if activeFates[i].InFate and IsFateActive(activeFates[i]) then
+        if activeFates[i].InFate == true and IsFateActive(activeFates[i]) then
             return true
         end
     end
@@ -1168,10 +1159,8 @@ function BuildFateTable(fateObj)
         isBonusFate = fateObj.IsBonus,
     }
 
-    Dalamud.Log("[FATE] Check 5")
     fateTable.npcName = GetFateNpcName(fateTable.fateName)
 
-    Dalamud.Log("[FATE] Check 6")
     local currentTime = EorzeaTimeToUnixTime(Instances.Framework.EorzeaTime)
     if fateTable.startTime == 0 then
         fateTable.timeLeft = 900
@@ -1180,18 +1169,12 @@ function BuildFateTable(fateObj)
         fateTable.timeLeft = fateTable.duration - fateTable.timeElapsed
     end
 
-    Dalamud.Log("[FATE] Check 7")
     fateTable.isCollectionsFate = IsCollectionsFate(fateTable.fateName)
-    Dalamud.Log("[FATE] Check 7.1")
     fateTable.isBossFate = IsBossFate(fateTable.fateObject)
-    Dalamud.Log("[FATE] Check 7.2")
     fateTable.isOtherNpcFate = IsOtherNpcFate(fateTable.fateName)
-    Dalamud.Log("[FATE] Check 7.3")
     fateTable.isSpecialFate = IsSpecialFate(fateTable.fateName)
-    Dalamud.Log("[FATE] Check 7.4")
     fateTable.isBlacklistedFate = IsBlacklistedFate(fateTable.fateName)
 
-    Dalamud.Log("[FATE] Check 8")
     fateTable.continuationIsBoss = false
     fateTable.hasContinuation = false
     for _, continuationFate in ipairs(SelectedZone.fatesList.fatesWithContinuations) do
@@ -1341,9 +1324,7 @@ end
 
 function AcceptNPCFateOrRejectOtherYesno()
     if Addons.GetAddon("SelectYesno").Ready then
-        Dalamud.Log("[FATE] Check 45")
         local dialogBox = GetNodeText("SelectYesno", 1, 2)
-        Dalamud.Log("[FATE] Check 46")
         if type(dialogBox) == "string" and dialogBox:find("The recommended level for this FATE is") then
             yield("/callback SelectYesno true 0") --accept fate
         else
@@ -1810,7 +1791,6 @@ end
 --Paths to the Fate. CurrentFate is set here to allow MovetoFate to change its mind,
 --so CurrentFate is possibly nil.
 function MoveToFate()
-    Dalamud.Log("[FATE] Check 9")
     SuccessiveInstanceChanges = 0
 
     if not Player.Available then
@@ -1826,22 +1806,17 @@ function MoveToFate()
     end
 
     NextFate = SelectNextFate()
-    Dalamud.Log("[FATE] Check 13")
     if NextFate == nil then -- when moving to next fate, CurrentFate == NextFate
-        Dalamud.Log("[FATE] Check 14")
         yield("/vnav stop")
         State = CharacterState.ready
         Dalamud.Log("[FATE] State Change: Ready")
         return
     elseif CurrentFate == nil or NextFate.fateId ~= CurrentFate.fateId then
-        Dalamud.Log("[FATE] Check 15")
         yield("/vnav stop")
         CurrentFate = NextFate
         SetMapFlag(SelectedZone.zoneId, CurrentFate.position)
         return
     end
-
-    Dalamud.Log("[FATE] Check 11")
 
     -- change to secondary class if it's a boss fate
     if BossFatesClass ~= nil then
@@ -1855,10 +1830,8 @@ function MoveToFate()
         end
     end
 
-    Dalamud.Log("[FATE] Check 21")
     -- upon approaching fate, pick a target and switch to pathing towards target
     if GetDistanceToPoint(CurrentFate.position) < 60 then
-        Dalamud.Log("[FATE] Check 22")
         if Svc.Targets.Target ~= nil then
             Dalamud.Log("[FATE] Found FATE target, immediate rerouting")
             yield("/wait 0.1")
@@ -1877,7 +1850,6 @@ function MoveToFate()
             end
             return
         else
-            Dalamud.Log("[FATE] Check 23")
             if (CurrentFate.isOtherNpcFate or CurrentFate.isCollectionsFate) and not InActiveFate() then
                 yield("/target "..CurrentFate.npcName)
             else
@@ -1888,10 +1860,8 @@ function MoveToFate()
         end
     end
 
-    Dalamud.Log("[FATE] Check 16")
     -- check for stuck
     if (IPC.vnavmesh.IsRunning() or IPC.vnavmesh.PathfindInProgress()) and Svc.Condition[CharacterCondition.mounted] then
-        Dalamud.Log("[FATE] Check 17")
         local now = os.clock()
         if now - LastStuckCheckTime > 10 then
 
@@ -1909,7 +1879,6 @@ function MoveToFate()
         return
     end
 
-    Dalamud.Log("[FATE] Check 18")
     if not MovingAnnouncementLock then
         Dalamud.Log("[FATE] Moving to fate #"..CurrentFate.fateId.." "..CurrentFate.fateName)
         MovingAnnouncementLock = true
@@ -1928,11 +1897,8 @@ function MoveToFate()
         nearestFloor = RandomAdjustCoordinates(CurrentFate.position, 10)
     end
 
-    Dalamud.Log("[FATE] Check 10")
     if GetDistanceToPoint(nearestFloor) > 5 then
-        Dalamud.Log("[FATE] Check 11")
         if not Svc.Condition[CharacterCondition.mounted] then
-            Dalamud.Log("[FATE] Check 12")
             State = CharacterState.mounting
             Dalamud.Log("[FATE] State Change: Mounting")
             return
@@ -1949,9 +1915,7 @@ function MoveToFate()
 end
 
 function InteractWithFateNpc()
-    Dalamud.Log("[FATE] Check 20")
     if InActiveFate() or CurrentFate.startTime > 0 then
-        Dalamud.Log("[FATE] Check 31")
         yield("/vnav stop")
         State = CharacterState.doFate
         Dalamud.Log("[FATE] State Change: DoFate")
@@ -1965,30 +1929,24 @@ function InteractWithFateNpc()
         end
         return
     else
-        Dalamud.Log("[FATE] Check 27")
         -- if target is already selected earlier during pathing, avoids having to target and move again
         if (Svc.Targets.Target == nil or GetTargetName()~=CurrentFate.npcName) then
-            Dalamud.Log("[FATE] Check 35")
             yield("/target "..CurrentFate.npcName)
             return
         end
 
-        Dalamud.Log("[FATE] Check 32")
         if Svc.Condition[CharacterCondition.mounted] then
             State = CharacterState.npcDismount
             Dalamud.Log("[FATE] State Change: NPCDismount")
             return
         end
 
-        Dalamud.Log("[FATE] Check 33")
         if GetDistanceToPoint(Svc.Targets.Target.Position) > 5 then
             MoveToNPC()
             return
         end
 
-        Dalamud.Log("[FATE] Check 34")
         if Addons.GetAddon("SelectYesno").Ready then
-            Dalamud.Log("[FATE] Check 44")
             AcceptNPCFateOrRejectOtherYesno()
         elseif not Svc.Condition[CharacterCondition.occupied] then
             yield("/interact")
@@ -2153,7 +2111,6 @@ function GetTargetHitboxRadius()
 end
 
 function TurnOnAoes()
-    Dalamud.Log("[FATE] Check 37")
     if not AoesOn then
         if RotationPlugin == "RSR" then
             yield("/rotation off")
@@ -2174,7 +2131,6 @@ function TurnOnAoes()
         end
         AoesOn = true
     end
-    Dalamud.Log("[FATE] Check 38")
 end
 
 function TurnOffAoes()
@@ -2372,11 +2328,10 @@ function DoFate()
         yield("/gs change "..MainClass.className)
         yield("/wait 1")
         return
-    elseif not Dalamud.Log("[FATE] Check 62") and InActiveFate() and (CurrentFate.fateObject.MaxLevel < Player.Job.Level) and not Player.IsLevelSynced then
-        Dalamud.Log("[FATE] Check 60")
+    elseif InActiveFate() and (CurrentFate.fateObject.MaxLevel < Player.Job.Level) and not Player.IsLevelSynced then
         yield("/lsync")
         yield("/wait 0.5") -- give it a second to register
-    elseif not Dalamud.Log("[FATE] Check 63") and IsFateActive(CurrentFate.fateObject) and not InActiveFate() and CurrentFate.fateObject.Progress ~= nil and CurrentFate.fateObject.Progress < 100 and
+    elseif IsFateActive(CurrentFate.fateObject) and not InActiveFate() and CurrentFate.fateObject.Progress ~= nil and CurrentFate.fateObject.Progress < 100 and
         (GetDistanceToPoint(CurrentFate.position) < CurrentFate.fateObject.Radius + 10) and
         not Svc.Condition[CharacterCondition.mounted] and not (IPC.vnavmesh.IsRunning() or IPC.vnavmesh.PathfindInProgress())
     then -- got pushed out of fate. go back
@@ -2457,37 +2412,29 @@ function DoFate()
         TurnOnAoes()
     end
 
-    Dalamud.Log("[FATE] Check 39")
     -- targets whatever is trying to kill you
     if Entity.Target == nil then
         yield("/battletarget")
     end
 
     -- clears target
-    Dalamud.Log("[FATE] Check 40")
     if Entity.Target ~= nil and Entity.Target.FateId ~= CurrentFate.fateId and not Entity.Target.IsInCombat then
-        Dalamud.Log("[FATE] Check 41")
         Entity.Target:ClearTarget()
     end
 
-    Dalamud.Log("[FATE] Check 42")
     -- do not interrupt casts to path towards enemies
     if Svc.Condition[CharacterCondition.casting] then
         return
     end
 
-    Dalamud.Log("[FATE] Check 49")
     --hold buff thingy
     if CurrentFate.fateObject.Progress ~= nil and CurrentFate.fateObject.Progress >= PercentageToHoldBuff then
         TurnOffRaidBuffs()
     end
 
-    Dalamud.Log("[FATE] Check 43")
     -- pathfind closer if enemies are too far
     if not Svc.Condition[CharacterCondition.inCombat] then
-        Dalamud.Log("[FATE] Check 47")
         if Svc.Targets.Target ~= nil then
-            Dalamud.Log("[FATE] Check 57")
             if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
                 if IPC.vnavmesh.PathfindInProgress() or IPC.vnavmesh.IsRunning() then
                     yield("/vnav stop")
@@ -2502,10 +2449,8 @@ function DoFate()
                     MoveToTargetHitbox()
                 end
             end
-            Dalamud.Log("[FATE] Check 59")
             return
         else
-            Dalamud.Log("[FATE] Check 58")
             AttemptToTargetClosestFateEnemy()
             yield("/wait 1") -- wait in case target doesn't stick
             if (Svc.Targets.Target == nil) and not Svc.Condition[CharacterCondition.casting] then
@@ -2513,7 +2458,6 @@ function DoFate()
             end
         end
     else
-        Dalamud.Log("[FATE] Check 48")
         if Svc.Targets.Target ~= nil and (GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius())) then
             if IPC.vnavmesh.PathfindInProgress() or IPC.vnavmesh.IsRunning() then
                 yield("/vnav stop")
@@ -2531,8 +2475,6 @@ function DoFate()
             end
         end
     end
-
-    Dalamud.Log("[FATE] Check 50")
 end
 
 --#endregion
@@ -2540,7 +2482,6 @@ end
 --#region State Transition Functions
 
 function Ready()
-    Dalamud.Log("[FATE] Check 1")
     FoodCheck()
     PotionCheck()
 
@@ -2549,14 +2490,11 @@ function Ready()
     ForlornMarked = false
     MovingAnnouncementLock = false
 
-    Dalamud.Log("[FATE] Check 2")
     local shouldWaitForBonusBuff = WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))
     local needsRepair = Inventory.GetItemsInNeedOfRepairs(RemainingDurabilityToRepair)
     local spiritbonded = Inventory.GetSpiritbondedItems()
 
-    Dalamud.Log("[FATE] Check 3")
     NextFate = SelectNextFate()
-    Dalamud.Log("[FATE] Check 4")
     if CurrentFate ~= nil and not IsFateActive(CurrentFate.fateObject) then
         CurrentFate = nil
     end
@@ -2833,16 +2771,13 @@ function GrandCompanyTurnIn()
 end
 
 function Repair()
-    Dalamud.Log("[FATE] Check 25")
     local needsRepair = Inventory.GetItemsInNeedOfRepairs(RemainingDurabilityToRepair)
     if Addons.GetAddon("SelectYesno").Ready then
-        Dalamud.Log("[FATE] Check 30")
         yield("/callback SelectYesno true 0")
         return
     end
 
     if Addons.GetAddon("Repair").Ready then
-        Dalamud.Log("[FATE] Check 31")
         if needsRepair.Count == nil or needsRepair.Count == 0 then
             yield("/callback Repair true -1") -- if you don't need repair anymore, close the menu
         else
@@ -2853,7 +2788,6 @@ function Repair()
 
     -- if occupied by repair, then just wait
     if Svc.Condition[CharacterCondition.occupiedMateriaExtractionAndRepair] then
-        Dalamud.Log("[FATE] Check 32")
         Dalamud.Log("[FATE] Repairing...")
         yield("/wait 1")
         return
@@ -2878,9 +2812,7 @@ function Repair()
                 return
             end
 
-            Dalamud.Log("[FATE] Check 28")
             if needsRepair.Count > 0 then
-                Dalamud.Log("[FATE] Check 29")
                 if not Addons.GetAddon("Repair").Ready then
                     Dalamud.Log("[FATE] Opening repair menu...")
                     yield("/generalaction repair")
