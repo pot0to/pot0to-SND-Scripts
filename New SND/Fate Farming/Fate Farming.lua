@@ -1,14 +1,99 @@
+--[=====[
+[[SND Metadata]]
+author: pot0to
+version: 3.0.6
+description: >-
+  Fate farming script with the following features:
+
+  - Can purchase Bicolor Gemstone Vouchers (both old and new) when your gemstones are almost capped
+
+  - Priority system for Fate selection: most progress > is bonus fate > least time left > distance
+
+  - Can prioritize Forlorns when they show up during Fate
+
+  - Can do all fates, including NPC collection fates
+
+  - Revives upon death and gets back to fate farming
+
+  - Attempts to change instances when there are no fates left in the zone
+
+  - Can process your retainers and Grand Company turn ins, then get back to fate farming
+
+  - Autobuys gysahl greens and grade 8 dark matter when you run out
+
+  - Has companion scripts dedicated to atma farming, or you can write your own! (See section for companion scripts)
+plugin_dependencies:
+- Lifestream
+- vnavmesh
+- TextAdvance
+configs:
+  Food:
+    default: 
+    description: Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
+    type: string
+  Potion:
+    default:
+    description: Leave "" Blank if you don't want to use any potions.
+    type: string
+  Summon Chocobo Companion?:
+    default: true
+    type: boolean
+    required: true
+  Chocobo Companion Stance:
+    default: "Healer"
+    description: Options: Follow/Free/Defender/Healer/Attacker
+    type: boolean
+  Buy Gysahl Greens?:
+    default: true
+    description: Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
+    type: boolean
+  Ignore FATE if progress is over (%):
+    default: 80
+    type: int
+    min: 0
+    max: 100
+    required: true
+  Ignore FATE if duration is less than (mins):
+    default: 3
+    type: int
+    min: 0
+    max: 100
+    required: true
+  Ignore boss FATEs until progress is at least (%):
+    default: 0
+    type: int
+    min: 0
+    max: 100
+    required true
+  Ignore Special FATEs until progress is at least (%):
+    default: 20
+    type: int
+    min: 0
+    max: 100
+    required true
+  Do collection FATEs:
+    default: true
+    type: boolean
+  Do only bonus FATEs:
+    default: false
+    type:boolean
+  Max melee distance:
+    default: 2.5
+    type: float
+    required: true
+  Max ranged distance:
+    default: 20
+    type: float
+    required: true
+[[End Metadata]]
+--]=====]
 --[[
 
 ********************************************************************************
-*                                Fate Farming                                  *
-*                                Version 3.0.4                                 *
+*                                  Changelog                                   *
 ********************************************************************************
 
-Created by: pot0to (https://ko-fi.com/pot0to)
-Contributors: Prawellp, Mavi, Allison
-State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
-
+    -> 3.0.6    Adding metadata
     -> 3.0.5    Fixed repair function
     -> 3.0.4    Remove noisy logging
     -> 3.0.2    Fixed HasPlugin check
@@ -32,7 +117,6 @@ Plugins that are needed for it to work:
         -> BossMod Reborn: https://raw.githubusercontent.com/FFXIV-CombatReborn/CombatRebornRepo/main/pluginmaster.json
         -> Veyn's BossMod: https://puni.sh/api/repository/veyn
     -> TextAdvance: (for interacting with Fate NPCs) https://github.com/NightmareXIV/MyDalamudPlugins/raw/main/pluginmaster.json
-    -> Teleporter :  (for Teleporting to aetherytes [teleport][Exchange][Retainers])
     -> Lifestream :  (for changing Instances [ChangeInstance][Exchange]) https://raw.githubusercontent.com/NightmareXIV/MyDalamudPlugins/main/pluginmaster.json
 
 ********************************************************************************
@@ -57,27 +141,27 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 ]]
 
 --Pre Fate Settings
-Food                                = ""            --Leave "" Blank if you don't want to use any food. If its HQ include <hq> next to the name "Baked Eggplant <hq>"
-Potion                              = ""            --Leave "" Blank if you don't want to use any potions.
-ShouldSummonChocobo                 = true         --Summon chocobo?
-    ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
-    ChocoboStance                   = "Healer"      --Options: Follow/Free/Defender/Healer/Attacker
-    ShouldAutoBuyGysahlGreens       = true          --Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if you're out
+Food = Config.Get("Food")
+Potion = Config.Get("Potion")
+ShouldSummonChocobo = Config.Get("Summon Chocobo Companion?")
+ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
+ChocoboStance = Config.Get("Chocobo Companion Stance")      --
+ShouldAutoBuyGysahlGreens = Config.Get("Buy Gysahl Greens?")    --
 MountToUse                          = "mount roulette"       --The mount you'd like to use when flying between fates
 FatePriority                        = {"DistanceTeleport", "Progress", "DistanceTeleport", "Bonus", "TimeLeft", "Distance"}
 
 --Fate Combat Settings
-CompletionToIgnoreFate              = 80            --If the fate has more than this much progress already, skip it
-MinTimeLeftToIgnoreFate             = 3*60          --If the fate has less than this many seconds left on the timer, skip it
-CompletionToJoinBossFate            = 0             --If the boss fate has less than this much progress, skip it (used to avoid soloing bosses)
-    CompletionToJoinSpecialBossFates = 20           --For the Special Fates like the Serpentlord Seethes or Mascot Murder
-    ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
+CompletionToIgnoreFate = Config.Get("Ignore FATE if progress is over (%)")
+MinTimeLeftToIgnoreFate = Config.Get("Ignore FATE if duration is less than (mins)")*60
+CompletionToJoinBossFate = Config.Get("Ignore boss FATEs until progress is at least (%)")
+CompletionToJoinSpecialBossFates = Config.Get("Ignore Special FATEs until progress is at least (%)")
+ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                                         --for the class. Ex: "PLD"
-JoinCollectionsFates                = true          --Set to false if you never want to do collections fates
-BonusFatesOnly                      = false         --If true, will only do bonus fates and ignore everything else
+JoinCollectionsFates = Config.Get("Do collection FATEs")
+BonusFatesOnly = Config.Get("Do only bonus FATEs")         --If true, will only do bonus fates and ignore everything else
 
-MeleeDist                           = 2.5           --Distance for melee. Melee attacks (auto attacks) max distance is 2.59y, 2.60 is "target out of range"
-RangedDist                          = 20            --Distance for ranged. Ranged attacks and spells max distance to be usable is 25.49y, 25.5 is "target out of range"=
+MeleeDist = Config.Get("Max melee distance")
+RangedDist = Config.Get("Max ranged distance")
 
 RotationPlugin                      = "RSR"         --Options: RSR/BMR/VBM/Wrath/None
     RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
