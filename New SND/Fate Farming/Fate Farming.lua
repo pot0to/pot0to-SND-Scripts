@@ -2,14 +2,15 @@
 
 ********************************************************************************
 *                                Fate Farming                                  *
-*                                Version 3.0.3                                 *
+*                                Version 3.0.4                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
 Contributors: Prawellp, Mavi, Allison
 State Machine Diagram: https://github.com/pot0to/pot0to-SND-Scripts/blob/main/FateFarmingStateMachine.drawio.png
 
-    -> 3.0.3    Remove noisy logging
+    -> 3.0.5    Fixed repair function
+    -> 3.0.4    Remove noisy logging
     -> 3.0.2    Fixed HasPlugin check
     -> 3.0.1    Fixed typo causing it to crash
     -> 3.0.0    Updated for SND2
@@ -101,8 +102,8 @@ EnableChangeInstance                = false          --should it Change Instance
     NumberOfInstances               = 2
 ShouldExchangeBicolorGemstones      = true          --Should it exchange Bicolor Gemstone Vouchers?
     ItemToPurchase                  = "Turali Bicolor Gemstone Voucher"        -- Old Sharlayan for "Bicolor Gemstone Voucher" and Solution Nine for "Turali Bicolor Gemstone Voucher"
-SelfRepair                          = true         --if false, will go to Limsa mender
-    RemainingDurabilityToRepair                    = 20            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
+SelfRepair                          = true          --if false, will go to Limsa mender
+    RemainingDurabilityToRepair     = 10            --the amount it needs to drop before Repairing (set it to 0 if you don't want it to repair)
     ShouldAutoBuyDarkMatter         = true          --Automatically buys a 99 stack of Grade 8 Dark Matter from the Limsa gil vendor if you're out
 ShouldExtractMateria                = true          --should it Extract Materia
 Retainers                           = false         --should it do Retainers
@@ -2756,13 +2757,16 @@ function GrandCompanyTurnIn()
 end
 
 function Repair()
+    Dalamud.Log("[FATE] Check 25")
     local needsRepair = Inventory.GetItemsInNeedOfRepairs(RemainingDurabilityToRepair)
     if Addons.GetAddon("SelectYesno").Ready then
+        Dalamud.Log("[FATE] Check 30")
         yield("/callback SelectYesno true 0")
         return
     end
 
     if Addons.GetAddon("Repair").Ready then
+        Dalamud.Log("[FATE] Check 31")
         if needsRepair.Count == nil or needsRepair.Count == 0 then
             yield("/callback Repair true -1") -- if you don't need repair anymore, close the menu
         else
@@ -2773,6 +2777,7 @@ function Repair()
 
     -- if occupied by repair, then just wait
     if Svc.Condition[CharacterCondition.occupiedMateriaExtractionAndRepair] then
+        Dalamud.Log("[FATE] Check 32")
         Dalamud.Log("[FATE] Repairing...")
         yield("/wait 1")
         return
@@ -2781,7 +2786,7 @@ function Repair()
     local hawkersAlleyAethernetShard = { x=-213.95, y=15.99, z=49.35 }
     if SelfRepair then
         if Inventory.GetItemCount(33916) > 0 then
-            if Addons.GetAddon("Shop") then
+            if Addons.GetAddon("Shop").Ready then
                 yield("/callback Shop true -1")
                 return
             end
@@ -2797,7 +2802,9 @@ function Repair()
                 return
             end
 
+            Dalamud.Log("[FATE] Check 28")
             if needsRepair.Count > 0 then
+                Dalamud.Log("[FATE] Check 29")
                 if not Addons.GetAddon("Repair").Ready then
                     Dalamud.Log("[FATE] Opening repair menu...")
                     yield("/generalaction repair")
@@ -2867,7 +2874,7 @@ function Repair()
                 end
             end
         else
-            State = CharacterState.Ready
+            State = CharacterState.ready
             Dalamud.Log("[FATE] State Change: Ready")
         end
     end
