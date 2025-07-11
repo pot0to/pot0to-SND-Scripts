@@ -1213,6 +1213,7 @@ function SelectNextFateHelper(tempFate, nextFate)
         Dalamud.Log("[FATE] nextFate is nil")
         return tempFate
     elseif BonusFatesOnly then
+        Dalamud.Log("[FATE] only doing bonus fates")
         --Check if WaitForBonusIfBonusBuff is true, and have eithe buff, then set BonusFatesOnlyTemp to true
         if not tempFate.isBonusFate and nextFate ~= nil and nextFate.isBonusFate then
             return nextFate
@@ -1286,6 +1287,7 @@ function SelectNextFate()
         if not (tempFate.position.X == 0 and tempFate.position.Z == 0) then -- sometimes game doesn't send the correct coords
             if not tempFate.isBlacklistedFate then -- check fate is not blacklisted for any reason
                 if tempFate.isBossFate then
+                    Dalamud.Log("[FATE] Is a boss fate")
                     if (tempFate.isSpecialFate and tempFate.fateObject.Progress >= CompletionToJoinSpecialBossFates) or
                         (not tempFate.isSpecialFate and tempFate.fateObject.Progress >= CompletionToJoinBossFate) then
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
@@ -1293,21 +1295,33 @@ function SelectNextFate()
                         Dalamud.Log("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to boss fate with not enough progress.")
                     end
                 elseif (tempFate.isOtherNpcFate or tempFate.isCollectionsFate) and tempFate.startTime == 0 then
-                    if not Dalamud.Log("[FATE] SelectNextFate->nextFate is nil") and nextFate == nil then -- pick this if there's nothing else
+                    Dalamud.Log("[FATE] Is not an npc or collections fate")
+                    if nextFate == nil then -- pick this if there's nothing else
+                        Dalamud.Log("[FATE] Selecting this fate because there's nothing else so far")
                         nextFate = tempFate
-                    elseif not Dalamud.Log("[FATE] SelectNextFate->check tempFate.isBonsuFate") and tempFate.isBonusFate then
+                    elseif tempFate.isBonusFate then
+                        Dalamud.Log("[FATE] tempFate.isBonusFate")
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
-                    elseif not Dalamud.Log("[FATE] SelectNextFate->check nextFate.startTime") and nextFate.startTime == 0 then -- both fates are unopened npc fates
+                    elseif nextFate.startTime == 0 then -- both fates are unopened npc fates
+                        Dalamud.Log("[FATE] Both fates are unopened npc fates")
                         nextFate = SelectNextFateHelper(tempFate, nextFate)
+                    else
+                        Dalamud.Log("[FATE] else")
                     end
                 elseif tempFate.duration ~= 0 then -- else is normal fate. avoid unlisted talk to npc fates
+                    Dalamud.Log("[FATE] Normal fate")
                     nextFate = SelectNextFateHelper(tempFate, nextFate)
+                else
+                    Dalamud.Log("[FATE] Fate duration was zero.")
                 end
                 Dalamud.Log("[FATE] Finished considering fate #"..tempFate.fateId.." "..tempFate.fateName)
             else
                 Dalamud.Log("[FATE] Skipping fate #"..tempFate.fateId.." "..tempFate.fateName.." due to blacklist.")
             end
+        else
+            Dalamud.Log("[FATE] FATE coords were zeroed out")
         end
+    
     end
 
     Dalamud.Log("[FATE] Finished considering all fates")
@@ -2189,10 +2203,13 @@ function TurnOffRaidBuffs()
 end
 
 function SetMaxDistance()
-    MaxDistance = MeleeDist --default to melee distance
     --ranged and casters have a further max distance so not always running all way up to target
     if not Player.Job.IsMelee then
         MaxDistance = RangedDist
+        Dalamud.Log("[FATE] Setting max distance to "..RangedDist)
+    else
+        MaxDistance = MeleeDist --default to melee distance
+        Dalamud.Log("[FATE] Setting max distance to "..MeleeDist)
     end
 end
 
@@ -3078,10 +3095,10 @@ CompletionToIgnoreFate = Config.Get("Ignore FATE if progress is over (%)")
 MinTimeLeftToIgnoreFate = Config.Get("Ignore FATE if duration is less than (mins)")*60
 CompletionToJoinBossFate = Config.Get("Ignore boss FATEs until progress is at least (%)")
 CompletionToJoinSpecialBossFates = Config.Get("Ignore Special FATEs until progress is at least (%)")
-ClassForBossFates               = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
+ClassForBossFates = ""            --If you want to use a different class for boss fates, set this to the 3 letter abbreviation
                                                         --for the class. Ex: "PLD"
-JoinCollectionsFates = Config.Get("Do collection FATEs")
-BonusFatesOnly = Config.Get("Do only bonus FATEs")         --If true, will only do bonus fates and ignore everything else
+JoinCollectionsFates = Config.Get("Do collection FATEs?")
+BonusFatesOnly = Config.Get("Do only bonus FATEs?")         --If true, will only do bonus fates and ignore everything else
 
 MeleeDist = Config.Get("Max melee distance")
 RangedDist = Config.Get("Max ranged distance")
