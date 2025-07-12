@@ -3041,7 +3041,7 @@ RangedDist = Config.Get("Max ranged distance")
 
 if HasPlugin("Wrath") then
     RotationPlugin = "Wrath"         --Options: RSR/BMR/VBM/Wrath/None
-elseif HasPlugin("RotationSolverReborn") then
+elseif HasPlugin("RotationSolver") then
     RotationPlugin = "RSR"
 elseif HasPlugin("BossMod") then
     RotationPlugin = "VBM"
