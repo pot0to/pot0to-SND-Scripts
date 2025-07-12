@@ -35,7 +35,7 @@ configs:
     default:
     description: Leave blank if you don't want to use any potions. If its HQ include <hq> next to the name "Superior Spiritbond Potion <hq>"
     type: string
-  Summon Chocobo Companion?:
+  Chocobo Companion Stance:
     default: "Healer"
     description: Options - Follow/Free/Defender/Healer/Attacker/None. Will not summon chocobo if set to "None"
     type: string
@@ -3041,7 +3041,7 @@ RangedDist = Config.Get("Max ranged distance")
 
 if HasPlugin("Wrath") then
     RotationPlugin = "Wrath"         --Options: RSR/BMR/VBM/Wrath/None
-elseif HasPlugin("RotationSolverReborn") then
+elseif HasPlugin("RotationSolver") then
     RotationPlugin = "RSR"
 elseif HasPlugin("BossMod") then
     RotationPlugin = "VBM"
