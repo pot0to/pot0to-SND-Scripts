@@ -1,7 +1,7 @@
 --[=====[
 [[SND Metadata]]
 author: pot0to
-version: 3.0.7
+version: 3.0.8
 description: >-
   Fate farming script with the following features:
 
