@@ -1,15 +1,15 @@
 --[=====[
 [[SND Metadata]]
 author: pot0to
-version: 3.0.8
+version: 3.0.9
 description: >-
   Fate farming script with the following features:
 
   - Can purchase Bicolor Gemstone Vouchers (both old and new) when your gemstones are almost capped
 
-  - Priority system for Fate selection: most progress > is bonus fate > least time left > distance
+  - Priority system for Fate selection: distance w/ teleport > most progress > is bonus fate > least time left > distance
 
-  - Can prioritize Forlorns when they show up during Fate
+  - Will prioritize Forlorns when they show up during Fate
 
   - Can do all fates, including NPC collection fates
 
@@ -122,6 +122,14 @@ configs:
     default: All
     type: string
     description: Options - All/Gems/None
+  Rotation Plugin:
+    default: "Any"
+    type: string
+    description: Options - Any/Wrath/RotationSolver/BossMod/BossModReborn. What Rotation Plugin to use.
+  Dodging Plugin:
+    default: "Any"
+    type: string
+    description: Options - Any/BossMod/BossModReborn/None. What Dodging Plugin to use. If your RotationPlugin is BossModReborn/BossMod, then this will be overriden
 [[End Metadata]]
 --]=====]
 --[[
@@ -130,6 +138,13 @@ configs:
 *                                  Changelog                                   *
 ********************************************************************************
 
+    -> 3.0.9    By Allison.
+                Fix standing in place after fate finishes bug.
+                Add config options for Rotation Plugin and Dodging Plugin (Fixed bug when multiple solvers present at once)
+                Update description to more accurately reflect script. 
+                Cleaned up metadata + changed description to more accurately reflect script.
+                Small change to combat related distanct to target checks to more accurately reflect how FFXIV determines if abilites are usable (no height). Hopefully fixes some max distance checks during combat.
+                Small Bugfixes.
     -> 3.0.6    Adding metadata
     -> 3.0.5    Fixed repair function
     -> 3.0.4    Remove noisy logging
@@ -169,14 +184,6 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 --------------------------------------------------------------------------------------------------------------------------------------------------------------
 ]]
 
---#region Settings
-
---[[
-********************************************************************************
-*                                   Settings                                   *
-********************************************************************************
-]]
-
 --[[
 ********************************************************************************
 *           Code: Don't touch this unless you know what you're doing           *
@@ -184,8 +191,6 @@ This Plugins are Optional and not needed unless you have it enabled in the setti
 ]]
 
 import("System.Numerics")
-
---#endregion Plugin Checks and Setting Init
 
 --#region Data
 
@@ -1089,7 +1094,11 @@ function GetFateNpcName(fateName)
 end
 
 function IsFateActive(fate)
-    return fate.State ~= FateState.Ending and fate.State ~= FateState.Ended and fate.State ~= FateState.Failed
+    if fate.State == nil then
+        return false
+    else
+        return fate.State ~= FateState.Ending and fate.State ~= FateState.Ended and fate.State ~= FateState.Failed
+    end
 end
 
 function InActiveFate()
@@ -1189,7 +1198,7 @@ end
 
 --[[
     Selects the better fate based on the priority order defined in FatePriority.
-    Default Priority order is "Progress" -> "DistanceTeleport" -> "Bonus" -> "TimeLeft" -> "Distance"
+    Default Priority order is "DistanceTeleport" -> "Progress" -> "Bonus" -> "TimeLeft" -> "Distance"
 ]]
 function SelectNextFateHelper(tempFate, nextFate)
     if nextFate == nil then
@@ -1353,6 +1362,26 @@ function GetDistanceToTarget()
     end
 end
 
+
+function GetDistanceToTargetFlat()
+    if Svc.Targets.Target ~= nil then
+        return GetDistanceToPointFlat(Svc.Targets.Target.Position)
+    else
+        return math.maxinteger
+    end
+end
+
+function GetDistanceToPointFlat(vec3)
+    return DistanceBetweenFlat(Svc.ClientState.LocalPlayer.Position, vec3)
+end
+
+function DistanceBetweenFlat(pos1, pos2)
+    local flat1 = Vector3(pos1.X, 0, pos1.Z)
+    local flat2 = Vector3(pos2.X, 0, pos2.Z)
+    return Vector3.Distance(flat1, flat2)
+end
+
+
 function RandomAdjustCoordinates(position, maxDistance)
     local angle = math.random() * 2 * math.pi
     local x_adjust = maxDistance * math.random()
@@ -1406,7 +1435,7 @@ function GetDistanceToPointWithAetheryteTravel(vec3)
     -- Get the direct flight distance (no aetheryte)
     local directFlightDistance = GetDistanceToPoint(vec3)
     Dalamud.Log("[FATE] Direct flight distance is: " .. directFlightDistance)
-    
+
     -- Get the distance to the closest aetheryte, including teleportation penalty
     local distanceToAetheryte = DistanceFromClosestAetheryteToPoint(vec3, 200)
     Dalamud.Log("[FATE] Distance via closest Aetheryte is: " .. (distanceToAetheryte or "nil"))
@@ -2110,6 +2139,14 @@ function GetTargetHitboxRadius()
     end
 end
 
+function GetPlayerHitboxRadius()
+    if Svc.ClientState.LocalPlayer ~= nil then
+        return Svc.ClientState.LocalPlayer.HitboxRadius
+    else
+        return 0
+    end
+end
+
 function TurnOnAoes()
     if not AoesOn then
         if RotationPlugin == "RSR" then
@@ -2160,7 +2197,7 @@ end
 
 function SetMaxDistance()
     --ranged and casters have a further max distance so not always running all way up to target
-    if not Player.Job.IsMelee then
+    if not Player.Job.IsMeleeDPS or not Player.Job.IsTank then
         MaxDistance = RangedDist
         Dalamud.Log("[FATE] Setting max distance to "..RangedDist)
     else
@@ -2285,7 +2322,7 @@ function HandleUnexpectedCombat()
 
     -- pathfind closer if enemies are too far
     if Svc.Targets.Target ~= nil then
-        if GetDistanceToTarget() > (MaxDistance + GetTargetHitboxRadius()) then
+        if GetDistanceToTargetFlat() > (MaxDistance + GetTargetHitboxRadius() + GetPlayerHitboxRadius()) then
             if not (IPC.vnavmesh.PathfindInProgress() or IPC.vnavmesh.IsRunning()) then
                 if Player.CanFly and SelectedZone.flying then
                     yield("/vnav flytarget")
@@ -2310,8 +2347,10 @@ function HandleUnexpectedCombat()
     yield("/wait 1")
 end
 
+
+
 function DoFate()
-    Dalamud.Log("[FATE] Check 61")
+    Dalamud.Log("[FATE] DoFate")
     if WaitingForFateRewards == nil or WaitingForFateRewards.fateId ~= CurrentFate.fateId then
         WaitingForFateRewards = CurrentFate
         Dalamud.Log("[FATE] WaitingForFateRewards DoFate: "..tostring(WaitingForFateRewards.fateId))
@@ -2331,10 +2370,7 @@ function DoFate()
     elseif InActiveFate() and (CurrentFate.fateObject.MaxLevel < Player.Job.Level) and not Player.IsLevelSynced then
         yield("/lsync")
         yield("/wait 0.5") -- give it a second to register
-    elseif IsFateActive(CurrentFate.fateObject) and not InActiveFate() and CurrentFate.fateObject.Progress ~= nil and CurrentFate.fateObject.Progress < 100 and
-        (GetDistanceToPoint(CurrentFate.position) < CurrentFate.fateObject.Radius + 10) and
-        not Svc.Condition[CharacterCondition.mounted] and not (IPC.vnavmesh.IsRunning() or IPC.vnavmesh.PathfindInProgress())
-    then -- got pushed out of fate. go back
+    elseif IsFateActive(CurrentFate.fateObject) and not InActiveFate() and CurrentFate.fateObject.Progress ~= nil and CurrentFate.fateObject.Progress < 100 and (GetDistanceToPoint(CurrentFate.position) < CurrentFate.fateObject.Radius + 10) and not Svc.Condition[CharacterCondition.mounted] and not (IPC.vnavmesh.IsRunning() or IPC.vnavmesh.PathfindInProgress()) then -- got pushed out of fate. go back
         yield("/vnav stop")
         yield("/wait 1")
         Dalamud.Log("[FATE] pushed out of fate going back!")
@@ -2435,11 +2471,11 @@ function DoFate()
     -- pathfind closer if enemies are too far
     if not Svc.Condition[CharacterCondition.inCombat] then
         if Svc.Targets.Target ~= nil then
-            if GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius()) then
+            if GetDistanceToTargetFlat() <= (MaxDistance + GetTargetHitboxRadius() + GetPlayerHitboxRadius()) then
                 if IPC.vnavmesh.PathfindInProgress() or IPC.vnavmesh.IsRunning() then
                     yield("/vnav stop")
                     yield("/wait 5.002") -- wait 5s before inching any closer
-                elseif (GetDistanceToTarget() > (1 + GetTargetHitboxRadius())) and not Svc.Condition[CharacterCondition.casting] then -- never move into hitbox
+                elseif (GetDistanceToTargetFlat() > (1 + GetTargetHitboxRadius() + GetPlayerHitboxRadius())) and not Svc.Condition[CharacterCondition.casting] then -- never move into hitbox
                     yield("/vnav movetarget")
                     yield("/wait 1") -- inch closer by 1s
                 end
@@ -2458,7 +2494,7 @@ function DoFate()
             end
         end
     else
-        if Svc.Targets.Target ~= nil and (GetDistanceToTarget() <= (MaxDistance + GetTargetHitboxRadius())) then
+        if Svc.Targets.Target ~= nil and (GetDistanceToTargetFlat() <= (MaxDistance + GetTargetHitboxRadius() + GetPlayerHitboxRadius())) then
             if IPC.vnavmesh.PathfindInProgress() or IPC.vnavmesh.IsRunning() then
                 yield("/vnav stop")
             end
@@ -3013,18 +3049,16 @@ Dalamud.Log("[FATE] Starting fate farming script.")
 Food = Config.Get("Food")
 Potion = Config.Get("Potion")
 ResummonChocoboTimeLeft         = 3 * 60        --Resummons chocobo if there's less than this many seconds left on the timer, so it doesn't disappear on you in the middle of a fate.
-ChocoboStance = Config.Get("Chocobo Companion Stance")
-ShouldSummonChocobo = true
-if ChocoboStance ~= "Follow" and ChocoboStance ~= "Free" and
-    ChocoboStance ~= "Defender" and ChocoboStance ~= "Healer" and
-    ChocoboStance ~= "Attacker"
-then
-    ShouldSummonChocobo = false
-end
+ChocoboStance = Config.Get("Chocobo Companion Stance") -- Options: Follow, Free, Defender, Healer, Attacker, None. Do not summon if None.
+ShouldSummonChocobo = ChocoboStance == "Follow"
+    or ChocoboStance == "Free"
+    or ChocoboStance == "Defender"
+    or ChocoboStance == "Healer"
+    or ChocoboStance == "Attacker"
 
 ShouldAutoBuyGysahlGreens = Config.Get("Buy Gysahl Greens?")    --
 MountToUse                          = "mount roulette"       --The mount you'd like to use when flying between fates
-FatePriority                        = {"DistanceTeleport", "Progress", "DistanceTeleport", "Bonus", "TimeLeft", "Distance"}
+FatePriority                        = {"DistanceTeleport", "Progress", "Bonus", "TimeLeft", "Distance"}
 
 --Fate Combat Settings
 CompletionToIgnoreFate = Config.Get("Ignore FATE if progress is over (%)")
@@ -3039,14 +3073,27 @@ BonusFatesOnly = Config.Get("Do only bonus FATEs?")         --If true, will only
 MeleeDist = Config.Get("Max melee distance")
 RangedDist = Config.Get("Max ranged distance")
 
-if HasPlugin("Wrath") then
-    RotationPlugin = "Wrath"         --Options: RSR/BMR/VBM/Wrath/None
-elseif HasPlugin("RotationSolver") then
+RotationPlugin = Config.Get("Rotation Plugin")
+if RotationPlugin == "Any" then
+    if HasPlugin("Wrath") then
+        RotationPlugin = "Wrath"
+    elseif HasPlugin("RotationSolver") then
+        RotationPlugin = "RSR"
+    elseif HasPlugin("BossModReborn") then
+        RotationPlugin = "BMR"
+    elseif HasPlugin("BossMod") then
+        RotationPlugin = "VBM"
+    end
+elseif RotationPlugin == "Wrath" and HasPlugin("Wrath") then
+    RotationPlugin = "Wrath"
+elseif RotationPlugin == "RotationSolver" and HasPlugin("RotationSolver") then
     RotationPlugin = "RSR"
-elseif HasPlugin("BossMod") then
-    RotationPlugin = "VBM"
-elseif HasPlugin("BossModReborn") then
+elseif RotationPlugin == "BossModReborn" and HasPlugin("BossModReborn") then
     RotationPlugin = "BMR"
+elseif RotationPlugin == "BossMod" and HasPlugin("BossMod") then
+    RotationPlugin = "VBM"
+else
+    StopScript = true
 end
     RSRAoeType                      = "Full"        --Options: Cleave/Full/Off
 
@@ -3055,9 +3102,8 @@ end
     RotationAoePreset               = ""            --Preset with AOE + Buff strategies.
     RotationHoldBuffPreset          = ""            --Preset to hold 2min burst when progress gets to seleted %
     PercentageToHoldBuff            = 65            --Ideally you'll want to make full use of your buffs, higher than 70% will still waste a few seconds if progress is too fast.
-DodgingPlugin                       = "BMR"         --Options: BMR/VBM/None. If your RotationPlugin is BMR/VBM, then this will be overriden
 
-IgnoreForlorns = false
+    IgnoreForlorns = false
 IgnoreBigForlornOnly = false
 Forlorns = Config.Get("Forlorns")
 if Forlorns == "None" then
@@ -3093,18 +3139,36 @@ ReturnOnDeath = Config.Get("Return on death?")
 Echo = Config.Get("Echo logs")
 CompanionScriptMode                 = false         --Set to true if you are using the fate script with a companion script (such as the Atma Farmer)
 
+-- Get user-configured plugin
+local dodgeConfig = Config.Get("Dodging Plugin")  -- Options: Any / BossModReborn / BossMod / None
 
-if DodgingPlugin == "None" then
-    -- do nothing
-elseif RotationPlugin == "BMR" and DodgingPlugin ~= "BMR" then
+-- Resolve "any" or specific plugin if available
+if dodgeConfig == "Any" then
+    if HasPlugin("BossModReborn") then
+        DodgingPlugin = "BMR"
+    elseif HasPlugin("BossMod") then
+        DodgingPlugin = "VBM"
+    else
+        DodgingPlugin = "None"
+    end
+elseif dodgeConfig == "BossModReborn" and HasPlugin("BossModReborn") then
     DodgingPlugin = "BMR"
-elseif RotationPlugin == "VBM" and DodgingPlugin ~= "VBM"  then
+elseif dodgeConfig == "BossMod" and HasPlugin("BossMod") then
+    DodgingPlugin = "VBM"
+else
+    DodgingPlugin = "None"
+end
+
+-- Override if RotationPlugin already uses a dodging plugin
+if RotationPlugin == "BMR" then
+    DodgingPlugin = "BMR"
+elseif RotationPlugin == "VBM" then
     DodgingPlugin = "VBM"
 end
 
-if not HasPlugin("BossMod") and not HasPlugin("BossModReborn") then
-    DodgingPlugin = "None"
-    yield("/echo [FATE] Warning: you do not have an AI dodging plugin, so your character will stand in AOEs. Please install either Veyn's BossMod or BossMod Reborn")
+-- Final warning if no dodging plugin is active
+if DodgingPlugin == "None" then
+    yield("/echo [FATE] Warning: you do not have an AI dodging plugin configured, so your character will stand in AOEs. Please install either Veyn's BossMod or BossMod Reborn")
 end
 
 if Retainers and not HasPlugin("AutoRetainer") then
@@ -3149,23 +3213,26 @@ if SelectedZone.zoneName ~= "" and Echo == "All" then
 end
 Dalamud.Log("[FATE] Farming Start for "..SelectedZone.zoneName)
 
-for _, shop in ipairs(BicolorExchangeData) do
-    for _, item in ipairs(shop.shopItems) do
-        if item.itemName == ItemToPurchase then
-            SelectedBicolorExchangeData = {
-                shopKeepName = shop.shopKeepName,
-                zoneId = shop.zoneId,
-                aetheryteName = shop.aetheryteName,
-                miniAethernet = shop.miniAethernet,
-                position = shop.position,
-                item = item
-            }
+
+if ShouldExchangeBicolorGemstones ~= false then
+    for _, shop in ipairs(BicolorExchangeData) do
+        for _, item in ipairs(shop.shopItems) do
+            if item.itemName == ItemToPurchase then
+                SelectedBicolorExchangeData = {
+                    shopKeepName = shop.shopKeepName,
+                    zoneId = shop.zoneId,
+                    aetheryteName = shop.aetheryteName,
+                    miniAethernet = shop.miniAethernet,
+                    position = shop.position,
+                    item = item
+                }
+            end
         end
     end
-end
-if SelectedBicolorExchangeData == nil then
-    yield("/echo [FATE] Cannot recognize bicolor shop item "..ItemToPurchase.."! Please make sure it's in the BicolorExchangeData table!")
-    StopScript = true
+    if SelectedBicolorExchangeData == nil then
+        yield("/echo [FATE] Cannot recognize bicolor shop item "..ItemToPurchase.."! Please make sure it's in the BicolorExchangeData table!")
+        StopScript = true
+    end
 end
 
 State = CharacterState.ready
