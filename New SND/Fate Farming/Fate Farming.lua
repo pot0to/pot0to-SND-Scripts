@@ -1,7 +1,7 @@
 --[=====[
 [[SND Metadata]]
 author: pot0to
-version: 3.0.8
+version: 3.0.9
 description: >-
   Fate farming script with the following features:
 
@@ -130,6 +130,7 @@ configs:
 *                                  Changelog                                   *
 ********************************************************************************
 
+    -> 3.0.9    Fix nil buy bicolor gemstone error
     -> 3.0.6    Adding metadata
     -> 3.0.5    Fixed repair function
     -> 3.0.4    Remove noisy logging
