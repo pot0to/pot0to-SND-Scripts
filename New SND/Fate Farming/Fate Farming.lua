@@ -3163,7 +3163,7 @@ for _, shop in ipairs(BicolorExchangeData) do
         end
     end
 end
-if SelectedBicolorExchangeData == nil then
+if SelectedBicolorExchangeData == nil and ShouldExchangeBicolorGemstones == true then
     yield("/echo [FATE] Cannot recognize bicolor shop item "..ItemToPurchase.."! Please make sure it's in the BicolorExchangeData table!")
     StopScript = true
 end
