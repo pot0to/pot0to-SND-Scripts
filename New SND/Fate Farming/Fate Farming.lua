@@ -143,7 +143,7 @@ configs:
                 Add config options for Rotation Plugin and Dodging Plugin (Fixed bug when multiple solvers present at once)
                 Update description to more accurately reflect script. 
                 Cleaned up metadata + changed description to more accurately reflect script.
-                Small change to combat related distanct to target checks to more accurately reflect how FFXIV determines if abilites are usable (no height). Hopefully fixes some max distance checks during combat.
+                Small change to combat related distance to target checks to more accurately reflect how FFXIV determines if abilities are usable (no height). Hopefully fixes some max distance checks during combat.
                 Small Bugfixes.
     -> 3.0.6    Adding metadata
     -> 3.0.5    Fixed repair function
