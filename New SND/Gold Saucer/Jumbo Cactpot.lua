@@ -26,7 +26,7 @@ you had any), and purchases 3 new tickets using random numbers.
 3. Vnavmesh
 
 ********************************************************************************
-*           Code: Dont touch this unless you know what youre doing             *
+*           Code: Don't touch this unless you know what you're doing           *
 ********************************************************************************
 ]]
 
