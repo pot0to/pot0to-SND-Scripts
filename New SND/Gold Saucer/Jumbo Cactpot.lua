@@ -1,11 +1,12 @@
---[[SND Metadata]]
+--[=====[
+[[SND Metadata]]
 author: pot0to
-version: 2.0.1
+version: 2.0.2
 description: Teleports to Gold Saucer, picks up last week's cactpot prizes (if you had any), and purchases 3 new tickets using random numbers.\nhttps://ko-fi.com/pot0to
 plugin_dependencies: vnavmesh, TextAdvance, Lifestream
---[[End Metadata]]
+[[End Metadata]]
+--]=====]
 --[[
-
 ********************************************************************************
 *                                                                              *
 *                                Jumbo Cactpot                                 *
@@ -25,9 +26,10 @@ you had any), and purchases 3 new tickets using random numbers.
 3. Vnavmesh
 
 ********************************************************************************
-*            Code: Don't touch this unless you know what you're doing          *
+*           Code: Dont touch this unless you know what youre doing             *
 ********************************************************************************
 ]]
+
 
 import("System.Numerics")
 
