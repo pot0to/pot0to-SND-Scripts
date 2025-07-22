@@ -1,8 +1,15 @@
+--[=====[
+[[SND Metadata]]
+author: pot0to
+version: 1.1.2
+description: Teleports to Gold Saucer, runs mini cactpot.\nhttps://ko-fi.com/pot0to
+plugin_dependencies: vnavmesh, TextAdvance, Lifestream, Saucy
+[[End Metadata]]
+--]=====]
 --[[
-
 ********************************************************************************
 *                                 Mini Cactpot                                 *
-*                                Version 1.1.1                                 *
+*                                Version 1.1.2                                 *
 ********************************************************************************
 
 Created by: pot0to (https://ko-fi.com/pot0to)
