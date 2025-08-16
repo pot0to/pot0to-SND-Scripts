@@ -1,7 +1,7 @@
 --[=====[
 [[SND Metadata]]
 author: pot0to
-version: 3.0.9
+version: 3.1.0
 description: >-
   Fate farming script with the following features:
 
@@ -130,6 +130,10 @@ configs:
     default: "Any"
     type: string
     description: Options - Any/BossMod/BossModReborn/None. What Dodging Plugin to use. If your RotationPlugin is BossModReborn/BossMod, then this will be overriden
+  Multi-Zone Farming:
+    default: false
+    type: boolean
+    description: Enable automatic zone switching when no FATEs are available. Automatically detects your current expansion and cycles through all zones within that expansion (ARR, HW, SB, ShB, EW, DT)
 [[End Metadata]]
 --]=====]
 --[[
@@ -138,6 +142,12 @@ configs:
 *                                  Changelog                                   *
 ********************************************************************************
 
+    -> 3.1.0    by: n0way02 (https://ko-fi.com/n0way02)    
+                Added Multi-Zone Farming option to automatically cycle through zones when no FATEs available.
+                Supports ALL expansions: ARR, Heavensward, Stormblood, Shadowbringers, Endwalker, and Dawntrail.
+                Automatically detects current expansion and cycles only within that expansion's zones.
+                Multi-zone triggers immediately when "No eligible fates found" and takes priority over instance changes.
+                Fixed bugs where the script would stop when no FATEs were available in expansion zones.
     -> 3.0.9    By Allison.
                 Fix standing in place after fate finishes bug.
                 Add config options for Rotation Plugin and Dodging Plugin (Fixed bug when multiple solvers present at once)
@@ -955,7 +965,22 @@ function SetMapFlag(zoneId, position)
 end
 
 function GetZoneInstance()
-    return InstancedContent.PublicInstance.InstanceId
+    local instanceId = nil
+    
+    -- Try multiple possible APIs for instance detection
+    if InstancedContent and InstancedContent.PublicInstance then
+        instanceId = InstancedContent.PublicInstance.InstanceId
+        Dalamud.Log("[FATE] GetZoneInstance() via InstancedContent.PublicInstance.InstanceId: "..tostring(instanceId))
+    elseif Svc.ClientState and Svc.ClientState.LocalPlayer then
+        -- Try alternative method if available
+        instanceId = 1 -- Default to instance 1 if we can't detect
+        Dalamud.Log("[FATE] GetZoneInstance() fallback to default instance: "..tostring(instanceId))
+    else
+        instanceId = 0 -- No instance support
+        Dalamud.Log("[FATE] GetZoneInstance() no instance support detected: "..tostring(instanceId))
+    end
+    
+    return instanceId or 0
 end
 
 function GetTargetName()
@@ -1543,8 +1568,53 @@ function TeleportTo(aetheryteName)
     LastTeleportTimeStamp = EorzeaTimeToUnixTime(Instances.Framework.EorzeaTime)
 end
 
+function ChangeToNextZone()
+    if not EnableMultiZone then
+        return false
+    end
+    
+    Dalamud.Log("[FATE] Multi-Zone: Switching to next zone")
+    CurrentMultiZoneIndex = (CurrentMultiZoneIndex % #MultiZoneOrder) + 1
+    local nextZone = MultiZoneOrder[CurrentMultiZoneIndex]
+    
+    Dalamud.Log("[FATE] Multi-Zone: Moving to "..nextZone.fateZoneName.." (ID: "..nextZone.zoneId..")")
+    if Echo == "All" then
+        yield("/echo [FATE] Multi-Zone: Moving to "..nextZone.fateZoneName)
+    end
+    
+    -- Reset instance changes counter
+    SuccessiveInstanceChanges = 0
+    
+    -- Find aetheryte for the zone
+    local aetherytes = GetAetherytesInZone(nextZone.zoneId)
+    if aetherytes and #aetherytes > 0 then
+        local aetheryteName = GetAetheryteName(aetherytes[1])
+        TeleportTo(aetheryteName)
+        
+        -- Update SelectedZone to the new zone
+        SelectedZone = SelectNextZone()
+        Dalamud.Log("[FATE] Multi-Zone: Now in "..SelectedZone.zoneName)
+        
+        State = CharacterState.ready
+        Dalamud.Log("[FATE] State Change: Ready")
+        return true
+    else
+        Dalamud.Log("[FATE] Multi-Zone: ERROR - No aetherytes found for "..nextZone.fateZoneName)
+        yield("/echo [FATE] Multi-Zone: ERROR - No aetherytes found for "..nextZone.fateZoneName)
+        return false
+    end
+end
+
 function ChangeInstance()
+    Dalamud.Log("[FATE] ChangeInstance() called - SuccessiveInstanceChanges: "..SuccessiveInstanceChanges..", NumberOfInstances: "..NumberOfInstances)
     if SuccessiveInstanceChanges >= NumberOfInstances then
+        if EnableMultiZone then
+            -- Try to change zones instead of stopping
+            if ChangeToNextZone() then
+                return
+            end
+        end
+        
         if CompanionScriptMode then
             local shouldWaitForBonusBuff = WaitIfBonusBuff and (HasStatusId(1288) or HasStatusId(1289))
             if WaitingForFateRewards == nil and not shouldWaitForBonusBuff then
@@ -2590,7 +2660,21 @@ function Ready()
         (not shouldWaitForBonusBuff or Inventory.GetItemCount(4868) > 0) then
         State = CharacterState.summonChocobo
     elseif not Dalamud.Log("[FATE] Ready -> NextFate nil") and NextFate == nil then
-        if EnableChangeInstance and GetZoneInstance() > 0 and not shouldWaitForBonusBuff then
+        if EnableMultiZone and not shouldWaitForBonusBuff then
+            -- Multi-zone: try to change zone directly when no fates
+            Dalamud.Log("[FATE] Multi-Zone: No FATEs found, attempting zone change")
+            if Echo == "All" then
+                yield("/echo [FATE] Multi-Zone: No eligible FATEs found, switching zones")
+            end
+            if ChangeToNextZone() then
+                return
+            end
+            -- If zone change failed, fall through to instance change
+        end
+        local currentInstance = GetZoneInstance()
+        Dalamud.Log("[FATE] Instance check - EnableChangeInstance: "..tostring(EnableChangeInstance)..", ZoneInstance: "..tostring(currentInstance)..", shouldWaitForBonusBuff: "..tostring(shouldWaitForBonusBuff))
+        if EnableChangeInstance and currentInstance > 0 and not shouldWaitForBonusBuff then
+            Dalamud.Log("[FATE] Conditions met for instance change!")
             State = CharacterState.changingInstances
             Dalamud.Log("[FATE] State Change: ChangingInstances")
             return
@@ -3120,6 +3204,91 @@ DownTimeWaitAtNearestAetheryte      = false         --When waiting for fates to 
 EnableChangeInstance = Config.Get("Change instances if no FATEs?")
 WaitIfBonusBuff = true          --Don't change instances if you have the Twist of Fate bonus buff
 NumberOfInstances = 2
+EnableMultiZone = Config.Get("Multi-Zone Farming")
+
+-- Multi-Zone Orders by Expansion
+MultiZoneExpansions = {
+    -- A Realm Reborn (ARR) - Zones 134-180
+    ARR = {
+        { fateZoneName = "Middle La Noscea", zoneId = 134 },
+        { fateZoneName = "Lower La Noscea", zoneId = 135 },
+        { fateZoneName = "Central Thanalan", zoneId = 141 },
+        { fateZoneName = "Eastern Thanalan", zoneId = 145 },
+        { fateZoneName = "Southern Thanalan", zoneId = 146 },
+        { fateZoneName = "Coerthas Central Highlands", zoneId = 155 },
+        { fateZoneName = "Mor Dhona", zoneId = 156 },
+        { fateZoneName = "Outer La Noscea", zoneId = 180 }
+    },
+    -- Heavensward (HW) - Zones 397-402
+    HW = {
+        { fateZoneName = "Coerthas Western Highlands", zoneId = 397 },
+        { fateZoneName = "The Dravanian Forelands", zoneId = 398 },
+        { fateZoneName = "The Dravanian Hinterlands", zoneId = 399 },
+        { fateZoneName = "The Churning Mists", zoneId = 400 },
+        { fateZoneName = "The Sea of Clouds", zoneId = 401 },
+        { fateZoneName = "Azys Lla", zoneId = 402 }
+    },
+    -- Stormblood (SB) - Zones 612-622
+    SB = {
+        { fateZoneName = "The Fringes", zoneId = 612 },
+        { fateZoneName = "The Ruby Sea", zoneId = 613 },
+        { fateZoneName = "Yanxia", zoneId = 614 },
+        { fateZoneName = "The Peaks", zoneId = 620 },
+        { fateZoneName = "The Lochs", zoneId = 621 },
+        { fateZoneName = "The Azim Steppe", zoneId = 622 }
+    },
+    -- Shadowbringers (ShB) - Zones 813-818
+    ShB = {
+        { fateZoneName = "Lakeland", zoneId = 813 },
+        { fateZoneName = "Kholusia", zoneId = 814 },
+        { fateZoneName = "Amh Araeng", zoneId = 815 },
+        { fateZoneName = "Il Mheg", zoneId = 816 },
+        { fateZoneName = "The Rak'tika Greatwood", zoneId = 817 },
+        { fateZoneName = "The Tempest", zoneId = 818 }
+    },
+    -- Endwalker (EW) - Zones 956-961
+    EW = {
+        { fateZoneName = "Labyrinthos", zoneId = 956 },
+        { fateZoneName = "Thavnair", zoneId = 957 },
+        { fateZoneName = "Garlemald", zoneId = 958 },
+        { fateZoneName = "Mare Lamentorum", zoneId = 959 },
+        { fateZoneName = "Ultima Thule", zoneId = 960 },
+        { fateZoneName = "Elpis", zoneId = 961 }
+    },
+    -- Dawntrail (DT) - Zones 1187-1192
+    DT = {
+        { fateZoneName = "Urqopacha", zoneId = 1187 },
+        { fateZoneName = "Kozama'uka", zoneId = 1188 },
+        { fateZoneName = "Yak T'el", zoneId = 1189 },
+        { fateZoneName = "Shaaloani", zoneId = 1190 },
+        { fateZoneName = "Heritage Found", zoneId = 1191 },
+        { fateZoneName = "Living Memory", zoneId = 1192 }
+    }
+}
+
+-- Determine which expansion the current zone belongs to
+function GetExpansionFromZoneId(zoneId)
+    if zoneId >= 134 and zoneId <= 180 then
+        return "ARR"
+    elseif zoneId >= 397 and zoneId <= 402 then
+        return "HW"
+    elseif zoneId >= 612 and zoneId <= 622 then
+        return "SB"
+    elseif zoneId >= 813 and zoneId <= 818 then
+        return "ShB"
+    elseif zoneId >= 956 and zoneId <= 961 then
+        return "EW"
+    elseif zoneId >= 1187 and zoneId <= 1192 then
+        return "DT"
+    else
+        return nil -- Unknown expansion
+    end
+end
+
+-- Current expansion and zone tracking
+CurrentExpansion = nil
+MultiZoneOrder = {}
+CurrentMultiZoneIndex = 1
 ShouldExchangeBicolorGemstones = Config.Get("Exchange bicolor gemstones?")
 ItemToPurchase = Config.Get("Exchange bicolor gemstones for")
 ShouldExchangeBicolorGemstones = true
@@ -3212,6 +3381,32 @@ if SelectedZone.zoneName ~= "" and Echo == "All" then
     yield("/echo [FATE] Farming "..SelectedZone.zoneName)
 end
 Dalamud.Log("[FATE] Farming Start for "..SelectedZone.zoneName)
+
+-- Initialize multi-zone based on current expansion
+if EnableMultiZone then
+    CurrentExpansion = GetExpansionFromZoneId(SelectedZone.zoneId)
+    if CurrentExpansion and MultiZoneExpansions[CurrentExpansion] then
+        MultiZoneOrder = MultiZoneExpansions[CurrentExpansion]
+        -- Find current zone index within the expansion
+        for i, zone in ipairs(MultiZoneOrder) do
+            if zone.zoneId == SelectedZone.zoneId then
+                CurrentMultiZoneIndex = i
+                break
+            end
+        end
+        Dalamud.Log("[FATE] Multi-Zone enabled for "..CurrentExpansion.." expansion with "..#MultiZoneOrder.." zones")
+        Dalamud.Log("[FATE] Current zone: "..SelectedZone.zoneName.." (Index: "..CurrentMultiZoneIndex..")")
+        if Echo == "All" then
+            yield("/echo [FATE] Multi-Zone: "..CurrentExpansion.." expansion detected ("..#MultiZoneOrder.." zones)")
+        end
+    else
+        Dalamud.Log("[FATE] Multi-Zone enabled but current zone not supported for multi-zone")
+        if Echo == "All" then
+            yield("/echo [FATE] Multi-Zone: Current zone not supported for multi-zone cycling")
+        end
+        EnableMultiZone = false -- Disable if not in supported expansion
+    end
+end
 
 
 if ShouldExchangeBicolorGemstones ~= false then
