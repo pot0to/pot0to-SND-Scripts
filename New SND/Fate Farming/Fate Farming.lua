@@ -3278,9 +3278,9 @@ while not StopScript do
         Svc.Condition[CharacterCondition.occupiedMateriaExtractionAndRepair] or
         IPC.Lifestream.IsBusy())
     then
-        if WaitingForFateRewards ~= nil and not WaitingForFateRewards.fateObject.State == FateState.Ended then
+        if WaitingForFateRewards ~= nil and not IsFateActive(WaitingForFateRewards.fateObject) then
             WaitingForFateRewards = nil
-            Dalamud.Log("[FATE] WaitingForFateRewards: "..tostring(WaitingForFateRewards.fateId))
+            Dalamud.Log("[FATE] WaitingForFateRewards: "..tostring(WaitingForFateRewards))
         end
         State()
     end
