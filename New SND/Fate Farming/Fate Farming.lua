@@ -37,8 +37,17 @@ configs:
     type: string
   Chocobo Companion Stance:
     default: "Healer"
-    description: Options - Follow/Free/Defender/Healer/Attacker/None. Will not summon chocobo if set to "None"
-    type: string
+    description: Will not summon chocobo if set to "None"
+    type: list
+    required: true
+    is_choice: true
+    choices:
+        - Follow
+        - Free
+        - Defender
+        - Healer
+        - Attacker
+        - None
   Buy Gysahl Greens?:
     default: true
     description: Automatically buys a 99 stack of Gysahl Greens from the Limsa gil vendor if none in inventory
@@ -80,7 +89,7 @@ configs:
     default: false
     type: boolean
   Max melee distance:
-    default: 2.5
+    default: 2,5
     type: float
     min: 0
     max: 30
@@ -93,9 +102,13 @@ configs:
     required: true
   Forlorns:
     default: All
-    type: string
-    description: Options - All/Small/None
     required: true
+    type: list
+    is_choice: true
+    choices:
+        - All
+        - Small
+        - None
   Change instances if no FATEs?:
     default: true
     type: boolean
@@ -120,16 +133,32 @@ configs:
     description: Auto accept the box to return to home aetheryte when you die.
   Echo logs:
     default: All
-    type: string
-    description: Options - All/Gems/None
+    type: list
+    is_choice: true
+    choices:
+        - All
+        - Gems
+        - None
   Rotation Plugin:
     default: "Any"
-    type: string
-    description: Options - Any/Wrath/RotationSolver/BossMod/BossModReborn. What Rotation Plugin to use.
+    description: What Rotation Plugin to use.
+    type: list
+    is_choice: true
+    choices:
+        - Any
+        - Wrath
+        - RotationSolver
+        - BossMod
+        - BossModReborn
   Dodging Plugin:
     default: "Any"
-    type: string
-    description: Options - Any/BossMod/BossModReborn/None. What Dodging Plugin to use. If your RotationPlugin is BossModReborn/BossMod, then this will be overriden
+    description: What Dodging Plugin to use. If your RotationPlugin is BossModReborn/BossMod, then this will be overriden
+    type: list
+    is_choice: true
+    choices:
+        - Any
+        - BossMod
+        - BossModReborn
 [[End Metadata]]
 --]=====]
 --[[
