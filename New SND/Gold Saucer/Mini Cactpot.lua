@@ -93,7 +93,7 @@ function PlayMiniCactpot()
     elseif Addons.GetAddon("SelectIconString").Ready then
         yield("/callback SelectIconString true 0")
     elseif Addons.GetAddon("Talk").Ready then
-        if not HasPlugin("TextAdvance").Ready then
+        if not Addons.GetAddon("TextAdvance").Ready then
             yield("/click Talk Click")
         end
     elseif Addons.GetAddon("SelectYesno").Ready then
