@@ -23,6 +23,8 @@ Description: Teleports to Gold Saucer, runs mini cactpot.
 ]]
 import("System.Numerics")
 
+LogPrefix   = "[MiniCactpot]"
+
 CharacterCondition =
 {
     casting=27,
@@ -133,3 +135,6 @@ while not StopFlag do
     State()
     yield("/wait 0.1")
 end
+
+yield(string.format("/echo %s MiniCactpot script completed successfully..!!", LogPrefix))
+Dalamud.Log(string.format("%s MiniCactpot script completed successfully..!!", LogPrefix))
