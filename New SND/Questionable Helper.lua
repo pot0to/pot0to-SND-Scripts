@@ -61,34 +61,57 @@ end
 function OnConditionChange()
     if TriggerData.flag == ConditionFlag.InCombat or ConditionFlag.RolePlaying then -- and (Player.Entity.Target == nil or not Player.Entity.Target.IsInCombat) then
         if TriggerData.value then
-            yield("/rsr manual")
-            yield("/battletarget")
-            yield("/bmrai on")
+            TurnOnCombatTriggered = true
         else
-            Dalamud.Log("["..Prefix.."] Out of combat")
-            yield("/rsr off")
-            yield("/bmrai off")
+            TurnOffCombatTriggered = false
         end
     elseif TriggerData.flag == ConditionFlag.Unconscious then
         if TriggerData.value then
-            while Svc.Condition[ConditionFlag.Unconscious] do
-                if Addons.GetAddon("SelectYesno").Ready then
-                    yield("/callback SelectYesno true 0")
-                end
-                yield("/wait 1")
-            end
+            UnconsciousTriggered = true
         end
     end
 end
 
+Conditions =
+{
+    [26] = ConditionFlag.InCombat,
+    [34] = ConditionFlag.BoundByDuty,
+    [90] = ConditionFlag.RolePlaying
+}
+
+function HasCondition(cond)
+    for i, condition in pairs(Conditions) do
+        if cond == condition then
+            return Svc.Condition[i]
+        end
+    end
+    Dalamud.LogDebug("Could not find condition: "..tostring(cond))
+end
+
+TurnOnCombatTriggered = false
+TurnOffCombatTriggered = false
 StartAttempts = 0
 LastRecordedPosition = Player.Entity.Position
 StuckCheckTimer = 20
-
+yield("/at y")
 while true do
     if Addons.GetAddon("SelectYesno").Ready then
         yield("/callback SelectYesno true 0")
-    elseif Svc.Condition[ConditionFlag.BoundByDuty] then
+    elseif Addons.GetAddon("DifficultySelectYesNo").Ready then
+        yield("/callback DifficultySelectYesNo true 0 2")
+    elseif TurnOnCombatTriggered then
+        yield("/rsr manual")
+        yield("/bmrai on")
+        TurnOnCombatTriggered = false
+    elseif TurnOffCombatTriggered then
+        yield("/rsr off")
+        yield("/bmrai off")
+        TurnOffCombatTriggered = false
+    elseif HasCondition(ConditionFlag.InCombat) or HasCondition(ConditionFlag.RolePlaying) then
+        if Player.Entity.Target == nil or not Player.Entity.Target.IsInCombat then
+            yield("/battletarget")
+        end
+    elseif HasCondition(ConditionFlag.BoundByDuty) then
     elseif not IPC.Questionable.IsRunning() then
         local qstStepData = IPC.Questionable.GetCurrentStepData()
         if StartAttempts >= 3 then
@@ -118,7 +141,7 @@ while true do
         end
     else
         yield("/wait "..tostring(StuckCheckTimer))
-        if Player.Entity.Position == LastRecordedPosition and not Svc.Condition[ConditionFlag.BoundByDuty] then
+        if Player.Entity.Position == LastRecordedPosition and not HasCondition(ConditionFlag.BoundByDuty) then
             Dalamud.Log("["..Prefix.."] Stuck for over "..tostring(StuckCheckTimer).."s")
             yield("/qst reload")
         else
