@@ -85,7 +85,7 @@ function HasCondition(cond)
             return Svc.Condition[i]
         end
     end
-    Dalamud.LogDebug("Could not find condition: "..tostring(cond))
+    yield("/echo Could not find condition: "..tostring(cond))
 end
 
 TurnOnCombatTriggered = false
@@ -107,11 +107,10 @@ while true do
         yield("/rsr off")
         yield("/bmrai off")
         TurnOffCombatTriggered = false
-    elseif HasCondition(ConditionFlag.InCombat) or HasCondition(ConditionFlag.RolePlaying) then
+    elseif HasCondition(ConditionFlag.InCombat) or HasCondition(ConditionFlag.RolePlaying) or HasCondition(ConditionFlag.BoundByDuty) then
         if Player.Entity.Target == nil or not Player.Entity.Target.IsInCombat then
             yield("/battletarget")
         end
-    elseif HasCondition(ConditionFlag.BoundByDuty) then
     elseif not IPC.Questionable.IsRunning() then
         local qstStepData = IPC.Questionable.GetCurrentStepData()
         if StartAttempts >= 3 then
@@ -143,7 +142,7 @@ while true do
         yield("/wait "..tostring(StuckCheckTimer))
         if Player.Entity.Position == LastRecordedPosition and not HasCondition(ConditionFlag.BoundByDuty) then
             Dalamud.Log("["..Prefix.."] Stuck for over "..tostring(StuckCheckTimer).."s")
-            yield("/qst reload")
+            yield("/qst stop")
         else
             LastRecordedPosition = Player.Entity.Position
         end
