@@ -69,6 +69,10 @@ function OnConditionChange()
         if TriggerData.value then
             UnconsciousTriggered = true
         end
+    elseif TriggerData.flag == ConditionFlag.BoundByDuty then
+        if not TriggerData.value then
+            ExitedDuty = true
+        end
     end
 end
 
@@ -90,8 +94,10 @@ end
 
 TurnOnCombatTriggered = false
 TurnOffCombatTriggered = false
+ExitedDuty = false
 StartAttempts = 0
 LastRecordedPosition = Player.Entity.Position
+LastRecordedTimestamp = os.time()
 StuckCheckTimer = 20
 yield("/at y")
 while true do
@@ -107,6 +113,9 @@ while true do
         yield("/rsr off")
         yield("/bmrai off")
         TurnOffCombatTriggered = false
+    elseif ExitedDuty then
+        yield("/qst start")
+        ExitedDuty = false
     elseif HasCondition(ConditionFlag.InCombat) or HasCondition(ConditionFlag.RolePlaying) or HasCondition(ConditionFlag.BoundByDuty) then
         if Player.Entity.Target == nil or not Player.Entity.Target.IsInCombat then
             yield("/battletarget")
@@ -125,10 +134,15 @@ while true do
                     yield("/li tp "..closestAetheryte.aetheryteName)
                     yield("/wait 10")
                 else
-                    yield("/echo ["..Prefix.."] Cannot find aetheryte to get to next area: #"..tostring(targetTerritory))
-                    yield("/snd stop")
+                    local msg = "["..Prefix.."] Cannot find aetheryte to get to next area: #"..tostring(targetTerritory)
+                    Dalamud.Log(msg)
+                    yield("/echo "..msg)
+                    yield("/snd stop all")
                 end
             else
+                local msg = "["..Prefix.."] QST is stopped. Attempting to start..."
+                Dalamud.Log(msg)
+                yield("/echo "..msg)
                 yield("/qst start")
                 yield("/wait 5")
                 StartAttempts = StartAttempts + 1
@@ -139,11 +153,14 @@ while true do
             yield("/wait 5")
         end
     else
-        yield("/wait "..tostring(StuckCheckTimer))
-        if Player.Entity.Position == LastRecordedPosition and not HasCondition(ConditionFlag.BoundByDuty) then
-            Dalamud.Log("["..Prefix.."] Stuck for over "..tostring(StuckCheckTimer).."s")
-            yield("/qst stop")
-        else
+        if os.time() - LastRecordedTimestamp > StuckCheckTimer then
+            if Player.Entity.Position == LastRecordedPosition and not HasCondition(ConditionFlag.BoundByDuty) then
+                local msg = "["..Prefix.."] Stuck for over "..tostring(StuckCheckTimer).."s"
+                Dalamud.Log(msg)
+                yield("/echo "..msg)
+                yield("/qst stop")
+            end
+            LastRecordedTimestamp = os.time()
             LastRecordedPosition = Player.Entity.Position
         end
         StartAttempts = 0
