@@ -79,7 +79,7 @@ function Start()
         yield("/echo close")
         yield("/vnav stop")
         yield("/li Cactpot Board")
-        State = CharacterStates.claimPrize
+        State = CharacterState.claimPrize
     end
 end
 
@@ -92,7 +92,7 @@ function ClaimPrize()
     elseif Addons.GetAddon("SelectYesno").Ready then
         yield("/callback SelectYesno true 0")
     elseif RewardClaimed and not Svc.Condition[CharacterCondition.occupiedShopkeeper] then
-        State = CharacterStates.purchaseNewTickets
+        State = CharacterState.purchaseNewTickets
     elseif Svc.Targets.Target == nil or
         Svc.Targets.Target.Name.TextValue ~= "Cactpot Cashier" or
         GetDistanceToPoint(Svc.Targets.Target.Position) > 7
@@ -112,7 +112,7 @@ function PurchaseNewTickets()
     if Addons.GetAddon("LotteryWeeklyRewardList").Ready then
         yield("/echo You have already purchased tickets this week!")
         yield("/callback LotteryWeeklyRewardList true -1")
-        State = CharacterStates.endState
+        State = CharacterState.endState
     elseif Addons.GetAddon("SelectString").Ready then
         yield("/callback SelectString true 0")
     elseif Addons.GetAddon("SelectYesno").Ready then
@@ -121,7 +121,7 @@ function PurchaseNewTickets()
         yield("/wait 1")
         yield("/callback LotteryWeeklyInput true "..math.random(9999))
     elseif TicketsPurchased and not Svc.Condition[CharacterCondition.occupiedShopkeeper] then
-        State = CharacterStates.endState
+        State = CharacterState.endState
     elseif Svc.Targets.Target == nil or
         Svc.Targets.Target.Name.TextValue ~= "Jumbo Cactpot Broker" or
         GetDistanceToPoint(Svc.Targets.Target.Position) > 7
@@ -143,7 +143,7 @@ function EndState()
     end
 end
 
-CharacterStates =
+CharacterState =
 {
     start = Start,
     claimPrize = ClaimPrize,
@@ -152,7 +152,7 @@ CharacterStates =
 }
 
 StopFlag = false
-State = CharacterStates.start
+State = CharacterState.start
 yield("/at y")
 while not StopFlag do
     State()

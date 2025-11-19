@@ -48,7 +48,7 @@ function Ready()
     if Svc.ClientState.TerritoryType ~= 144 then
         Teleport("Gold Saucer")
     else
-        State = CharacterStates.goToCashier
+        State = CharacterState.goToCashier
     end
 end
 
@@ -81,7 +81,7 @@ function GoToCashier()
         yield("/vnav stop")
     end
 
-    State = CharacterStates.playMiniCactpot
+    State = CharacterState.playMiniCactpot
 end
 
 TicketsPurchased = false
@@ -103,7 +103,7 @@ function PlayMiniCactpot()
     elseif IPC.vnavmesh.IsRunning() or IPC.vnavmesh.PathfindInProgress() then
         yield("/vnav stop")
     elseif TicketsPurchased and not Svc.Condition[CharacterCondition.occupiedShopkeeper] then
-        State = CharacterStates.endState
+        State = CharacterState.endState
     elseif Svc.Targets.Target == nil or Svc.Targets.Target.Name.TextValue ~= Npc.name then
         yield("/target "..Npc.name)
     else
@@ -120,7 +120,7 @@ function EndState()
     end
 end
 
-CharacterStates =
+CharacterState =
 {
     ready = Ready,
     goToCashier = GoToCashier,
@@ -129,7 +129,7 @@ CharacterStates =
 }
 
 StopFlag = false
-State = CharacterStates.ready
+State = CharacterState.ready
 yield("/at y")
 while not StopFlag do
     State()
