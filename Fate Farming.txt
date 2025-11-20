@@ -1,1 +1,2 @@
 Fate farming is now maintained by baanderson40. You can find their repo at: 
+https://github.com/baanderson40/SND_Scripts/tree/main/Fates
