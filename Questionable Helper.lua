@@ -12,6 +12,7 @@ Conditions =
     [34] = ConditionFlag.BoundByDuty,
     [35] = ConditionFlag.OccupiedInCutSceneEvent,
     [39] = ConditionFlag.Occupied39, -- materia extraction & repair
+    [45] = ConditionFlag.BetweenAreas,
     [77] = ConditionFlag.InFlight,
     [90] = ConditionFlag.RolePlaying
 }
@@ -174,7 +175,11 @@ function Questing()
     elseif HasCondition(ConditionFlag.OccupiedInCutSceneEvent) then
         LastRecordedPosition = Player.Entity.Position
         LastRecordedTimestamp = os.time()
-    elseif IPC.AutoRetainer.IsBusy() or not IPC.vnavmesh.IsReady() or IPC.vnavmesh.PathfindInProgress() then
+    elseif  IPC.AutoRetainer.IsBusy() or
+            not IPC.vnavmesh.IsReady() or
+            IPC.vnavmesh.PathfindInProgress() or
+            HasCondition(ConditionFlag.BetweenAreas)
+    then
         -- wait for autoretainer to finish
     elseif Addons.GetAddon("DifficultySelectYesNo").Ready then
         yield("/callback DifficultySelectYesNo true 0 2")
@@ -207,6 +212,7 @@ function Questing()
         local qstStepData = IPC.Questionable.GetCurrentStepData()
         if StartAttempts >= 3 then
             yield("/qst reload")
+            StartAttempts = 0
             yield("/wait 5")
         elseif qstStepData ~= nil then
             local targetTerritory = qstStepData.TerritoryId
@@ -233,7 +239,6 @@ function Questing()
                     yield("/snd stop all")
                 end
             else
-                yield("/echo 3")
                 local msg = "["..Prefix.."] QST is stopped. Attempting to start..."
                 Dalamud.Log(msg)
                 yield("/echo "..msg)
@@ -242,9 +247,9 @@ function Questing()
                 StartAttempts = StartAttempts + 1
             end
         else
-            yield("/qst reload")
-            StartAttempts = 0
-            yield("/wait 5")
+            local msg = "["..Prefix.."] QST step data is empty."
+            Dalamud.Log(msg)
+            yield("/snd stop all")
         end
     else
         if os.time() - LastRecordedTimestamp > StuckCheckTimer then
@@ -399,11 +404,11 @@ function SetMaxDistance()
     if Player.Job and (Player.Job.IsMeleeDPS or Player.Job.IsTank) then
         MaxDistance = MeleeDist
         MoveToMob = true
-        Dalamud.Log("[FATE] Setting max distance to " .. tostring(MeleeDist) .. " (melee/tank)")
+        Dalamud.Log("["..Prefix.."] Setting max distance to " .. tostring(MeleeDist) .. " (melee/tank)")
     else
         MoveToMob = false
         MaxDistance = RangedDist
-        Dalamud.Log("[FATE] Setting max distance to " .. tostring(RangedDist) .. " (ranged/caster)")
+        Dalamud.Log("["..Prefix.."] Setting max distance to " .. tostring(RangedDist) .. " (ranged/caster)")
     end
 end
 
