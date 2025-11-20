@@ -4,7 +4,8 @@ author: pot0to
 version: 2.0.0
 description: |
   Support via https://ko-fi.com/pot0to
-  Bokairo Inn jump puzzle and sightseeing log: https://www.youtube.com/watch?v=Wl_3FUdCo-o
+  Tulliyolal Tower jump puzzle and sightseeing log: https://youtu.be/paXx-tiXkh0?t=118
+  (Not the palace! There's no sightseeing jump puzzle at the palace!)
 plugin_dependencies:
 - vnavmesh
 configs:

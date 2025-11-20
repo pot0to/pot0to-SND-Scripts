@@ -4,7 +4,7 @@ author: pot0to
 version: 2.0.0
 description: |
   Support via https://ko-fi.com/pot0to
-  Bokairo Inn jump puzzle and sightseeing log: https://www.youtube.com/watch?v=Wl_3FUdCo-o
+  Radz-at-Han Palace and sightseeing log: https://www.youtube.com/watch?v=aWir-tIjIRw
 plugin_dependencies:
 - vnavmesh
 configs:
